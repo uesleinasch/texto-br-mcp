@@ -1,0 +1,253 @@
+#!/usr/bin/env python3
+"""Perturbação lexical controlada (fase de medição) para o pipeline texto-br.
+
+Lê JSON no stdin: {"texto": rascunho, "secao10": seção 10 de
+humanizacao-algoritmos.md}. As tabelas pivot→alternativas da seção 10 são
+parseadas em runtime (fonte única de verdade: editar o .md atualiza a análise).
+
+Detecta vocabulário pivot de LLM, repetições lexicais e baixa diversidade,
+devolvendo diagnóstico com alternativas. Este script mede; quem perturba o
+léxico (reescreve) é o modelo, com critério de contexto.
+"""
+
+import json
+import re
+import sys
+from collections import Counter
+
+from texto_util import (
+    dividir_paragrafos,
+    dividir_sentencas,
+    excerto,
+    limpar_markdown,
+    listar_palavras,
+)
+
+STOPWORDS = set("""
+a à às ao aos as com como da das de dele dela deles delas depois do dos e ela
+elas ele eles em entre era eram essa essas esse esses esta estas este estes
+estou está estão eu foi for foram há isso isto já lhe lhes mais mas me mesmo
+meu meus minha minhas muito na nas nem no nos nós não o os ou para pela pelas
+pelo pelos por qual quando que quem se sem ser seu seus sou sua suas são só
+também te tem têm ter teu tinha tua tudo um uma umas uns você vocês vai vão
+ainda até bem cada coisa coisas dia onde pode podem porque qualquer quanto
+sobre todo toda todos todas outro outra outros outras
+""".split())
+
+# Sufixo flexional tolerado depois do radical de um verbo pivot
+SUFIXO_VERBAL = r"(?:[aeiou]\w{0,6})?"
+
+
+def parsear_tabelas(secao10):
+    """Extrai as tabelas pivot→alternativas das subseções 10.N."""
+    categorias = {}
+    categoria = None
+    for linha in secao10.split("\n"):
+        sub = re.match(r"^### 10\.\d+\s+(.+)$", linha)
+        if sub:
+            titulo = sub.group(1).lower()
+            if "verbo" in titulo:
+                categoria = "verbos"
+            elif "adjetivo" in titulo:
+                categoria = "adjetivos"
+            elif "substantivo" in titulo:
+                categoria = "substantivos"
+            elif "conector" in titulo:
+                categoria = "conectores"
+            elif "abertura" in titulo:
+                categoria = "aberturas"
+            elif "fechamento" in titulo:
+                categoria = "fechamentos"
+            else:
+                categoria = None
+            continue
+        m = re.match(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$", linha)
+        if not (m and categoria):
+            continue
+        evitar, trocar = m.group(1), m.group(2)
+        if evitar.lower() in ("evitar", "") or set(evitar) <= {"-", " ", ":"}:
+            continue  # cabeçalho ou separador da tabela
+        # remove qualificadores e reticências: "fundamental (em excesso)", "Em um mundo onde..."
+        termo = re.sub(r"\s*\([^)]*\)", "", evitar).strip().rstrip(".… ").lower()
+        if termo:
+            categorias.setdefault(categoria, []).append(
+                {"termo": termo, "alternativas": trocar.strip()}
+            )
+    return categorias
+
+
+def regex_para(termo, categoria):
+    """Regex tolerante a flexão conforme a categoria do termo pivot."""
+    palavras = termo.split()
+    if categoria == "verbos":
+        # radical do verbo (sem a terminação -ar/-er/-ir) + flexão
+        primeira = palavras[0]
+        raiz = re.sub(r"[aei]r$", "", primeira)
+        partes = [re.escape(raiz) + SUFIXO_VERBAL] + [re.escape(p) for p in palavras[1:]]
+        return re.compile(r"\b" + r"\s+".join(partes) + r"\b", re.IGNORECASE)
+    if categoria in ("adjetivos", "substantivos"):
+        if re.search(r"[oa]$", termo):
+            base = re.escape(termo[:-1]) + r"[oa]s?"
+        else:
+            base = re.escape(termo) + r"s?"
+        return re.compile(r"\b" + base + r"\b", re.IGNORECASE)
+    # conectores, aberturas, fechamentos: frase com espaços flexíveis
+    return re.compile(
+        r"\b" + r"\s+".join(re.escape(p) for p in palavras), re.IGNORECASE
+    )
+
+
+def analisar(texto, secao10):
+    prosa, _ = limpar_markdown(texto)
+    paragrafos = dividir_paragrafos(prosa)
+    sentencas = [s for p in paragrafos for s in dividir_sentencas(p)]
+    palavras = listar_palavras(prosa)
+
+    if len(palavras) < 30:
+        return {"erro": "Texto com menos de 30 palavras de prosa; análise lexical não se aplica."}
+
+    categorias = parsear_tabelas(secao10)
+    diagnostico = []
+
+    # 1. Ocorrências de vocabulário pivot
+    ocorrencias = []
+    for categoria, entradas in categorias.items():
+        for entrada in entradas:
+            padrao = regex_para(entrada["termo"], categoria)
+            for i, s in enumerate(sentencas):
+                # aberturas só contam no início da sentença
+                if categoria == "aberturas":
+                    achou = padrao.match(s.lstrip("\"'«( "))
+                else:
+                    achou = padrao.search(s)
+                if achou:
+                    ocorrencias.append(
+                        {
+                            "categoria": categoria,
+                            "pivot": entrada["termo"],
+                            "encontrado": achou.group(0),
+                            "sentenca": i + 1,
+                            "trecho": excerto(s),
+                            "alternativas": entrada["alternativas"],
+                        }
+                    )
+
+    # 2. Repetições de palavras de conteúdo (avisos; repetição temática é legítima)
+    conteudo = [p for p in palavras if len(p) >= 4 and p not in STOPWORDS]
+    frequencias = Counter(conteudo)
+    repetidas = [
+        {"palavra": p, "vezes": n}
+        for p, n in frequencias.most_common(8)
+        if n >= 3
+    ]
+
+    proximas = []
+    ultima_posicao = {}
+    for pos, p in enumerate(conteudo):
+        if p in ultima_posicao and pos - ultima_posicao[p] <= 20:
+            proximas.append(p)
+        ultima_posicao[p] = pos
+    proximas = sorted(set(proximas))
+
+    # 3. Diversidade lexical: TTR em janelas de 100 palavras (MATTR simplificado)
+    if len(palavras) >= 100:
+        janelas = [
+            len(set(palavras[i : i + 100])) / 100
+            for i in range(0, len(palavras) - 99, 50)
+        ]
+        diversidade = round(sum(janelas) / len(janelas), 3)
+    else:
+        diversidade = round(len(set(palavras)) / len(palavras), 3)
+
+    # 4. Trigramas repetidos (estruturas de frase recicladas)
+    trigramas = Counter(
+        " ".join(palavras[i : i + 3]) for i in range(len(palavras) - 2)
+    )
+    trigramas_repetidos = [t for t, n in trigramas.items() if n >= 2]
+
+    # Diagnóstico
+    if ocorrencias:
+        diagnostico.append(
+            f"INTERVIR: {len(ocorrencias)} ocorrência(s) de vocabulário pivot de LLM. "
+            "Troque cada uma pelas alternativas sugeridas (escolhendo a que cabe no contexto) "
+            "ou corte a expressão."
+        )
+    else:
+        diagnostico.append("OK: nenhuma ocorrência das listas de vocabulário pivot.")
+
+    if diversidade < 0.5:
+        diagnostico.append(
+            f"Diversidade lexical baixa ({diversidade}): vocabulário repetitivo; "
+            "varie as escolhas de palavras nas reescritas."
+        )
+    for r in repetidas:
+        diagnostico.append(
+            f"\"{r['palavra']}\" aparece {r['vezes']}x: se não for termo do tema, "
+            "varie com sinônimos ou retomadas (\"isso\", \"esse processo\")."
+        )
+    if proximas:
+        diagnostico.append(
+            f"Repetições em proximidade (mesma palavra a <= 20 palavras de distância): "
+            f"{', '.join(proximas[:8])}."
+        )
+    if trigramas_repetidos:
+        diagnostico.append(
+            f"Trigramas repetidos ({len(trigramas_repetidos)}): "
+            f"{'; '.join(trigramas_repetidos[:5])}. Reformule uma das ocorrências."
+        )
+
+    atingiu_alvo = len(ocorrencias) == 0
+
+    return {
+        "metricas": {
+            "palavras": len(palavras),
+            "sentencas": len(sentencas),
+            "ocorrencias_pivot": len(ocorrencias),
+            "diversidade_lexical": diversidade,
+            "tabelas_carregadas": {c: len(e) for c, e in categorias.items()},
+        },
+        "ocorrencias": ocorrencias[:20],
+        "repetidas": repetidas,
+        "repeticoes_proximas": proximas[:10],
+        "trigramas_repetidos": trigramas_repetidos[:8],
+        "atingiu_alvo": atingiu_alvo,
+        "diagnostico": diagnostico,
+    }
+
+
+def formatar_relatorio(resultado):
+    if "erro" in resultado:
+        return resultado["erro"]
+    m = resultado["metricas"]
+    linhas = [
+        "## Análise de perturbação lexical",
+        "",
+        f"Palavras: {m['palavras']} | Sentenças: {m['sentencas']} | "
+        f"Diversidade lexical (janela 100): {m['diversidade_lexical']}",
+        f"**Ocorrências de vocabulário pivot: {m['ocorrencias_pivot']}** | alvo: 0",
+        "",
+        "### Diagnóstico",
+        "",
+    ]
+    linhas += [f"- {d}" for d in resultado["diagnostico"]]
+    if resultado["ocorrencias"]:
+        linhas += ["", "### Ocorrências pivot (trocar ou cortar)", ""]
+        for o in resultado["ocorrencias"]:
+            linhas.append(
+                f"- Sentença {o['sentenca']} [{o['categoria']}] \"{o['encontrado']}\" "
+                f"→ {o['alternativas']} | contexto: \"{o['trecho']}\""
+            )
+    veredicto = "ALVO ATINGIDO" if resultado["atingiu_alvo"] else "REESCREVER E MEDIR DE NOVO"
+    linhas += ["", f"**Veredicto: {veredicto}**"]
+    return "\n".join(linhas)
+
+
+def main():
+    entrada = json.load(sys.stdin)
+    resultado = analisar(entrada["texto"], entrada.get("secao10", ""))
+    resultado["relatorio"] = formatar_relatorio(resultado)
+    json.dump(resultado, sys.stdout, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    main()

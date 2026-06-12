@@ -1,0 +1,32 @@
+import { z } from 'zod';
+import { runPython } from './run-python.js';
+
+export function register(server, session) {
+  server.registerTool(
+    'texto_br_variancia',
+    {
+      title: 'Análise de variância sintática',
+      description:
+        'Mede o ritmo sintático de um rascunho: burstiness (sigma/mu, alvo >= 0.7), ' +
+        'sentenças candidatas a quebra/fusão, sequências uniformes, inícios repetidos e ' +
+        'uniformidade de parágrafos. Retorna diagnóstico para reescrita cirúrgica. ' +
+        'Use no loop quantitativo da Fase 2: medir → reescrever os pontos apontados → ' +
+        'medir de novo, até "ALVO ATINGIDO".',
+      inputSchema: {
+        texto: z.string().min(1).describe('Rascunho completo a analisar (markdown ou texto puro)'),
+      },
+    },
+    async ({ texto }) => {
+      try {
+        const resultado = await runPython('variancia.py', texto);
+        if (session && !resultado.erro) {
+          session.varianciaAtingida = resultado.atingiu_alvo === true;
+          session.persist();
+        }
+        return { content: [{ type: 'text', text: resultado.relatorio }] };
+      } catch (err) {
+        return { isError: true, content: [{ type: 'text', text: err.message }] };
+      }
+    }
+  );
+}

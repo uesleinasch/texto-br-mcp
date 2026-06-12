@@ -1,0 +1,19 @@
+{
+  "name": "texto-br-mcp",
+  "version": "1.0.0",
+  "description": "Servidor MCP da skill texto-br: escrita profissional em pt-BR com pipeline de 6 fases",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test 'test/*.test.js'"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.104.1",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.24.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
