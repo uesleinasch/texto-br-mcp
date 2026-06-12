@@ -30,9 +30,10 @@ Verificação: `claude mcp list` deve mostrar `texto-br ... ✔ Connected`.
 |---|---|
 | `texto_br_start(briefing, tipo?, tamanho?, variancia?)` | Inicia o pipeline; com tipo definido retorna o material das Fases 0-1 |
 | `texto_br_proxima_fase(rascunho?, fase?, forcar?, variancia?)` | Avança (ou reposiciona via `fase`); salva `rascunho`; gate quantitativo na saída da Fase 2 |
+| `texto_br_score(texto)` | Score de humanidade 0-100 (ritmo + léxico + estrutura; alvo ≥ 80; satisfaz o gate da Fase 2) |
+| `texto_br_otimizar(texto)` | Otimiza contra o score via Claude API: subida de encosta com anti-degradação (requer credencial) |
 | `texto_br_variancia(texto)` | Mede ritmo sintático (burstiness σ/μ, alvo ≥ 0.7) |
 | `texto_br_lexico(texto)` | Mede previsibilidade lexical (vocabulário pivot da seção 10, repetições, diversidade) |
-| `texto_br_variancia_aplicar(texto)` | Corrige o ritmo automaticamente via Claude API (requer credencial) |
 | `texto_br_tipo(id)` / `texto_br_gramatica(secao)` / `texto_br_checklist(fase)` | Consultas pontuais |
 | `texto_br_rascunho(fase)` | Recupera rascunho salvo de uma fase |
 | `texto_br_status()` | Fase atual, tipo, vereditos do loop, rascunhos salvos |

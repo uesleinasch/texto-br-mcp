@@ -119,6 +119,10 @@ Se o usuário pedir explicitamente, mostre também o rascunho da Fase 1 para com
   },
 };
 
+// Tipos conversacionais recebem payloads enxutos (roteamento adaptativo):
+// textos curtos não precisam das seções completas de gramática e humanização.
+export const TIPOS_CONVERSACIONAIS = ['email', 'comentario-blog', 'comentario-jira', 'chat'];
+
 // Mapa declarativo: quais seções de quais references cada fase recebe.
 // Notações especiais: "type:{slug}" (seção do tipo ativo, resolvida em runtime)
 // e "h1:Texto" (bloco de heading nível 1 com texto exato).
@@ -165,6 +169,33 @@ export const PHASE_SECTIONS = {
   5: [],
 };
 
+// Payloads enxutos para tipos conversacionais (fases ausentes herdam o mapa cheio).
+// Seções podadas continuam acessíveis sob demanda via texto_br_gramatica etc.
+export const PHASE_SECTIONS_CONVERSACIONAL = {
+  1: [
+    { file: 'tipos-de-texto', section: 'type:{slug}' },
+    { file: 'gramatica-pt-br', section: '4' }, // ortografia (porquês, mau/mal, a/há...)
+    { file: 'gramatica-pt-br', section: '5' }, // pontuação (regra dos travessões)
+    { file: 'gramatica-pt-br', section: '17' }, // erros frequentes
+  ],
+  2: [
+    { file: 'humanizacao-algoritmos', section: '4' }, // algoritmo master
+    { file: 'humanizacao-algoritmos', section: '8' }, // voz humana
+    { file: 'humanizacao-algoritmos', section: '9' }, // caracteres invisíveis
+    { file: 'humanizacao-algoritmos', section: '10' }, // substituições lexicais
+  ],
+  3: [
+    { file: 'camadas-profundas', section: '1' }, // aterragem
+    { file: 'camadas-profundas', section: '3' }, // fricção epistêmica
+    { file: 'camadas-profundas', section: '6' }, // matriz de calibração
+  ],
+  4: [
+    { file: 'humanizacao-discursiva', section: '2' }, // hesitação
+    { file: 'humanizacao-discursiva', section: '3' }, // autorreparo
+    { file: 'humanizacao-discursiva', section: '6' }, // matriz de calibração
+  ],
+};
+
 export const CHECKLISTS = {
   2: { file: 'humanizacao-algoritmos', section: '11' },
   3: { file: 'camadas-profundas', section: '7' },
@@ -175,12 +206,11 @@ export const CHECKLISTS = {
 // Ativo por default; desligado apenas com variancia: false a pedido do usuário.
 export const LOOP_QUANTITATIVO_GUIDANCE = `## Loop quantitativo (ATIVADO)
 
-Depois de aplicar as cinco técnicas de superfície acima, rode o loop de medição:
+Depois de aplicar as cinco técnicas de superfície acima, otimize contra o score de humanidade (0-100, alvo >= 80):
 
-1. Chame texto_br_variancia E texto_br_lexico passando o rascunho atual completo.
-2. **Injeção de variância sintática**: o alvo é burstiness (sigma/mu) >= 0.7, nenhuma sequência uniforme e nenhum início repetido. Use as sentenças candidatas apontadas (as que estão no entorno da média) para quebrar algumas em sentenças muito curtas (1-5 palavras) e fundir outras com vizinhas (30+ palavras). Insira 1-2 orações subordinadas não-canônicas se o diagnóstico apontar ausência (anteposta: "Quando X, Y"; intercalada: "O projeto, embora atrasado, saiu"; gerúndio inicial). Corrija parágrafos uniformes apontados. Atalho: se a tool texto_br_variancia_aplicar estiver operacional (requer credencial da API no servidor), pode usá-la para executar este item automaticamente em loop garantido; se ela retornar erro de credencial, faça a reescrita você mesmo.
-3. **Perturbação lexical controlada**: o alvo é zero ocorrências de vocabulário pivot. Troque cada ocorrência apontada por uma das alternativas sugeridas, escolhendo a que cabe no contexto (ou corte a expressão). As listas detectadas são o PISO, não o teto: identifique você também palavras e colocações previsíveis demais no contexto deste texto específico (use as repetições, a diversidade lexical e os trigramas do relatório como sinal) e perturbe-as com escolhas menos óbvias que preservem o sentido.
-4. Reescreva APENAS os pontos apontados, preservando sentido e qualidade, e meça de novo com as duas tools.
-5. Repita até ambas retornarem "ALVO ATINGIDO", com no máximo 3 iterações para não sobreajustar.
-
-A perturbação nunca degrada o texto: se uma troca, quebra ou fusão piorar a frase, escolha outra candidata.`;
+1. **Via automática (preferencial se disponível)**: chame texto_br_otimizar com o rascunho completo. Ela roda a subida de encosta inteira (medir → reescrever → medir, rejeitando iterações que piorem o score) e devolve o texto otimizado com a trajetória. Se retornar erro de credencial, siga a via manual.
+2. **Via manual**: chame texto_br_score com o rascunho e corrija os componentes fracos apontados:
+   - **Ritmo (injeção de variância sintática)**: quebre candidatas em sentenças muito curtas (1-5 palavras), funda curtas consecutivas em longas (30+), insira 1-2 subordinadas não-canônicas (anteposta: "Quando X, Y"; intercalada: "O projeto, embora atrasado, saiu"; gerúndio inicial), varie inícios repetidos.
+   - **Léxico (perturbação lexical controlada)**: troque cada pivot apontado pela alternativa que cabe no contexto (ou corte). As listas são o PISO: perturbe também palavras previsíveis demais no contexto deste texto (use repetições, diversidade e trigramas como sinal).
+   - **Estrutura**: parágrafos uniformes e correntes de conectivos apontados.
+3. Reescreva APENAS os pontos apontados e meça de novo. Repita até "ALVO ATINGIDO", com no máximo 3 iterações manuais. Se o score CAIR após uma reescrita, descarte-a e volte à versão anterior: a otimização nunca degrada o texto.`;

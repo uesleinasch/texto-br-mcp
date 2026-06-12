@@ -55,6 +55,20 @@ test('toda fase tem guidance e payload coerente', () => {
   }
 });
 
+test('roteamento adaptativo: payload conversacional é menor que o de produção', () => {
+  for (const fase of [1, 2, 3, 4]) {
+    const producao = composePhaseSections(fase, 'blog');
+    const conversacional = composePhaseSections(fase, 'chat');
+    assert.ok(
+      conversacional.length < producao.length,
+      `fase ${fase}: payload de chat (${conversacional.length}) deveria ser menor que o de blog (${producao.length})`
+    );
+    assert.ok(!conversacional.includes('> Aviso:'), `fase ${fase} conversacional com seção ausente`);
+  }
+  // fases sem override herdam o mapa cheio
+  assert.equal(composePhaseSections(5, 'chat'), composePhaseSections(5, 'blog'));
+});
+
 test('checklists apontam para seções existentes', () => {
   for (const [fase, ref] of Object.entries(CHECKLISTS)) {
     const corpo = getSection(ref.file, ref.section);

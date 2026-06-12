@@ -48,6 +48,18 @@ test('lexico: texto limpo atinge o alvo', async () => {
   assert.equal(r.atingiu_alvo, true, JSON.stringify(r.ocorrencias));
 });
 
+test('score: separa texto humano (>= 80) de texto LLM (< 80)', async () => {
+  const secao10 = getSection('humanizacao-algoritmos', 10);
+  const bom = await runPython('score.py', JSON.stringify({ texto: TEXTO_VARIADO, secao10 }));
+  assert.ok(bom.score.total >= 80, `texto bom pontuou ${bom.score.total}`);
+  assert.equal(bom.atingiu_alvo, true);
+
+  const ruim = await runPython('score.py', JSON.stringify({ texto: TEXTO_PIVOT, secao10 }));
+  assert.ok(ruim.score.total < 80, `texto pivot pontuou ${ruim.score.total}`);
+  assert.equal(ruim.atingiu_alvo, false);
+  assert.ok(ruim.relatorio.includes('| Componente | Pontos |'));
+});
+
 test('analisadores ignoram código e headings de markdown', async () => {
   const md = `# Título\n\n${TEXTO_VARIADO}\n\n\`\`\`\ncodigo. ignorado. aqui. sempre. mesmo. tamanho. fixo.\n\`\`\`\n`;
   const r = await runPython('variancia.py', md);

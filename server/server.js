@@ -7,7 +7,8 @@ import { register as registerChecklist } from './tools/checklist.js';
 import { register as registerStatus } from './tools/status.js';
 import { register as registerVariancia } from './tools/variancia.js';
 import { register as registerLexico } from './tools/lexico.js';
-import { register as registerVarianciaAplicar } from './tools/variancia-aplicar.js';
+import { register as registerScore } from './tools/score.js';
+import { register as registerOtimizar } from './tools/otimizar.js';
 import { register as registerRascunho } from './tools/rascunho.js';
 
 // As regras citadas abaixo são um resumo; a lista autoritativa, injetada na
@@ -20,7 +21,7 @@ SEMPRE que o usuário pedir para escrever, redigir, criar, produzir, rascunhar o
 2. Chame texto_br_proxima_fase ao concluir cada fase, SEMPRE passando o texto atual no parâmetro "rascunho" (fica salvo na sessão para comparação posterior). Ele retorna a guidance e as referências da fase seguinte (2: humanização de superfície; 3: humanização profunda; 4: humanização discursiva, com hesitação, autorreparo e exemplos idiossincráticos calibrados por tipo; 5: entrega). Sair da Fase 2 com o loop quantitativo ativo exige os dois alvos atingidos (gate; use "forcar": true só a pedido do usuário). Para refazer uma fase, use o parâmetro "fase" (ex.: fase: 2). Aplique cada fase integralmente antes de avançar. Não pule fases, não as combine, não anuncie ao usuário em qual fase está.
 3. Na Fase 5, entregue APENAS o texto final em Markdown limpo, sem preâmbulos nem comentários.
 
-Tools de consulta pontual: texto_br_tipo(id) para a especificação de um tipo; texto_br_gramatica(secao) para dúvidas gramaticais (seções 1-18); texto_br_checklist(fase) para os critérios de saída das fases 2, 3 e 4; texto_br_variancia(texto) para medir o ritmo sintático de um rascunho (burstiness, candidatas a quebra/fusão, ordem não-canônica); texto_br_variancia_aplicar(texto) para corrigir o ritmo automaticamente via Claude API quando o servidor tiver ANTHROPIC_API_KEY configurada; texto_br_lexico(texto) para medir previsibilidade lexical (vocabulário pivot com alternativas, repetições, diversidade); texto_br_status() para retomar o estado após pausa.
+Tools de consulta pontual: texto_br_tipo(id) para a especificação de um tipo; texto_br_gramatica(secao) para dúvidas gramaticais (seções 1-18); texto_br_checklist(fase) para os critérios de saída das fases 2, 3 e 4; texto_br_score(texto) para o score de humanidade 0-100 (ritmo + léxico + estrutura; alvo >= 80, satisfaz o gate da Fase 2 numa chamada); texto_br_otimizar(texto) para otimizar automaticamente contra o score via Claude API (subida de encosta com anti-degradação; requer ANTHROPIC_API_KEY no servidor); texto_br_variancia(texto) e texto_br_lexico(texto) para os diagnósticos individuais; texto_br_lexico(texto) para medir previsibilidade lexical (vocabulário pivot com alternativas, repetições, diversidade); texto_br_status() para retomar o estado após pausa.
 
 Regras absolutas em todas as fases: português brasileiro com AO1990; ZERO travessões (—) e meias-riscas (–); zero conectores clichê ("Além disso", "No entanto", "Em conclusão"); zero aberturas de IA ("Em um mundo onde", "Nos dias atuais"); zero meta-referência ao próprio texto; zero caracteres Unicode invisíveis. A humanização nunca pode degradar o texto.
 
@@ -40,7 +41,8 @@ export function createServer(session) {
   registerStatus(server, session);
   registerVariancia(server, session);
   registerLexico(server, session);
-  registerVarianciaAplicar(server, session);
+  registerScore(server, session);
+  registerOtimizar(server, session);
   registerRascunho(server, session);
 
   return server;

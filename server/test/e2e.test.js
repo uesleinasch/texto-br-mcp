@@ -37,9 +37,9 @@ test('pipeline completo via client MCP: gate, rascunho, voltar fase', async () =
     assert.equal(r3.isError, true);
     assert.ok(r3.content[0].text.includes('Gate da Fase 2'));
 
-    // medições com texto que passa nos dois alvos
-    await client.callTool({ name: 'texto_br_variancia', arguments: { texto: TEXTO_BOM } });
-    await client.callTool({ name: 'texto_br_lexico', arguments: { texto: TEXTO_BOM } });
+    // o score unificado satisfaz o gate numa única chamada
+    const rScore = await client.callTool({ name: 'texto_br_score', arguments: { texto: TEXTO_BOM } });
+    assert.ok(rScore.content[0].text.includes('ALVO ATINGIDO'));
     const status = await client.callTool({ name: 'texto_br_status', arguments: {} });
     assert.ok(status.content[0].text.includes('variância alvo atingido'));
     assert.ok(status.content[0].text.includes('léxico alvo atingido'));

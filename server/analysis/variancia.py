@@ -217,6 +217,8 @@ def analisar(texto):
             "muito_curtas": muito_curtas,
             "muito_longas": muito_longas,
             "nao_canonicas": nao_canonicas,
+            "paragrafos_uniformes": paragrafos_uniformes,
+            "conectivos_consecutivos": conectivos_consecutivos,
             "linhas_nao_prosa_excluidas": linhas_excluidas,
         },
         "candidatas_quebra_fusao": candidatas[:12],

@@ -1,6 +1,11 @@
 import { getFile, knownFiles } from './loader.js';
 import { parseNumberedSections, extractH1Block } from './parser.js';
-import { PHASE_SECTIONS, TIPOS_VALIDOS } from '../knowledge/phases.js';
+import {
+  PHASE_SECTIONS,
+  PHASE_SECTIONS_CONVERSACIONAL,
+  TIPOS_CONVERSACIONAIS,
+  TIPOS_VALIDOS,
+} from '../knowledge/phases.js';
 
 // Conhecimento estrutural sobre as references: seções numeradas por arquivo,
 // índice slug → seção em tipos-de-texto.md, e validação no startup.
@@ -23,11 +28,13 @@ export function buildIndexes() {
 export function validateAll() {
   const warn = (msg) => console.error(`[texto-br] aviso: ${msg}`);
 
-  for (const phase of Object.values(PHASE_SECTIONS)) {
-    for (const ref of phase) {
-      if (ref.section.startsWith('type:') || ref.section.startsWith('h1:')) continue;
-      if (!parsed.get(ref.file)?.has(ref.section)) {
-        warn(`seção ${ref.section} não encontrada em ${ref.file}.md`);
+  for (const mapa of [PHASE_SECTIONS, PHASE_SECTIONS_CONVERSACIONAL]) {
+    for (const phase of Object.values(mapa)) {
+      for (const ref of phase) {
+        if (ref.section.startsWith('type:') || ref.section.startsWith('h1:')) continue;
+        if (!parsed.get(ref.file)?.has(ref.section)) {
+          warn(`seção ${ref.section} não encontrada em ${ref.file}.md`);
+        }
       }
     }
   }
@@ -65,9 +72,15 @@ export function listSections(file) {
 
 // Resolve as entradas de PHASE_SECTIONS de uma fase em texto concatenado,
 // interpolando "type:{slug}" com o tipo ativo e "h1:..." com blocos nível 1.
+// Tipos conversacionais usam o mapa enxuto quando a fase tem override.
 export function composePhaseSections(phase, slug) {
+  const conversacional = slug && TIPOS_CONVERSACIONAIS.includes(slug);
+  const refs =
+    (conversacional ? PHASE_SECTIONS_CONVERSACIONAL[phase] : undefined) ??
+    PHASE_SECTIONS[phase] ??
+    [];
   const parts = [];
-  for (const ref of PHASE_SECTIONS[phase] ?? []) {
+  for (const ref of refs) {
     if (ref.section === 'type:{slug}') {
       if (!slug) continue;
       const spec = getTypeSpec(slug);
