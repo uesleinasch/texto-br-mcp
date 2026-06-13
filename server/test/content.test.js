@@ -42,6 +42,14 @@ test('seções numeradas das references estão completas', () => {
   assert.equal(listSections('camadas-profundas').length, 8);
   assert.equal(listSections('humanizacao-discursiva').length, 8);
   assert.equal(listSections('tipos-de-texto').length, 12);
+  assert.equal(listSections('estrutura-macro').length, 8);
+});
+
+test('estrutura-macro: parseia seções e checklist', () => {
+  assert.ok(getSection('estrutura-macro', 2).includes('Simetria de seções'));
+  assert.ok(getSection('estrutura-macro', 7).includes('Matriz de calibração'));
+  const chk = getSection('estrutura-macro', 8);
+  assert.ok(chk.includes('[ ]'), 'checklist da Fase 5 sem itens [ ]');
 });
 
 test('toda fase tem guidance e payload coerente', () => {

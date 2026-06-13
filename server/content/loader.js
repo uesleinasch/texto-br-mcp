@@ -7,6 +7,7 @@ const FILES = [
   'humanizacao-algoritmos',
   'camadas-profundas',
   'humanizacao-discursiva',
+  'estrutura-macro',
 ];
 
 const cache = new Map();
