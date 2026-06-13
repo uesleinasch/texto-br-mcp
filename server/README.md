@@ -1,6 +1,6 @@
 # texto-br MCP
 
-Servidor MCP (stdio) que encapsula o workflow texto-br: escrita profissional em português brasileiro com pipeline de 6 fases (0 coleta, 1 redação, 2 humanização de superfície com loop quantitativo, 3 humanização profunda, 4 humanização discursiva, 5 entrega). O conteúdo de domínio vive em `../references/*.md`; o servidor lê e fatia esses arquivos em runtime, servindo a cada fase apenas as seções necessárias.
+Servidor MCP (stdio) que encapsula o workflow texto-br: escrita profissional em português brasileiro com pipeline de 7 fases (0 coleta, 1 redação, 2 humanização de superfície com loop quantitativo, 3 humanização profunda, 4 humanização discursiva, 5 análise macroestrutural, 6 entrega). O conteúdo de domínio vive em `../references/*.md`; o servidor lê e fatia esses arquivos em runtime, servindo a cada fase apenas as seções necessárias.
 
 ## Pré-requisitos
 
@@ -29,8 +29,9 @@ Verificação: `claude mcp list` deve mostrar `texto-br ... ✔ Connected`.
 | Tool | Função |
 |---|---|
 | `texto_br_start(briefing, tipo?, tamanho?, variancia?)` | Inicia o pipeline; com tipo definido retorna o material das Fases 0-1 |
-| `texto_br_proxima_fase(rascunho?, fase?, forcar?, variancia?)` | Avança (ou reposiciona via `fase`); salva `rascunho`; gate quantitativo na saída da Fase 2 |
-| `texto_br_score(texto)` | Score de humanidade 0-100 (ritmo + léxico + estrutura; alvo ≥ 80; satisfaz o gate da Fase 2) |
+| `texto_br_proxima_fase(rascunho?, fase?, forcar?, variancia?)` | Avança (ou reposiciona via `fase`); salva `rascunho`; gate quantitativo na saída da Fase 2 e gate macroestrutural na saída da Fase 5 (tipos longos) |
+| `texto_br_score(texto)` | Score de humanidade 0-100 (ritmo + léxico + estrutura micro; alvo ≥ 80; satisfaz o gate da Fase 2) |
+| `texto_br_estrutura(texto, tipo?)` | Score de naturalidade estrutural 0-100 (macro: simetria, subtópicos, kicker, bordões, progressão; alvo ≥ 70) + plano de perturbação (Fase 5) |
 | `texto_br_otimizar(texto)` | Otimiza contra o score via Claude API: subida de encosta com anti-degradação (requer credencial) |
 | `texto_br_variancia(texto)` | Mede ritmo sintático (burstiness σ/μ, alvo ≥ 0.7) |
 | `texto_br_lexico(texto)` | Mede previsibilidade lexical (vocabulário pivot da seção 10, repetições, diversidade) |
@@ -48,7 +49,7 @@ server/
 ├── knowledge/phases.js   # guidance das fases + mapa fase→seções (toda evolução do workflow é aqui)
 ├── session/state.js      # estado da sessão, persistido em $TMPDIR/texto-br-session.json
 ├── tools/                # uma tool por arquivo + run-python.js (spawn dos analisadores)
-├── analysis/             # variancia.py, lexico.py, texto_util.py (Python stdlib)
+├── analysis/             # variancia.py, lexico.py, score.py, estrutura.py, texto_util.py (Python stdlib)
 └── test/                 # node --test
 ```
 

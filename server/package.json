@@ -1,7 +1,7 @@
 {
   "name": "texto-br-mcp",
   "version": "1.0.0",
-  "description": "Servidor MCP da skill texto-br: escrita profissional em pt-BR com pipeline de 6 fases",
+  "description": "Servidor MCP da skill texto-br: escrita profissional em pt-BR com pipeline de 7 fases",
   "type": "module",
   "main": "index.js",
   "scripts": {

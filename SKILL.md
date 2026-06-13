@@ -1,6 +1,6 @@
 ---
 name: texto-br
-description: Escrita profissional em português brasileiro com pipeline de seis fases (coleta, redação, humanização de superfície, humanização profunda, humanização discursiva, entrega). Use quando o usuário pedir para escrever, redigir, criar, produzir, rascunhar ou humanizar textos em pt-BR — artigos de blog, artigos técnicos, textos corporativos, e-mails, capítulos de livro, roteiros de podcast, roteiros de vídeo, textos explicativos, textos gerais, comentários em blog, comentários em Jira ou respostas de chat. Aplica rigorosamente o Acordo Ortográfico de 1990 e produz textos calibrados para serem indistinguíveis de escrita humana por detectores como ZeroGPT, GPTZero, Copyleaks e Originality.ai.
+description: Escrita profissional em português brasileiro com pipeline de sete fases (coleta, redação, humanização de superfície, humanização profunda, humanização discursiva, análise macroestrutural, entrega). Use quando o usuário pedir para escrever, redigir, criar, produzir, rascunhar ou humanizar textos em pt-BR — artigos de blog, artigos técnicos, textos corporativos, e-mails, capítulos de livro, roteiros de podcast, roteiros de vídeo, textos explicativos, textos gerais, comentários em blog, comentários em Jira ou respostas de chat. Aplica rigorosamente o Acordo Ortográfico de 1990 e produz textos calibrados para serem indistinguíveis de escrita humana por detectores como ZeroGPT, GPTZero, Copyleaks e Originality.ai.
 ---
 
 # texto-br
@@ -34,7 +34,7 @@ Esta skill depende de quatro documentos em `references/`. Cada um cobre uma cama
 
 ## Workflow obrigatório
 
-Execute SEMPRE nas fases abaixo, nesta ordem. Não pule, não combine, não anuncie ao usuário em qual fase está. O resultado entregue é apenas o produto da Fase 5.
+Execute SEMPRE nas fases abaixo, nesta ordem. Não pule, não combine, não anuncie ao usuário em qual fase está. O resultado entregue é apenas o produto da Fase 6.
 
 ---
 
@@ -76,7 +76,7 @@ Escreva o texto seguindo:
 - **A regra inegociável de pontuação: zero travessões (—) e zero meias-riscas (–) em qualquer hipótese.** Use vírgulas, parênteses, dois-pontos, ponto final ou ponto e vírgula conforme contexto. Detalhes em `gramatica-pt-br.md` → seção "Pontuação" e `humanizacao-algoritmos.md` → seção sobre travessões.
 - Português brasileiro, sem regionalismos lusitanos
 
-**Salve o rascunho internamente.** Não mostre ao usuário. Não comente. Não anuncie "Fase 1 concluída". O usuário só verá o resultado da Fase 5.
+**Salve o rascunho internamente.** Não mostre ao usuário. Não comente. Não anuncie "Fase 1 concluída". O usuário só verá o resultado da Fase 6.
 
 ---
 
@@ -131,7 +131,21 @@ Trabalha a performance do enunciador (como a voz se comporta na página), confor
 
 ---
 
-### Fase 5 — Entrega
+### Fase 5 — Análise macroestrutural
+
+**Leia:** `references/estrutura-macro.md`, com atenção à matriz de calibração (seção 7) para o tipo identificado.
+
+Trata da arquitetura do documento inteiro (as fases anteriores cuidaram da palavra e da sentença). Texto de IA tende a uma estrutura simétrica demais; desencaixe-a:
+
+1. Rode `texto_br_estrutura` com o rascunho atual: ele mede simetria de seções, inflação de subtópicos, parágrafo-lição (kicker uniforme), frases de efeito em sequência e progressão sinalizada, compondo um score 0-100 (alvo >= 70).
+2. Aplique o plano de perturbação devolvido, corrigindo os detectores mais fracos primeiro. Nunca degrade a clareza.
+3. Meça de novo. Repita até "ALVO ATINGIDO" ou, no máximo, 3 iterações.
+
+**Critério de saída:** checklist da seção 8 de `estrutura-macro.md`. Em tipos longos (blog, capitulo, tecnico, explicativo, podcast, video) o gate exige o alvo para avançar; nos demais é advisory. Conversacionais quase não têm macroestrutura: não force.
+
+---
+
+### Fase 6 — Entrega
 
 Entregue **apenas** o texto final em Markdown limpo:
 
