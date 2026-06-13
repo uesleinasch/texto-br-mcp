@@ -1,3 +1,5 @@
 server/node_modules/
 .feature-dev/
 .claude/settings.local.json
+__pycache__/
+*.pyc
