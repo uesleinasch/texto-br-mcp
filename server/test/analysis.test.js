@@ -65,3 +65,94 @@ test('analisadores ignoram código e headings de markdown', async () => {
   const r = await runPython('variancia.py', md);
   assert.equal(r.atingiu_alvo, true);
 });
+
+// --- Análise macroestrutural (estrutura.py) ---
+
+const ESTR_IA = `# Hábitos que transformam
+
+## Entendendo o problema
+
+A rotina molda quem somos ao longo dos anos, e as pequenas escolhas diárias se acumulam em direções que ninguém planeja de antemão. Os estudos sobre comportamento mostram esse padrão com clareza. No fim, somos o que repetimos todo santo dia.
+
+Quem ignora os próprios hábitos acaba refém deles sem perceber o quanto. A consciência é o primeiro movimento de qualquer mudança real. Afinal, ninguém conserta o que não enxerga.
+
+## Aplicando a mudança
+
+Comece pequeno e seja consistente com o processo, porque a ambição exagerada costuma cobrar um preço alto logo nos primeiros dias. A constância vence a intensidade em quase tudo que importa. No fundo, é a repetição que constrói.
+
+Ajuste o ambiente para que o bom comportamento seja o caminho mais fácil de seguir. Um gatilho visível vale mais que toda a força de vontade do mundo. É isso que sustenta o hábito.
+
+## Construindo o futuro
+
+O amanhã se constrói no gesto repetido de hoje, mesmo quando esse gesto parece pequeno demais para significar alguma coisa. Cada dia é um tijolo na parede que você ergue sem ver. No fim das contas, é tudo uma questão de paciência.
+
+A identidade segue o comportamento, e não o contrário, como muitos imaginam no começo. Você vira aquilo que pratica com regularidade. A verdade é que mudamos devagar.`;
+
+const ESTR_HUMANO = `# O sábado em que parei de correr
+
+Comecei a meditar num sábado qualquer de 2019, mais por teimosia do que por convicção, e o tédio dos primeiros dias quase me venceu. A cadeira rangia. Eu olhava o relógio do micro-ondas a cada dois minutos achando que tinha passado meia hora.
+
+## O que mudou (e o que não mudou)
+
+Na terceira semana o sono melhorou. Não foi epifania nenhuma, foi só uma noite em que dormi sem rolar na cama, e aí outra, e aí virou hábito sem eu perceber direito quando.
+
+Os colegas notaram antes de mim. Diziam que eu tinha ficado mais paciente nas reuniões intermináveis de quarta, aquelas que não levam a lugar nenhum e que eu detestava com todas as forças.
+
+Hoje ainda perco a paciência no trânsito. Meditar não me fez santo. Só me deu uns segundos a mais entre o estímulo e a besteira que eu ia falar, e às vezes esses segundos bastam, às vezes não bastam coisa nenhuma e eu xingo igual.`;
+
+test('estrutura: texto IA-encaixado reprova com plano de perturbação', async () => {
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: ESTR_IA, tipo: 'blog' }));
+  assert.equal(r.atingiu_alvo, false, JSON.stringify(r.score));
+  assert.ok(r.score.total < 70, `pontuou ${r.score.total}`);
+  assert.ok(r.relatorio.includes('Plano de perturbação'));
+});
+
+test('estrutura: simetria detecta seções gêmeas e títulos paralelos', async () => {
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: ESTR_IA, tipo: 'blog' }));
+  const sim = r.detectores.find((d) => d.id === 'simetria_secoes');
+  assert.ok(sim.aplicavel);
+  assert.ok(sim.subscore < 0.5, `subscore ${sim.subscore}`);
+  assert.ok(sim.perturbacoes.length >= 1);
+});
+
+test('estrutura: kicker uniforme detectado em ESTR_IA', async () => {
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: ESTR_IA, tipo: 'blog' }));
+  const k = r.detectores.find((d) => d.id === 'kicker_uniforme');
+  assert.ok(k.aplicavel);
+  assert.ok(k.subscore < 0.6, `subscore ${k.subscore}`);
+});
+
+test('estrutura: texto humano-variado passa', async () => {
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: ESTR_HUMANO, tipo: 'blog' }));
+  assert.ok(r.score.total >= 70, `pontuou ${r.score.total}`);
+  assert.equal(r.atingiu_alvo, true);
+});
+
+test('estrutura: texto curto demais retorna erro', async () => {
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: 'Uma frase só.', tipo: 'blog' }));
+  assert.ok(r.erro);
+});
+
+test('estrutura: inflação de subtópicos detecta seções finas', async () => {
+  const md = `# Guia\n\n## A\n\nUma linha curta só aqui.\n\n## B\n\nOutra linha curta aqui.\n\n## C\n\nMais uma curtíssima.\n\n## D\n\nE a última bem curta.`;
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: md, tipo: 'blog' }));
+  const inf = r.detectores.find((d) => d.id === 'inflacao_subtopicos');
+  assert.ok(inf.aplicavel);
+  assert.ok(inf.subscore < 0.6, `subscore ${inf.subscore}`);
+});
+
+test('estrutura: frases de efeito em sequência', async () => {
+  const md = `# T\n\nA vida é curta.\n\nO tempo não volta.\n\nCada dia conta.\n\nFaça valer.\n\nAgora desenvolvo um parágrafo de verdade, com mais de uma sentença e alguma respiração, para não ser bordão. Ele segue por aqui sem pressa.`;
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: md, tipo: 'blog' }));
+  const f = r.detectores.find((d) => d.id === 'frases_efeito');
+  assert.ok(f.aplicavel);
+  assert.ok(f.subscore < 0.6, `subscore ${f.subscore}`);
+});
+
+test('estrutura: progressão sinalizada (escada de signposts)', async () => {
+  const md = `# Plano\n\n## Primeiro passo\n\nPara começar, organize a mesa de trabalho com calma e atenção aos detalhes do dia.\n\n## Em seguida\n\nDepois, defina as três prioridades do dia com calma e atenção aos detalhes.\n\n## Em terceiro lugar\n\nAgora que tudo está pronto, execute a primeira tarefa sem pressa nenhuma.\n\n## Por fim\n\nFinalmente, revise tudo o que foi feito com calma e atenção aos detalhes restantes.`;
+  const r = await runPython('estrutura.py', JSON.stringify({ texto: md, tipo: 'blog' }));
+  const p = r.detectores.find((d) => d.id === 'progressao_sinalizada');
+  assert.ok(p.aplicavel);
+  assert.ok(p.subscore < 0.6, `subscore ${p.subscore}`);
+});
