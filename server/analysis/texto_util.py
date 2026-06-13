@@ -72,3 +72,54 @@ def listar_palavras(texto):
 
 def excerto(sentenca, limite=70):
     return sentenca if len(sentenca) <= limite else sentenca[: limite - 1] + "…"
+
+
+def parsear_blocos(texto):
+    """Lista ordenada de blocos do markdown: heading, paragrafo, lista, codigo,
+    citacao. Reusa a lógica de cerca de limpar_markdown (a cerca fecha só com o
+    mesmo caractere e comprimento >= o de abertura)."""
+    blocos = []
+    cerca_aberta = None
+    buffer_codigo = []
+    buffer_prosa = []
+
+    def fechar_prosa():
+        if buffer_prosa:
+            texto_p = "\n".join(buffer_prosa).strip()
+            if texto_p:
+                blocos.append({"tipo": "paragrafo", "nivel": 0, "texto": texto_p})
+            buffer_prosa.clear()
+
+    for linha in texto.split("\n"):
+        m_cerca = re.match(r"^\s*(`{3,}|~{3,})", linha)
+        if m_cerca:
+            if cerca_aberta is None:
+                fechar_prosa()
+                cerca_aberta = m_cerca.group(1)
+                buffer_codigo = []
+            elif m_cerca.group(1)[0] == cerca_aberta[0] and len(m_cerca.group(1)) >= len(cerca_aberta):
+                blocos.append({"tipo": "codigo", "nivel": 0, "texto": "\n".join(buffer_codigo)})
+                cerca_aberta = None
+            continue
+        if cerca_aberta is not None:
+            buffer_codigo.append(linha)
+            continue
+        m_h = re.match(r"^\s*(#{1,6})\s+(.*)$", linha)
+        if m_h:
+            fechar_prosa()
+            blocos.append({"tipo": "heading", "nivel": len(m_h.group(1)), "texto": m_h.group(2).strip()})
+            continue
+        if re.match(r"^\s*([-*+]\s|\d+[.)]\s)", linha):
+            fechar_prosa()
+            blocos.append({"tipo": "lista", "nivel": 0, "texto": linha.strip()})
+            continue
+        if re.match(r"^\s*>", linha):
+            fechar_prosa()
+            blocos.append({"tipo": "citacao", "nivel": 0, "texto": linha.lstrip("> ").strip()})
+            continue
+        if linha.strip() == "":
+            fechar_prosa()
+            continue
+        buffer_prosa.append(linha)
+    fechar_prosa()
+    return blocos
