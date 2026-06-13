@@ -20,6 +20,7 @@ const CAMPOS = [
   'rascunhos',
   'varianciaAtingida',
   'lexicoAtingido',
+  'estruturaAtingida',
 ];
 
 export const SessionState = {
@@ -32,6 +33,7 @@ export const SessionState = {
   rascunhos: {}, // fase concluída -> texto salvo ao avançar
   varianciaAtingida: null, // último veredicto de texto_br_variancia(_aplicar)
   lexicoAtingido: null, // último veredicto de texto_br_lexico
+  estruturaAtingida: null, // último veredicto de texto_br_estrutura (Fase 5)
 
   start(briefing, tipo, tamanho, variancia) {
     this.briefing = briefing;
@@ -43,6 +45,7 @@ export const SessionState = {
     this.rascunhos = {};
     this.varianciaAtingida = null;
     this.lexicoAtingido = null;
+    this.estruturaAtingida = null;
     this.persist();
   },
 
@@ -55,8 +58,8 @@ export const SessionState = {
         'Tipo de texto ainda não definido. Chame texto_br_start novamente com o tipo.'
       );
     }
-    if (this.currentPhase >= 5) {
-      throw new Error('O pipeline já chegou à Fase 5 (entrega). Inicie outra escrita com texto_br_start.');
+    if (this.currentPhase >= 6) {
+      throw new Error('O pipeline já chegou à Fase 6 (entrega). Inicie outra escrita com texto_br_start.');
     }
     this.currentPhase += 1;
     this.persist();
@@ -71,8 +74,8 @@ export const SessionState = {
     if (!this.tipo) {
       throw new Error('Tipo de texto ainda não definido. Chame texto_br_start novamente com o tipo.');
     }
-    if (!Number.isInteger(fase) || fase < 1 || fase > 5) {
-      throw new Error('Fase inválida: use um inteiro de 1 a 5.');
+    if (!Number.isInteger(fase) || fase < 1 || fase > 6) {
+      throw new Error('Fase inválida: use um inteiro de 1 a 6.');
     }
     this.currentPhase = fase;
     this.persist();

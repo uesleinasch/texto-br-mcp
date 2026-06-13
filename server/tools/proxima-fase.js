@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PHASE_GUIDANCE, LOOP_QUANTITATIVO_GUIDANCE } from '../knowledge/phases.js';
+import { PHASE_GUIDANCE, LOOP_QUANTITATIVO_GUIDANCE, TIPOS_ESTRUTURA_GATE } from '../knowledge/phases.js';
 import { composePhaseSections } from '../content/registry.js';
 
 export function register(server, session) {
@@ -10,10 +10,11 @@ export function register(server, session) {
       description:
         'Avança o pipeline de escrita para a próxima fase e retorna a guidance dela junto com ' +
         'as seções de referência necessárias. Sequência: 1 (redação) → 2 (humanização de ' +
-        'superfície) → 3 (humanização profunda) → 4 (humanização discursiva) → 5 (entrega). ' +
-        'SEMPRE passe em "rascunho" o texto produzido na fase que está concluindo. Use "fase" ' +
-        'para voltar/repetir uma fase específica. Sair da Fase 2 com o loop quantitativo ativo ' +
-        'exige ambos os alvos atingidos (ou "forcar": true).',
+        'superfície) → 3 (humanização profunda) → 4 (humanização discursiva) → 5 (análise ' +
+        'macroestrutural) → 6 (entrega). SEMPRE passe em "rascunho" o texto produzido na fase ' +
+        'que está concluindo. Use "fase" para voltar/repetir uma fase específica. Sair da Fase 2 ' +
+        '(loop quantitativo) exige ambos os alvos; sair da Fase 5 em tipos longos exige o alvo ' +
+        'de naturalidade estrutural (ou "forcar": true em ambos os casos).',
       inputSchema: {
         rascunho: z
           .string()
@@ -23,7 +24,7 @@ export function register(server, session) {
           .number()
           .int()
           .min(1)
-          .max(5)
+          .max(6)
           .optional()
           .describe('Reposiciona o pipeline nesta fase (ex.: 2 para refazer a humanização de superfície)'),
         forcar: z
@@ -79,6 +80,28 @@ export function register(server, session) {
               ],
             };
           }
+          // Gate da Fase 5: em tipos longos, só avança com o alvo de naturalidade
+          // estrutural atingido (texto_br_estrutura). Advisory nos demais tipos.
+          if (
+            session.currentPhase === 5 &&
+            TIPOS_ESTRUTURA_GATE.includes(session.tipo) &&
+            !forcar &&
+            session.estruturaAtingida !== true
+          ) {
+            return {
+              isError: true,
+              content: [
+                {
+                  type: 'text',
+                  text:
+                    'Gate da Fase 5: a naturalidade estrutural ainda não atingiu o alvo ' +
+                    `(score < 70 para o tipo "${session.tipo}"). Rode texto_br_estrutura com o ` +
+                    'rascunho atual, aplique o plano de perturbação até "ALVO ATINGIDO" e tente ' +
+                    'avançar de novo. Para avançar mesmo assim (a pedido do usuário), use forcar: true.',
+                },
+              ],
+            };
+          }
           phase = session.advance();
         }
       } catch (err) {
@@ -99,7 +122,7 @@ export function register(server, session) {
       if (phase === 2 && session.variancia) {
         parts.push(LOOP_QUANTITATIVO_GUIDANCE);
       }
-      if (phase === 5) {
+      if (phase === 6) {
         const salvos = Object.keys(session.rascunhos);
         parts.push(
           salvos.length

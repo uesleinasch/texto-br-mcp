@@ -107,6 +107,16 @@ Critério de saída: checklist retornado por texto_br_checklist(3) verificado co
 Critério de saída: checklist retornado por texto_br_checklist(4) verificado conforme a matriz. Pergunta-síntese: o texto soa como alguém pensando por escrito, sem tique repetido? Cada técnica é sal, não molho: na dúvida, aplique menos. Depois chame texto_br_proxima_fase().`,
   },
   5: {
+    name: 'Análise macroestrutural',
+    instruction: `Antes da entrega, desencaixe a macroestrutura. Texto de IA tende a uma arquitetura simétrica demais (seções gêmeas, títulos paralelos, parágrafos que sempre fecham numa "lição", bordões em sequência, subtópicos demais, progressão linear com signposts). As fases anteriores cuidaram da palavra e da sentença; esta cuida do documento inteiro.
+
+1. Chame texto_br_estrutura com o rascunho atual (ele usa o tipo da sessão para calibrar e medir).
+2. Aplique o plano de perturbação que ele devolver, corrigindo os detectores mais fracos primeiro. NUNCA degrade a clareza: a assimetria serve ao texto, não o contrário.
+3. Meça de novo. Repita até "ALVO ATINGIDO" (score >= 70) ou, no máximo, 3 iterações.
+
+Critério de saída: checklist de texto_br_checklist(5) verificado. Em tipos longos (blog, capitulo, tecnico, explicativo, podcast, video) o gate exige o alvo atingido para avançar; nos demais é advisory. Depois chame texto_br_proxima_fase passando a versão atual em "rascunho".`,
+  },
+  6: {
     name: 'Entrega',
     instruction: `Entregue APENAS o texto final em Markdown limpo:
 
@@ -166,7 +176,17 @@ export const PHASE_SECTIONS = {
     // checklist (seção 7) só via texto_br_checklist(4)
     { file: 'humanizacao-discursiva', section: '8' }, // armadilhas
   ],
-  5: [],
+  5: [
+    { file: 'estrutura-macro', section: '1' }, // o sinal
+    { file: 'estrutura-macro', section: '2' }, // simetria de seções
+    { file: 'estrutura-macro', section: '3' }, // inflação de subtópicos
+    { file: 'estrutura-macro', section: '4' }, // parágrafo-lição (kicker)
+    { file: 'estrutura-macro', section: '5' }, // frases de efeito em sequência
+    { file: 'estrutura-macro', section: '6' }, // progressão sinalizada
+    { file: 'estrutura-macro', section: '7' }, // matriz de calibração
+    // checklist (seção 8) só via texto_br_checklist(5)
+  ],
+  6: [],
 };
 
 // Payloads enxutos para tipos conversacionais (fases ausentes herdam o mapa cheio).
@@ -194,13 +214,22 @@ export const PHASE_SECTIONS_CONVERSACIONAL = {
     { file: 'humanizacao-discursiva', section: '3' }, // autorreparo
     { file: 'humanizacao-discursiva', section: '6' }, // matriz de calibração
   ],
+  5: [
+    { file: 'estrutura-macro', section: '4' }, // parágrafo-lição (kicker)
+    { file: 'estrutura-macro', section: '7' }, // matriz de calibração
+  ],
 };
 
 export const CHECKLISTS = {
   2: { file: 'humanizacao-algoritmos', section: '11' },
   3: { file: 'camadas-profundas', section: '7' },
   4: { file: 'humanizacao-discursiva', section: '7' },
+  5: { file: 'estrutura-macro', section: '8' },
 };
+
+// Tipos longos onde a Fase 5 (macroestrutura) bloqueia a entrega até o alvo.
+// Fonte de verdade replicada em analysis/estrutura.py (TIPOS_GATE).
+export const TIPOS_ESTRUTURA_GATE = ['blog', 'capitulo', 'tecnico', 'explicativo', 'podcast', 'video'];
 
 // Loop quantitativo da Fase 2 (variância sintática + perturbação lexical).
 // Ativo por default; desligado apenas com variancia: false a pedido do usuário.
