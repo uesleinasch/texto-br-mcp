@@ -7,6 +7,7 @@ import { register as registerChecklist } from './tools/checklist.js';
 import { register as registerStatus } from './tools/status.js';
 import { register as registerVariancia } from './tools/variancia.js';
 import { register as registerLexico } from './tools/lexico.js';
+import { register as registerEstrutura } from './tools/estrutura.js';
 import { register as registerScore } from './tools/score.js';
 import { register as registerOtimizar } from './tools/otimizar.js';
 import { register as registerRascunho } from './tools/rascunho.js';
@@ -41,6 +42,7 @@ export function createServer(session) {
   registerStatus(server, session);
   registerVariancia(server, session);
   registerLexico(server, session);
+  registerEstrutura(server, session);
   registerScore(server, session);
   registerOtimizar(server, session);
   registerRascunho(server, session);
