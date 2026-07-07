@@ -113,7 +113,10 @@ def analisar(texto, secao10):
     palavras = listar_palavras(prosa)
 
     if len(palavras) < 30:
-        return {"erro": "Texto com menos de 30 palavras de prosa; análise lexical não se aplica."}
+        return {
+            "erro": "Texto com menos de 30 palavras de prosa; análise lexical não se aplica.",
+            "inaplicavel": True,
+        }
 
     categorias = parsear_tabelas(secao10)
     diagnostico = []

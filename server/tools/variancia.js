@@ -19,8 +19,13 @@ export function register(server, session) {
     async ({ texto }) => {
       try {
         const resultado = await runPython('variancia.py', texto);
-        if (session && !resultado.erro) {
-          session.varianciaAtingida = resultado.atingiu_alvo === true;
+        if (session) {
+          if (resultado.inaplicavel) {
+            // Análise inaplicável (texto curto): não há o que medir, não trava o gate.
+            session.varianciaAtingida = true;
+          } else if (!resultado.erro) {
+            session.varianciaAtingida = resultado.atingiu_alvo === true;
+          }
           session.persist();
         }
         return { content: [{ type: 'text', text: resultado.relatorio }] };

@@ -172,3 +172,48 @@ test('e2e: gate da Fase 5 — blog bloqueia sem alvo e avança com alvo; chat é
     await client.close();
   }
 });
+
+test('e2e: texto curto não trava o gate da Fase 2 (inaplicável)', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-inaplicavel-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-inaplicavel', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    // sessão tipo chat, loop quantitativo ativo (default)
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'responder um oi', tipo: 'chat' },
+    });
+    await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: 'Oi! Tudo certo por aí?' },
+    }); // 1 -> 2
+
+    // mede um texto de 2 sentenças / 5 palavras: análise inaplicável
+    const v = await client.callTool({
+      name: 'texto_br_variancia',
+      arguments: { texto: 'Oi! Tudo certo por aí?' },
+    });
+    assert.match(v.content[0].text, /não se aplica/i);
+    const l = await client.callTool({
+      name: 'texto_br_lexico',
+      arguments: { texto: 'Oi! Tudo certo por aí?' },
+    });
+    assert.match(l.content[0].text, /não se aplica/i);
+
+    // o gate deve liberar a saída da Fase 2 sem forçar
+    const r = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: 'Oi! Tudo certo por aí?' },
+    });
+    assert.ok(!r.isError, r.content[0].text);
+    assert.ok(r.content[0].text.includes('# Fase 3'));
+  } finally {
+    await client.close();
+  }
+});

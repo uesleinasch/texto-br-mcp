@@ -24,8 +24,11 @@ export function register(server, session) {
         const tipoEfetivo = tipo ?? session?.tipo ?? 'geral';
         const resultado = await runPython('estrutura.py', JSON.stringify({ texto, tipo: tipoEfetivo }));
         if (session) {
-          // Análise inaplicável (texto curto demais) não tem o que perturbar: não trava o gate.
-          session.estruturaAtingida = resultado.erro ? true : resultado.atingiu_alvo === true;
+          // Análise inaplicável (texto curto demais) não tem o que perturbar: não trava
+          // o gate. Erro real (não declarado inaplicável) não libera o gate.
+          session.estruturaAtingida = resultado.inaplicavel
+            ? true
+            : resultado.atingiu_alvo === true;
           session.persist();
         }
         return { content: [{ type: 'text', text: resultado.relatorio }] };

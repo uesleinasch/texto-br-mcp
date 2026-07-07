@@ -21,6 +21,15 @@ export function register(server, session) {
       try {
         const secao10 = getSection('humanizacao-algoritmos', 10);
         const resultado = await runPython('score.py', JSON.stringify({ texto, secao10 }));
+        if (resultado.inaplicavel) {
+          // Análise inaplicável (texto curto): não há o que medir, não trava o gate.
+          if (session) {
+            session.varianciaAtingida = true;
+            session.lexicoAtingido = true;
+            session.persist();
+          }
+          return { content: [{ type: 'text', text: resultado.relatorio }] };
+        }
         if (resultado.erro) {
           return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
         }

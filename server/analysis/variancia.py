@@ -80,7 +80,8 @@ def analisar(texto):
             "erro": (
                 "Texto com menos de 3 sentenças de prosa analisáveis; "
                 "variância sintática não se aplica."
-            )
+            ),
+            "inaplicavel": True,
         }
 
     media = statistics.mean(comprimentos)

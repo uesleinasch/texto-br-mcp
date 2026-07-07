@@ -33,9 +33,15 @@ def calcular(texto, secao10):
     ritmo = variancia.analisar(texto)
     lex = lexico.analisar(texto, secao10)
     if "erro" in ritmo:
-        return {"erro": ritmo["erro"]}
+        resultado = {"erro": ritmo["erro"]}
+        if ritmo.get("inaplicavel"):
+            resultado["inaplicavel"] = True
+        return resultado
     if "erro" in lex:
-        return {"erro": lex["erro"]}
+        resultado = {"erro": lex["erro"]}
+        if lex.get("inaplicavel"):
+            resultado["inaplicavel"] = True
+        return resultado
 
     mr, ml = ritmo["metricas"], lex["metricas"]
 

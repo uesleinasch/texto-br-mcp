@@ -343,7 +343,10 @@ def calcular(texto, tipo):
     outline = montar_outline(blocos)
     paras = paragrafos_de_prosa(outline)
     if len(paras) < 4:
-        return {"erro": "Texto com menos de 4 parágrafos de prosa; análise macroestrutural não se aplica."}
+        return {
+            "erro": "Texto com menos de 4 parágrafos de prosa; análise macroestrutural não se aplica.",
+            "inaplicavel": True,
+        }
 
     alvo = ALVO_PADRAO
     resultados = [d(outline, blocos, tipo) for d in DETECTORES]

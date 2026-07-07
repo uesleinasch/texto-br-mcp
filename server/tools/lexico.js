@@ -22,8 +22,13 @@ export function register(server, session) {
       try {
         const secao10 = getSection('humanizacao-algoritmos', 10);
         const resultado = await runPython('lexico.py', JSON.stringify({ texto, secao10 }));
-        if (session && !resultado.erro) {
-          session.lexicoAtingido = resultado.atingiu_alvo === true;
+        if (session) {
+          if (resultado.inaplicavel) {
+            // Análise inaplicável (texto curto): não há o que medir, não trava o gate.
+            session.lexicoAtingido = true;
+          } else if (!resultado.erro) {
+            session.lexicoAtingido = resultado.atingiu_alvo === true;
+          }
           session.persist();
         }
         return { content: [{ type: 'text', text: resultado.relatorio }] };
