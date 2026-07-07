@@ -21,12 +21,9 @@ import sys
 
 import lexico
 import variancia
+from texto_util import clamp
 
 ALVO = 80
-
-
-def clamp(x, lo=0.0, hi=1.0):
-    return max(lo, min(hi, x))
 
 
 def calcular(texto, secao10):

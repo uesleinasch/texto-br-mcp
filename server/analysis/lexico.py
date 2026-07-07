@@ -16,23 +16,13 @@ import sys
 from collections import Counter
 
 from texto_util import (
+    STOPWORDS,
     dividir_paragrafos,
     dividir_sentencas,
     excerto,
     limpar_markdown,
     listar_palavras,
 )
-
-STOPWORDS = set("""
-a à às ao aos as com como da das de dele dela deles delas depois do dos e ela
-elas ele eles em entre era eram essa essas esse esses esta estas este estes
-estou está estão eu foi for foram há isso isto já lhe lhes mais mas me mesmo
-meu meus minha minhas muito na nas nem no nos nós não o os ou para pela pelas
-pelo pelos por qual quando que quem se sem ser seu seus sou sua suas são só
-também te tem têm ter teu tinha tua tudo um uma umas uns você vocês vai vão
-ainda até bem cada coisa coisas dia onde pode podem porque qualquer quanto
-sobre todo toda todos todas outro outra outros outras
-""".split())
 
 # Desinências verbais toleradas depois do radical de um verbo pivot (com
 # fronteira final): alternância explícita em vez de sufixo genérico, para não

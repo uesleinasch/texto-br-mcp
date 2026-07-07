@@ -20,7 +20,14 @@ import re
 import statistics
 import sys
 
-from texto_util import contar_palavras, dividir_sentencas, parsear_blocos
+from texto_util import (
+    CONECTIVOS_INICIAIS,
+    clamp,
+    contar_palavras,
+    dividir_sentencas,
+    parsear_blocos,
+    primeiro_termo,
+)
 
 # Espelha TIPOS_ESTRUTURA_GATE em knowledge/phases.js.
 TIPOS_GATE = ["blog", "capitulo", "tecnico", "explicativo", "podcast", "video"]
@@ -47,28 +54,12 @@ SIGNPOSTS_AMBIGUOS = [
     (re.compile(r"^depois\s*,", re.IGNORECASE), "depois"),
     (re.compile(r"^depois disso\b", re.IGNORECASE), "depois"),
 ]
-CONECTIVOS_INICIAIS = [
-    "além disso", "no entanto", "por outro lado", "portanto", "contudo",
-    "entretanto", "dessa forma", "desse modo", "por fim", "em suma",
-    "em conclusão", "ou seja", "nesse sentido",
-]
-
-
-def clamp(x, lo=0.0, hi=1.0):
-    return max(lo, min(hi, x))
-
-
 def interp(valor, ruim, bom):
     """Qualidade 0-1: valor no ponto `ruim` → 0, no ponto `bom` → 1, linear no
     meio (clampado). Funciona com bom > ruim e bom < ruim."""
     if bom == ruim:
         return 1.0 if valor >= bom else 0.0
     return clamp((valor - ruim) / (bom - ruim))
-
-
-def primeiro_termo(s):
-    m = re.match(r"^[\"'«(]*([\wÀ-ÿ]+)", s.strip())
-    return m.group(1).lower() if m else ""
 
 
 def comeca_com(texto, lista):
