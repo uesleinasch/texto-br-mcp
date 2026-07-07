@@ -11,6 +11,7 @@ Apenas stdlib: este script mede e diagnostica; quem reescreve é o modelo.
 """
 
 import json
+import math
 import re
 import statistics
 import sys
@@ -39,8 +40,18 @@ SUBORDINADORES_INICIAIS = [
     "mesmo sem", "mesmo com", "na falta de", "no dia em que",
 ]
 
+# Palavras funcionais cuja repetição em início de sentença é natural em pt-BR
+# (artigos, preposições, pronomes átonos de abertura): não contam como
+# "início repetido".
+INICIOS_NEUTROS = {
+    "o", "a", "os", "as", "um", "uma", "uns", "umas",
+    "e", "em", "no", "na", "nos", "nas", "de", "do", "da",
+    "mas", "que", "se", "por", "com", "para", "é",
+}
 
-
+# Falsos gerúndios frequentes: palavras terminadas em "ndo" que não são
+# gerúndio quando abrem sentença.
+FALSOS_GERUNDIOS = {"mundo", "segundo", "quando", "lindo", "fundo", "bando"}
 
 
 
@@ -83,7 +94,9 @@ def analisar(texto):
         if media * 0.7 <= c <= media * 1.3
     ]
 
-    # Sequências uniformes: 3+ sentenças consecutivas com comprimento similar
+    # Sequências uniformes: 3+ sentenças consecutivas de comprimento similar
+    # E médias/longas (média da corrida >= 8 palavras). Sequências de
+    # sentenças curtas de impacto são ritmo humano, não uniformidade.
     sequencias = []
     inicio = 0
     for i in range(1, len(comprimentos) + 1):
@@ -91,22 +104,24 @@ def analisar(texto):
             comprimentos[i] - comprimentos[i - 1]
         ) > max(2, comprimentos[i - 1] * 0.2)
         if fim_de_corrida:
-            if i - inicio >= 3:
+            corrida = comprimentos[inicio:i]
+            if len(corrida) >= 3 and statistics.mean(corrida) >= 8:
                 sequencias.append(
-                    {
-                        "sentencas": f"{inicio + 1}-{i}",
-                        "comprimentos": comprimentos[inicio:i],
-                    }
+                    {"sentencas": f"{inicio + 1}-{i}", "comprimentos": corrida}
                 )
             inicio = i
 
-    # Inícios repetidos
+    # Inícios repetidos: proporcional ao tamanho do texto e ignorando
+    # palavras funcionais (3 sentenças abrindo com "o" é normal em pt-BR).
     contagem_inicios = {}
     for s in sentencas:
         termo = primeiro_termo(s)
-        if termo:
+        if termo and termo not in INICIOS_NEUTROS:
             contagem_inicios[termo] = contagem_inicios.get(termo, 0) + 1
-    inicios_repetidos = {t: n for t, n in contagem_inicios.items() if n >= 3}
+    limite_inicios = max(3, math.ceil(len(sentencas) * 0.15))
+    inicios_repetidos = {
+        t: n for t, n in contagem_inicios.items() if n >= limite_inicios
+    }
 
     # Tipos de sentença (pela pontuação final) e fragmentos prováveis
     tipos = {"declarativa": 0, "interrogativa": 0, "exclamativa": 0}
@@ -122,11 +137,16 @@ def analisar(texto):
 
     # Ordem não-canônica: subordinada anteposta ou gerúndio inicial
     def nao_canonica(s):
-        inicio = s.lower().lstrip("\"'«( ")
-        if any(inicio.startswith(sub) for sub in SUBORDINADORES_INICIAIS):
-            return True
+        inicio = s.lower().lstrip("\"'«“( ")
+        for sub in SUBORDINADORES_INICIAIS:
+            if re.match(re.escape(sub.strip()) + r"\b", inicio):
+                return True
         primeira = re.match(r"^([\wÀ-ÿ]+)", inicio)
-        return bool(primeira and primeira.group(1).endswith("ndo"))
+        return bool(
+            primeira
+            and primeira.group(1).endswith("ndo")
+            and primeira.group(1) not in FALSOS_GERUNDIOS
+        )
 
     nao_canonicas = sum(1 for s in sentencas if nao_canonica(s))
 
