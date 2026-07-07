@@ -168,21 +168,30 @@ def analisar(texto, secao10):
         ultima_posicao[p] = pos
     proximas = sorted(set(proximas))
 
-    # 3. Diversidade lexical: TTR em janelas de 100 palavras (MATTR simplificado)
+    # 3. Diversidade lexical: MATTR (janela 100) em texto longo; TTR bruto abaixo.
     if len(palavras) >= 100:
         janelas = [
             len(set(palavras[i : i + 100])) / 100
             for i in range(0, len(palavras) - 99, 50)
         ]
         diversidade = round(sum(janelas) / len(janelas), 3)
+        diversidade_regime = "MATTR-100"
     else:
         diversidade = round(len(set(palavras)) / len(palavras), 3)
+        diversidade_regime = "TTR-bruto"
 
-    # 4. Trigramas repetidos (estruturas de frase recicladas)
+    # 4. Trigramas repetidos (estruturas de frase recicladas). Trigramas
+    # compostos apenas de stopwords ("de que a") são ruído estatístico em
+    # texto longo, não reciclagem de estrutura: não contam.
+    def _so_stopwords(tri):
+        return all(p in STOPWORDS for p in tri.split())
+
     trigramas = Counter(
         " ".join(palavras[i : i + 3]) for i in range(len(palavras) - 2)
     )
-    trigramas_repetidos = [t for t, n in trigramas.items() if n >= 2]
+    trigramas_repetidos = [
+        t for t, n in trigramas.items() if n >= 2 and not _so_stopwords(t)
+    ]
 
     # Diagnóstico
     if ocorrencias:
@@ -223,6 +232,7 @@ def analisar(texto, secao10):
             "sentencas": len(sentencas),
             "ocorrencias_pivot": len(ocorrencias),
             "diversidade_lexical": diversidade,
+            "diversidade_regime": diversidade_regime,
             "tabelas_carregadas": {c: len(e) for c, e in categorias.items()},
         },
         "ocorrencias": ocorrencias[:20],
@@ -242,7 +252,7 @@ def formatar_relatorio(resultado):
         "## Análise de perturbação lexical",
         "",
         f"Palavras: {m['palavras']} | Sentenças: {m['sentencas']} | "
-        f"Diversidade lexical (janela 100): {m['diversidade_lexical']}",
+        f"Diversidade lexical ({m['diversidade_regime']}): {m['diversidade_lexical']}",
         f"**Ocorrências de vocabulário pivot: {m['ocorrencias_pivot']}** | alvo: 0",
         "",
         "### Diagnóstico",
