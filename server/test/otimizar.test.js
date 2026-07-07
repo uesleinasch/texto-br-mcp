@@ -120,3 +120,27 @@ test('grava veredito na sessão com o texto da melhor versão (wiring da Task 5)
   assert.equal(chamadas.variancia[0].atingido, true);
   assert.equal(chamadas.lexico[0].atingido, true);
 });
+
+test('texto curto demais (inaplicavel): libera o gate em vez de só devolver erroInicial (achado Minor)', async () => {
+  // texto_br_score já libera o gate (registra os dois flags) para texto curto
+  // demais para medir; otimizarTexto tratava esse mesmo caso como erroInicial
+  // puro, sem registrar nada — inconsistente entre as duas tools para o
+  // mesmo texto. client não deveria nem ser chamado: não há o que otimizar.
+  const chamadas = { variancia: [], lexico: [] };
+  const session = {
+    registrarVariancia: (atingido, texto) => chamadas.variancia.push({ atingido, texto }),
+    registrarLexico: (atingido, texto) => chamadas.lexico.push({ atingido, texto }),
+  };
+  const client = fakeClient([]);
+  const pontuar = async () => ({ erro: 'Texto curto demais; análise não se aplica.', inaplicavel: true });
+  const r = await otimizarTexto({ texto: 'Oi. Tudo bem?', client, pontuar, session });
+
+  assert.equal(chamadas.variancia.length, 1);
+  assert.equal(chamadas.lexico.length, 1);
+  assert.equal(chamadas.variancia[0].atingido, true);
+  assert.equal(chamadas.lexico[0].atingido, true);
+  assert.equal(chamadas.variancia[0].texto, 'Oi. Tudo bem?');
+  assert.equal(chamadas.lexico[0].texto, 'Oi. Tudo bem?');
+  assert.equal(r.erroInicial, undefined);
+  assert.match(r.aviso ?? '', /curto demais|não se aplica/i);
+});

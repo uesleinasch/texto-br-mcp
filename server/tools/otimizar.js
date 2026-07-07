@@ -77,6 +77,23 @@ export function resumoDiagnostico(resultado) {
 // MCP aqui dentro.
 export async function otimizarTexto({ texto, client, pontuar, session }) {
   let melhor = { texto, analise: await pontuar(texto) };
+  if (melhor.analise.inaplicavel) {
+    // Texto curto demais para medir (mesmo contrato de texto_br_score): não
+    // há o que otimizar, mas também não há o que reprovar. Libera os dois
+    // flags do gate da Fase 2 para este texto (mesmo comportamento de
+    // texto_br_score), em vez de devolver um erro puro que deixaria o gate
+    // travado enquanto a outra tool o liberaria para o mesmo texto.
+    if (session) {
+      session.registrarVariancia(true, texto);
+      session.registrarLexico(true, texto);
+    }
+    return {
+      melhor,
+      aviso:
+        `${melhor.analise.erro} Nada a otimizar, mas o gate da Fase 2 foi ` +
+        'liberado para este texto.',
+    };
+  }
   if (melhor.analise.erro) return { melhor, erroInicial: melhor.analise.erro };
 
   let iteracoes = 0;
@@ -201,6 +218,12 @@ export function register(server, session) {
 
         if (erroInicial) {
           return { isError: true, content: [{ type: 'text', text: erroInicial }] };
+        }
+
+        if (melhor.analise.inaplicavel) {
+          // Não é erro: o gate da Fase 2 já foi liberado para este texto
+          // (mesmo contrato de texto_br_score); só não há o que otimizar.
+          return { content: [{ type: 'text', text: aviso }] };
         }
 
         const cabecalho = melhor.analise.atingiu_alvo
