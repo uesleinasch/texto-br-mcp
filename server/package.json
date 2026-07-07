@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node --test 'test/*.test.js'"
+    "test": "node --test 'test/*.test.js'",
+    "test:py": "python3 -m unittest discover -s analysis -p 'test_*.py' -v"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
