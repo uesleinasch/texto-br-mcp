@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { runPython } from './run-python.js';
 import { getSection } from '../content/registry.js';
 
-const MODEL = 'claude-opus-4-8';
+const MODEL = process.env.TEXTO_BR_MODEL || 'claude-opus-4-8';
 const MAX_ITERACOES = 4;
 const MAX_SEM_MELHORA = 2;
 
@@ -32,11 +32,17 @@ Regras invioláveis:
 
 Responda SOMENTE com o texto reescrito, sem comentários, sem preâmbulo, sem cercas de código.`;
 
-function resumoDiagnostico(resultado) {
+// Resumo do diagnóstico enviado ao modelo a cada iteração. Componentes
+// "fracos" são calculados por FRAÇÃO do máximo real de cada um (< 50%), não
+// por um corte absoluto: um componente binário de máximo baixo (ex.: 3/5,
+// 60%) não é fraco, mas um componente de máximo alto na mesma faixa absoluta
+// (ex.: 10/25, 40%) é.
+export function resumoDiagnostico(resultado) {
   const s = resultado.score;
+  const maximos = s.maximos ?? {};
   const fracos = Object.entries(s.componentes)
-    .filter(([, v]) => v < 5)
-    .map(([k, v]) => `${k}: ${v}`)
+    .filter(([k, v]) => v < 0.5 * (maximos[k] ?? 10))
+    .map(([k, v]) => `${k}: ${v}/${maximos[k] ?? '?'}`)
     .join(', ');
   const partes = [
     `score atual: ${s.total}/100 (alvo >= ${s.alvo}) | componentes fracos: ${fracos || 'nenhum'}`,
@@ -63,6 +69,92 @@ function resumoDiagnostico(resultado) {
     );
   }
   return partes.join('\n');
+}
+
+// Loop puro de subida de encosta: mede, reescreve via `client` e remede via
+// `pontuar`, rejeitando iterações que piorem o score. Injetável e testável
+// (client/pontuar fakes); nenhuma dependência de credencial ou de servidor
+// MCP aqui dentro.
+export async function otimizarTexto({ texto, client, pontuar, session }) {
+  let melhor = { texto, analise: await pontuar(texto) };
+  if (melhor.analise.erro) return { melhor, erroInicial: melhor.analise.erro };
+
+  let iteracoes = 0;
+  let semMelhora = 0;
+  let aviso = null;
+  const trajetoria = [melhor.analise.score.total];
+
+  while (
+    !melhor.analise.atingiu_alvo &&
+    iteracoes < MAX_ITERACOES &&
+    semMelhora < MAX_SEM_MELHORA
+  ) {
+    iteracoes += 1;
+    let resposta;
+    try {
+      resposta = await client.messages.create({
+        model: MODEL,
+        max_tokens: 16000,
+        thinking: { type: 'adaptive' },
+        system: SYSTEM,
+        messages: [
+          {
+            role: 'user',
+            content: `## Diagnóstico\n${resumoDiagnostico(melhor.analise)}\n\n## Texto\n${melhor.texto}`,
+          },
+        ],
+      });
+    } catch (err) {
+      // Falha de API no meio do loop: preserva a melhor versão já encontrada
+      // em vez de propagar o erro (achado R8) — não descarta o progresso.
+      aviso = `Loop interrompido na iteração ${iteracoes} (falha na API: ${err.message}); segue a melhor versão até aqui.`;
+      break;
+    }
+    // Anti-truncamento: candidato cortado em max_tokens perdeu conteúdo.
+    // Estrutural (o mesmo prompt tende a truncar de novo com o mesmo limite de
+    // tokens) — encerra o loop em vez de insistir, preservando a melhor versão.
+    if (resposta.stop_reason === 'max_tokens') {
+      aviso = `Loop interrompido na iteração ${iteracoes} (candidato truncado por max_tokens); segue a melhor versão até aqui.`;
+      break;
+    }
+    const bloco = resposta.content.find((b) => b.type === 'text');
+    if (!bloco?.text?.trim()) {
+      semMelhora += 1;
+      continue;
+    }
+    const candidato = bloco.text.trim();
+    // Sanity de comprimento: perda de mais de 20% do texto indica
+    // truncamento/omissão não sinalizado por stop_reason — mesmo tratamento.
+    if (candidato.length < melhor.texto.length * 0.8) {
+      aviso = `Loop interrompido na iteração ${iteracoes} (candidato descartado por comprimento suspeito, possível truncamento); segue a melhor versão até aqui.`;
+      break;
+    }
+    const analise = await pontuar(candidato);
+    if (analise.erro) {
+      semMelhora += 1;
+      continue;
+    }
+    trajetoria.push(analise.score.total);
+    // Anti-degradação: só aceita a iteração se o score subir
+    if (analise.score.total > melhor.analise.score.total) {
+      melhor = { texto: candidato, analise };
+      semMelhora = 0;
+    } else {
+      semMelhora += 1;
+    }
+  }
+
+  if (session) {
+    session.registrarVariancia(
+      melhor.analise.ritmo.atingiu_alvo === true || melhor.analise.atingiu_alvo === true,
+      melhor.texto
+    );
+    session.registrarLexico(
+      melhor.analise.lexico.atingiu_alvo === true || melhor.analise.atingiu_alvo === true,
+      melhor.texto
+    );
+  }
+  return { melhor, iteracoes, trajetoria, aviso };
 }
 
 export function register(server, session) {
@@ -98,60 +190,15 @@ export function register(server, session) {
         const secao10 = getSection('humanizacao-algoritmos', 10);
         const pontuar = (t) => runPython('score.py', JSON.stringify({ texto: t, secao10 }));
 
-        let melhor = { texto, analise: await pontuar(texto) };
-        if (melhor.analise.erro) {
-          return { isError: true, content: [{ type: 'text', text: melhor.analise.erro }] };
-        }
+        const { melhor, iteracoes, trajetoria, aviso, erroInicial } = await otimizarTexto({
+          texto,
+          client,
+          pontuar,
+          session,
+        });
 
-        let iteracoes = 0;
-        let semMelhora = 0;
-        const trajetoria = [melhor.analise.score.total];
-
-        while (
-          !melhor.analise.atingiu_alvo &&
-          iteracoes < MAX_ITERACOES &&
-          semMelhora < MAX_SEM_MELHORA
-        ) {
-          iteracoes += 1;
-          const resposta = await client.messages.create({
-            model: MODEL,
-            max_tokens: 16000,
-            thinking: { type: 'adaptive' },
-            system: SYSTEM,
-            messages: [
-              {
-                role: 'user',
-                content: `## Diagnóstico\n${resumoDiagnostico(melhor.analise)}\n\n## Texto\n${melhor.texto}`,
-              },
-            ],
-          });
-          const bloco = resposta.content.find((b) => b.type === 'text');
-          if (!bloco?.text?.trim()) {
-            semMelhora += 1;
-            continue;
-          }
-          const candidato = bloco.text.trim();
-          const analise = await pontuar(candidato);
-          if (analise.erro) {
-            semMelhora += 1;
-            continue;
-          }
-          trajetoria.push(analise.score.total);
-          // Anti-degradação: só aceita a iteração se o score subir
-          if (analise.score.total > melhor.analise.score.total) {
-            melhor = { texto: candidato, analise };
-            semMelhora = 0;
-          } else {
-            semMelhora += 1;
-          }
-        }
-
-        if (session) {
-          session.varianciaAtingida =
-            melhor.analise.ritmo.atingiu_alvo === true || melhor.analise.atingiu_alvo === true;
-          session.lexicoAtingido =
-            melhor.analise.lexico.atingiu_alvo === true || melhor.analise.atingiu_alvo === true;
-          session.persist();
+        if (erroInicial) {
+          return { isError: true, content: [{ type: 'text', text: erroInicial }] };
         }
 
         const cabecalho = melhor.analise.atingiu_alvo
@@ -159,12 +206,15 @@ export function register(server, session) {
           : `Otimização parou (${iteracoes} iteração(ões), convergência ou limite); segue a melhor versão encontrada (revise os pontos restantes manualmente).`;
 
         const text = [
+          aviso,
           cabecalho,
           `Trajetória do score: ${trajetoria.join(' → ')}`,
           '## Texto otimizado',
           melhor.texto,
           melhor.analise.relatorio,
-        ].join('\n\n');
+        ]
+          .filter(Boolean)
+          .join('\n\n');
         return { content: [{ type: 'text', text }] };
       } catch (err) {
         const semAuth =
