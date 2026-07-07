@@ -45,6 +45,7 @@ def resolver_gate(payload):
     gate = payload.get("gate")
     return gate if isinstance(gate, list) and gate else TIPOS_GATE
 
+
 MARCADORES_LICAO = [
     "no fim das contas", "no fim", "no fundo", "afinal", "é isso",
     "talvez seja", "o que importa", "a verdade é", "no final", "resta",
