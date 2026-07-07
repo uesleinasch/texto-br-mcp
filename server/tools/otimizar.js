@@ -110,12 +110,13 @@ export async function otimizarTexto({ texto, client, pontuar, session }) {
       aviso = `Loop interrompido na iteração ${iteracoes} (falha na API: ${err.message}); segue a melhor versão até aqui.`;
       break;
     }
-    // Anti-truncamento: candidato cortado em max_tokens perdeu conteúdo.
-    // Estrutural (o mesmo prompt tende a truncar de novo com o mesmo limite de
-    // tokens) — encerra o loop em vez de insistir, preservando a melhor versão.
+    // Anti-truncamento: candidato cortado em max_tokens perdeu conteúdo —
+    // descarta o candidato (conta como tentativa sem melhora), mas não aborta
+    // o loop: com thinking adaptive uma nova iteração pode não truncar, e
+    // MAX_SEM_MELHORA já é a rede contra retries improdutivos.
     if (resposta.stop_reason === 'max_tokens') {
-      aviso = `Loop interrompido na iteração ${iteracoes} (candidato truncado por max_tokens); segue a melhor versão até aqui.`;
-      break;
+      semMelhora += 1;
+      continue;
     }
     const bloco = resposta.content.find((b) => b.type === 'text');
     if (!bloco?.text?.trim()) {
@@ -124,10 +125,11 @@ export async function otimizarTexto({ texto, client, pontuar, session }) {
     }
     const candidato = bloco.text.trim();
     // Sanity de comprimento: perda de mais de 20% do texto indica
-    // truncamento/omissão não sinalizado por stop_reason — mesmo tratamento.
+    // truncamento/omissão não sinalizado por stop_reason — mesmo tratamento
+    // (descarta o candidato, segue o loop).
     if (candidato.length < melhor.texto.length * 0.8) {
-      aviso = `Loop interrompido na iteração ${iteracoes} (candidato descartado por comprimento suspeito, possível truncamento); segue a melhor versão até aqui.`;
-      break;
+      semMelhora += 1;
+      continue;
     }
     const analise = await pontuar(candidato);
     if (analise.erro) {

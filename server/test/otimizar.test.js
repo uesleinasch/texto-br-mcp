@@ -24,14 +24,49 @@ const fakeClient = (respostas) => {
   };
 };
 
-test('rejeita candidato truncado por max_tokens', async () => {
+test('descarta candidato truncado por max_tokens mas segue o loop e aceita melhora válida', async () => {
+  // Iteração 1 trunca (deve ser descartada, NÃO aceita); iteração 2 traz melhora
+  // válida e é aceita. Abortar o loop com break jogaria fora o orçamento de
+  // iterações; o correto é descartar o candidato e continuar a subida de encosta.
   const client = fakeClient([
     { stop_reason: 'max_tokens', content: [{ type: 'text', text: 'texto cortado' }] },
+    { stop_reason: 'end_turn', content: [{ type: 'text', text: 'versão melhorada e completa' }] },
   ]);
-  const scores = [60]; // só a medição inicial: candidato truncado nem é pontuado
+  const scores = [60, 85]; // só medições reais: inicial + candidato válido; o truncado nem é pontuado
+  const pontuar = async () => analiseBase(scores.shift() ?? 85);
+  const r = await otimizarTexto({ texto: 'original', client, pontuar, session: null });
+  assert.equal(r.melhor.texto, 'versão melhorada e completa');
+  assert.equal(r.melhor.analise.score.total, 85);
+  assert.equal(scores.length, 0); // exatamente 2 pontuações: o candidato truncado nunca foi medido
+});
+
+test('todas as respostas truncadas: preserva o original sem abortar por erro', async () => {
+  // Loop roda até MAX_SEM_MELHORA sem crashar; nenhum candidato válido → original mantido.
+  const client = fakeClient([
+    { stop_reason: 'max_tokens', content: [{ type: 'text', text: 'corte 1' }] },
+    { stop_reason: 'max_tokens', content: [{ type: 'text', text: 'corte 2' }] },
+  ]);
+  const scores = [60]; // só a medição inicial: candidatos truncados nunca são pontuados
   const pontuar = async () => analiseBase(scores.shift() ?? 60);
   const r = await otimizarTexto({ texto: 'original', client, pontuar, session: null });
   assert.equal(r.melhor.texto, 'original');
+});
+
+test('descarta candidato com comprimento suspeito (< 80%) e segue o loop', async () => {
+  const original = 'Este é um texto original razoavelmente longo com bastante conteúdo para o teste.';
+  const client = fakeClient([
+    { stop_reason: 'end_turn', content: [{ type: 'text', text: 'curto' }] }, // < 80% do original: descartado
+    {
+      stop_reason: 'end_turn',
+      content: [{ type: 'text', text: 'Versão melhorada mantendo praticamente todo o comprimento original do texto aqui.' }],
+    },
+  ]);
+  const scores = [60, 85]; // inicial + candidato de comprimento OK; o curto nunca é pontuado
+  const pontuar = async () => analiseBase(scores.shift() ?? 85);
+  const r = await otimizarTexto({ texto: original, client, pontuar, session: null });
+  assert.match(r.melhor.texto, /Versão melhorada/);
+  assert.notEqual(r.melhor.texto, 'curto');
+  assert.equal(scores.length, 0); // candidato curto nunca foi medido
 });
 
 test('falha de API no meio do loop devolve a melhor versão, não erro', async () => {
@@ -60,4 +95,28 @@ test('componentes fracos usam fração do máximo, não corte absoluto', async (
   );
   assert.match(resumo, /burstiness/);
   assert.doesNotMatch(resumo, /alt_binaria/);
+});
+
+test('grava veredito na sessão com o texto da melhor versão (wiring da Task 5)', async () => {
+  const chamadas = { variancia: [], lexico: [] };
+  const session = {
+    registrarVariancia: (atingido, texto) => chamadas.variancia.push({ atingido, texto }),
+    registrarLexico: (atingido, texto) => chamadas.lexico.push({ atingido, texto }),
+  };
+  const client = fakeClient([
+    { stop_reason: 'end_turn', content: [{ type: 'text', text: 'versão melhorada aqui' }] },
+  ]);
+  const scores = [60, 85];
+  const pontuar = async () => analiseBase(scores.shift() ?? 85);
+  const r = await otimizarTexto({ texto: 'original', client, pontuar, session });
+
+  assert.equal(chamadas.variancia.length, 1);
+  assert.equal(chamadas.lexico.length, 1);
+  // O hash do gate (gravado pelos registrar* da Task 5) deve bater com o
+  // rascunho otimizado, não com o texto de entrada.
+  assert.equal(chamadas.variancia[0].texto, r.melhor.texto);
+  assert.equal(chamadas.lexico[0].texto, r.melhor.texto);
+  assert.equal(chamadas.variancia[0].texto, 'versão melhorada aqui');
+  assert.equal(chamadas.variancia[0].atingido, true);
+  assert.equal(chamadas.lexico[0].atingido, true);
 });
