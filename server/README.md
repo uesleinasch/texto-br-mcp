@@ -6,7 +6,7 @@ Servidor MCP (stdio) que encapsula o workflow texto-br: escrita profissional em 
 
 - Node.js >= 18
 - Python 3 no PATH (`python3`) — usado pelos analisadores quantitativos
-- Opcional: `ANTHROPIC_API_KEY` no ambiente — habilita `texto_br_variancia_aplicar` (correção automática de ritmo via Claude API; sem a chave, a tool retorna erro amigável e o fluxo manual segue normal)
+- Opcional: `ANTHROPIC_API_KEY` no ambiente — habilita `texto_br_otimizar` (correção automática de ritmo via Claude API; sem a chave, a tool retorna erro amigável e o fluxo manual segue normal)
 
 ## Instalação e registro
 
@@ -57,7 +57,7 @@ server/
 
 | Variável | Efeito |
 |---|---|
-| `ANTHROPIC_API_KEY` | Habilita `texto_br_variancia_aplicar` |
+| `ANTHROPIC_API_KEY` | Habilita `texto_br_otimizar` |
 | `TEXTO_BR_PYTHON_TIMEOUT_MS` | Timeout dos analisadores Python (default 30000) |
 
 ## Desenvolvimento

@@ -762,7 +762,7 @@ Checklist obrigatório antes de entregar. Cada item é uma verificação. Se fal
 ```
 [ ] Avg sentence length entre 12 e 22?
 [ ] Sentence length StdDev > 8?
-[ ] Burstiness (σ/μ) > 0.6?
+[ ] Burstiness (σ/μ) >= 0.7?
 [ ] TTR entre 0.45 e 0.65?
 [ ] Hapax legomenon rate > 0.40?
 [ ] Stop word ratio > 0.42?
@@ -864,7 +864,7 @@ Para humanizar um texto em 10 passos (ordem importa):
 2. **Substituir** todos os conectores da lista negra ([Seção 10.4](#104-conectores-pivot)).
 3. **Trocar** aberturas e fechamentos clichê ([Seções 10.5-10.6](#105-aberturas-pivot)).
 4. **Reescrever** verbos, adjetivos e substantivos pivot ([Seções 10.1-10.3](#101-verbos-pivot-de-llm)).
-5. **Variar comprimento** de sentenças (alvo burstiness > 0.6).
+5. **Variar comprimento** de sentenças (alvo burstiness >= 0.7).
 6. **Quebrar** tríades e estruturas paralelas.
 7. **Injetar** voz humana conforme o tipo de texto.
 8. **Adicionar** especificidades concretas (datas, nomes, números reais).

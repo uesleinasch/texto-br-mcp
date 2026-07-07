@@ -22,7 +22,7 @@ Acione quando o usuário:
 
 ## Referências obrigatórias
 
-Esta skill depende de quatro documentos em `references/`. Cada um cobre uma camada do trabalho. Eles **não são opcionais** — são lidos durante o workflow:
+Esta skill depende de seis documentos em `references/`. Cada um cobre uma camada do trabalho. Eles **não são opcionais** — são lidos durante o workflow:
 
 | Arquivo                                | Conteúdo                                                | Quando ler                         |
 | -------------------------------------- | ------------------------------------------------------- | ---------------------------------- |
@@ -31,6 +31,7 @@ Esta skill depende de quatro documentos em `references/`. Cada um cobre uma cama
 | `references/humanizacao-algoritmos.md` | Pipeline de superfície (perplexidade, burstiness, etc.) | Fase 2 (humanização de superfície) |
 | `references/camadas-profundas.md`      | Quatro camadas semânticas + matriz de calibração        | Fase 3 (humanização profunda)      |
 | `references/humanizacao-discursiva.md` | Hesitação, autorreparo, exemplos idiossincráticos       | Fase 4 (humanização discursiva)    |
+| `references/estrutura-macro.md`        | Simetria, subtópicos, kicker, bordões, progressão       | Fase 5 (análise macroestrutural)   |
 
 ## Workflow obrigatório
 
@@ -88,11 +89,13 @@ Releia o rascunho da Fase 1 e aplique o pipeline completo de humanização de su
 
 1. **Limpeza Unicode** — remover caracteres invisíveis, normalizar pontuação
 2. **Reescrita lexical** — substituir vocabulário pivot (verbos, adjetivos, substantivos, conectores da lista negra)
-3. **Reestruturação sintática** — variar drasticamente comprimento de sentenças (alvo burstiness > 0.6)
+3. **Reestruturação sintática** — variar drasticamente comprimento de sentenças (alvo burstiness >= 0.7)
 4. **Quebra de estruturas paralelas** — eliminar tríades automáticas, simetria de parágrafos
 5. **Injeção de voz humana** — marcadores de subjetividade, contrações, expressões brasileiras conforme o tipo permitir
 
 **Calibração por tipo:** tipos conversacionais (chat, comentários) recebem humanização **leve**. Tipos de produção longa (blog, capítulo, podcast) recebem humanização **intensa**.
+
+**Loop quantitativo (ativado por default no servidor MCP):** depois das cinco técnicas acima, otimize contra os alvos numéricos até que ambos sejam atingidos. Meça com `texto_br_score` (humanidade 0-100, alvo >= 80) ou, componente a componente, com `texto_br_variancia` (ritmo sintático, burstiness σ/μ, alvo >= 0.7) + `texto_br_lexico` (previsibilidade lexical). Reescreva **apenas** os pontos fracos apontados e meça de novo; repita (no máximo 3 iterações) até "ALVO ATINGIDO" nos dois. Se uma reescrita fizer o score cair, descarte-a e volte à versão anterior — a otimização nunca degrada o texto. `texto_br_otimizar` é o atalho automático: roda a subida de encosta inteira via Claude API (requer credencial). A saída da Fase 2 é um **gate**: com o loop ativo, só se avança com os dois alvos atingidos. Desative com `variancia: false` apenas se o usuário pedir.
 
 **Critério de saída da Fase 2:** o checklist da seção 11 de `humanizacao-algoritmos.md` deve estar todo verificado. Se algum item falhar, voltar e reaplicar a técnica correspondente.
 

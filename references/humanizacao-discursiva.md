@@ -1,6 +1,6 @@
 # Humanização Discursiva
 
-Camada final de humanização, aplicada depois das camadas profundas e antes da entrega. Trabalha a **performance do enunciador**: não o que o texto diz (isso é a Fase 3), mas como a voz que escreve se comporta na página: hesita, se corrige, puxa um exemplo da própria vida, faz um aparte. Texto humano carrega os rastros do ato de escrever; texto de IA nasce pronto demais.
+Camada de humanização aplicada depois das camadas profundas e antes da análise macroestrutural (Fase 5) e da entrega. Trabalha a **performance do enunciador**: não o que o texto diz (isso é a Fase 3), mas como a voz que escreve se comporta na página: hesita, se corrige, puxa um exemplo da própria vida, faz um aparte. Texto humano carrega os rastros do ato de escrever; texto de IA nasce pronto demais.
 
 ## 1. O que é (e o que não é)
 
