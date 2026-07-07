@@ -1,9 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+
+// Sobe um client+transporte MCP apontando para um TEXTO_BR_STATE_FILE fixo.
+function conectar(stateFile, nomeCliente) {
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: nomeCliente, version: '1.0.0' });
+  return client.connect(transport).then(() => client);
+}
 
 const TEXTO_BOM = `Comecei a meditar num sábado qualquer de 2019, mais por teimosia do que por convicção, e o tédio dos primeiros dias quase me venceu logo de cara. Desisti? Quase. Mas na terceira semana o sono melhorou primeiro, depois veio uma paciência esquisita nas reuniões, dessas que os colegas percebem antes de você mesmo notar qualquer mudança. Não virei outra pessoa. Só parei de correr atrás de um relógio que ninguém me cobrava.`;
 
@@ -121,6 +133,7 @@ test('pipeline completo via client MCP: gate, rascunho, voltar fase', async () =
     assert.ok(r9.content[0].text.includes('foi abandonado'));
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
   }
 });
 
@@ -184,6 +197,7 @@ test('e2e: gate da Fase 5 — blog bloqueia sem alvo e avança com alvo; chat é
     assert.ok(chatOk.content[0].text.includes('# Fase 6'));
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
   }
 });
 
@@ -229,6 +243,7 @@ test('e2e: texto curto não trava o gate da Fase 2 (inaplicável)', async () => 
     assert.ok(r.content[0].text.includes('# Fase 3'));
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
   }
 });
 
@@ -263,6 +278,7 @@ test('e2e: gate da Fase 2 ignora medição de texto alheio (hash)', async () => 
     assert.match(r.content[0].text, /não medido|texto diferente/i);
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
   }
 });
 
@@ -287,6 +303,7 @@ test('e2e: proxima_fase não pula fases para frente', async () => {
     assert.match(r.content[0].text, /para trás|fase futura|avançar/i);
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
   }
 });
 
@@ -320,6 +337,7 @@ test('e2e: voltar para a Fase 2 zera os vereditos', async () => {
     assert.equal(r.isError, true, 'gate deveria exigir nova medição após voltar');
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
   }
 });
 
@@ -351,6 +369,7 @@ test('e2e: gate fail-closed — medir isca e avançar SEM rascunho não abre o g
     assert.ok(r.content[0].text.includes('Gate da Fase 2'));
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
   }
 });
 
@@ -386,5 +405,69 @@ test('e2e: caminho feliz — medir o rascunho real e avançar usando o salvo abr
     assert.ok(r.content[0].text.includes('# Fase 3'));
   } finally {
     await client.close();
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
+test('e2e: sessão sobrevive a restart do servidor e restore valida o shape do arquivo', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-restart-${process.pid}.json`);
+  try {
+    // primeira "janela": inicia a sessão e encerra o transporte (simula restart)
+    const client1 = await conectar(stateFile, 'teste-restart-1');
+    try {
+      await client1.callTool({
+        name: 'texto_br_start',
+        arguments: { briefing: 'teste restart', tipo: 'blog' },
+      });
+    } finally {
+      await client1.close();
+    }
+
+    // segunda "janela": mesmo TEXTO_BR_STATE_FILE, deve restaurar fase/tipo/vereditos
+    const client2 = await conectar(stateFile, 'teste-restart-2');
+    try {
+      const st = await client2.callTool({ name: 'texto_br_status', arguments: {} });
+      assert.match(st.content[0].text, /blog/);
+      assert.match(st.content[0].text, /estrutural/i); // estruturaAtingida agora aparece no status
+    } finally {
+      await client2.close();
+    }
+
+    // lixo no state file: restore precisa descartar sem crashar o servidor
+    fs.writeFileSync(stateFile, '{"rascunhos": null, "currentPhase": "x"}');
+    const client3 = await conectar(stateFile, 'teste-restart-3');
+    try {
+      const st3 = await client3.callTool({ name: 'texto_br_status', arguments: {} });
+      assert.match(st3.content[0].text, /[Nn]enhuma escrita em andamento/);
+    } finally {
+      await client3.close();
+    }
+  } finally {
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
+test('e2e: persist() limpa o state file assim que o pipeline chega à Fase 6', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-limpa-fase6-${process.pid}.json`);
+  try {
+    const client = await conectar(stateFile, 'teste-limpa-fase6');
+    try {
+      await client.callTool({
+        name: 'texto_br_start',
+        arguments: { briefing: 'artigo', tipo: 'blog', variancia: false },
+      });
+      await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 1 -> 2
+      await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 2 -> 3
+      await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 3 -> 4
+      await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 4 -> 5
+      const r = await client.callTool({ name: 'texto_br_proxima_fase', arguments: { forcar: true } }); // 5 -> 6
+      assert.ok(r.content[0].text.includes('# Fase 6'));
+      // sem sessão fantasma: o arquivo não deve existir mais no disco
+      assert.equal(fs.existsSync(stateFile), false);
+    } finally {
+      await client.close();
+    }
+  } finally {
+    fs.rmSync(stateFile, { force: true });
   }
 });

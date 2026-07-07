@@ -33,6 +33,7 @@ export function register(server, session) {
         `Tamanho: ${status.tamanho ?? 'medio (default)'}`,
         `Loop quantitativo (variância + léxico): ${variancia}`,
         `Vereditos: variância ${veredicto(status.varianciaAtingida)} | léxico ${veredicto(status.lexicoAtingido)}`,
+        `Naturalidade estrutural (Fase 5): ${veredicto(status.estruturaAtingida)}`,
         `Rascunhos salvos: ${status.rascunhosSalvos.length ? 'fases ' + status.rascunhosSalvos.join(', ') : 'nenhum'}`,
         `Iniciado em: ${status.iniciadoEm}`,
       ].join('\n');

@@ -8,8 +8,13 @@ import path from 'node:path';
 // rascunhos) é restaurada no startup. O arquivo vive em tmpdir e morre no
 // reboot, o que é suficiente para o caso de uso (crash/restart do servidor).
 
+// Nome do arquivo derivado do cwd (hash curto) para que duas janelas/instâncias
+// em projetos diferentes não pisem no state uma da outra (mesma pasta ainda
+// colide, o que é aceitável: é a mesma sessão de escrita).
+const cwdId = createHash('sha256').update(process.cwd()).digest('hex').slice(0, 8);
 const STATE_FILE =
-  process.env.TEXTO_BR_STATE_FILE || path.join(os.tmpdir(), 'texto-br-session.json');
+  process.env.TEXTO_BR_STATE_FILE ||
+  path.join(os.tmpdir(), `texto-br-session-${cwdId}.json`);
 
 const CAMPOS = [
   'currentPhase',
@@ -160,10 +165,16 @@ export const SessionState = {
       rascunhosSalvos: Object.keys(this.rascunhos),
       varianciaAtingida: this.varianciaAtingida,
       lexicoAtingido: this.lexicoAtingido,
+      estruturaAtingida: this.estruturaAtingida,
     };
   },
 
   persist() {
+    if (this.currentPhase !== null && this.currentPhase >= 6) {
+      // Pipeline entregue (Fase 6): nada a restaurar num restart futuro,
+      // então não deixa sessão fantasma no disco (achado R7).
+      return this.clearPersisted();
+    }
     try {
       const dados = Object.fromEntries(CAMPOS.map((c) => [c, this[c]]));
       writeFileSync(STATE_FILE, JSON.stringify(dados), 'utf8');
@@ -175,9 +186,19 @@ export const SessionState = {
   restore() {
     try {
       const dados = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
+      // Valida o shape mínimo antes de aplicar: um arquivo corrompido ou de
+      // outra versão não pode travar o startup do servidor (achado R7).
+      const valido =
+        dados &&
+        typeof dados === 'object' &&
+        (dados.currentPhase === null || Number.isInteger(dados.currentPhase)) &&
+        (dados.rascunhos === undefined ||
+          (typeof dados.rascunhos === 'object' && dados.rascunhos !== null));
+      if (!valido) return;
       for (const campo of CAMPOS) {
         if (campo in dados) this[campo] = dados[campo];
       }
+      if (this.rascunhos === null || typeof this.rascunhos !== 'object') this.rascunhos = {};
       if (this.currentPhase !== null) {
         console.error(
           `[texto-br] sessão anterior restaurada (fase ${this.currentPhase}, tipo ${this.tipo})`
