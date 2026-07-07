@@ -80,8 +80,11 @@ test('pipeline completo via client MCP: gate, rascunho, voltar fase', async () =
     assert.ok(status.content[0].text.includes('variância alvo atingido'));
     assert.ok(status.content[0].text.includes('léxico alvo atingido'));
 
-    // com alvos atingidos, o avanço passa
-    const r4 = await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} });
+    // com alvos atingidos, o avanço passa (rascunho = o mesmo texto medido)
+    const r4 = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: TEXTO_BOM },
+    });
     assert.ok(r4.content[0].text.includes('# Fase 3'));
 
     // voltar para a Fase 2 via parâmetro fase
@@ -315,6 +318,72 @@ test('e2e: voltar para a Fase 2 zera os vereditos', async () => {
       arguments: { rascunho: 'texto novo reescrito' },
     });
     assert.equal(r.isError, true, 'gate deveria exigir nova medição após voltar');
+  } finally {
+    await client.close();
+  }
+});
+
+test('e2e: gate fail-closed — medir isca e avançar SEM rascunho não abre o gate', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-failclosed-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-failclosed', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'artigo sobre café', tipo: 'blog' },
+    });
+    // avança para a Fase 2 salvando o rascunho na Fase 1 (rascunhos[2] fica vazio)
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: TEXTO_BOM } });
+
+    // seta os flags medindo um texto isca (bom, mas não é o rascunho real)
+    await client.callTool({ name: 'texto_br_score', arguments: { texto: OUTRO_TEXTO_BOM } });
+
+    // avança SEM rascunho e sem ter salvo o rascunho real medido na fase atual:
+    // fail-closed, o gate não pode abrir
+    const r = await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} });
+    assert.equal(r.isError, true, 'gate não pode abrir sem rascunho conhecido');
+    assert.ok(r.content[0].text.includes('Gate da Fase 2'));
+  } finally {
+    await client.close();
+  }
+});
+
+test('e2e: caminho feliz — medir o rascunho real e avançar usando o salvo abre o gate', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-salvo-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-salvo', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'artigo sobre café', tipo: 'blog' },
+    });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: TEXTO_BOM } }); // 1 -> 2
+    // uma tentativa de avanço passando o rascunho real salva rascunhos[2] mesmo bloqueando
+    const bloq = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: TEXTO_BOM },
+    });
+    assert.equal(bloq.isError, true); // ainda não medido
+
+    // mede o rascunho real
+    await client.callTool({ name: 'texto_br_score', arguments: { texto: TEXTO_BOM } });
+
+    // avança SEM reenviar o rascunho: a sessão usa o rascunho salvo da fase atual
+    const r = await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} });
+    assert.ok(!r.isError, r.content[0].text);
+    assert.ok(r.content[0].text.includes('# Fase 3'));
   } finally {
     await client.close();
   }

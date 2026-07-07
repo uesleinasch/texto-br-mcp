@@ -55,22 +55,24 @@ export function register(server, session) {
           phase = session.goTo(fase);
         } else {
           // Veredictos só contam se o hash do texto medido bater com o do
-          // rascunho que está sendo usado para tentar avançar agora (achado
-          // C3): medir um texto alheio não pode destravar o gate de outro.
-          // Sem rascunho nesta chamada, o hash não é exigido (avanço sem
-          // reenviar o texto, típico após uma medição bem-sucedida).
-          const hashRascunho = rascunho ? session.hashTexto(rascunho) : null;
+          // rascunho que a sessão conhece nesta fase (achado C3): medir um
+          // texto alheio ("isca") não pode destravar o gate de outro. O texto
+          // de comparação é o rascunho passado nesta chamada (já salvo acima)
+          // ou, na ausência dele, o rascunho salvo da fase atual.
+          // FAIL-CLOSED: se a sessão não conhece nenhum texto da fase atual
+          // (hashGate null), o gate NÃO abre — não há como confirmar que o
+          // veredicto se refere ao rascunho real.
+          const textoGate = rascunho ?? session.rascunhos?.[session.currentPhase];
+          const hashGate = textoGate ? session.hashTexto(textoGate) : null;
+          const casaHash = (hash) => hash !== null && hashGate !== null && hash === hashGate;
           const estadoCampo = (atingido, hash) => {
             if (atingido !== true) return atingido === false ? 'não atingido' : 'não medido';
-            if (hashRascunho && hash !== hashRascunho) return 'medido em texto diferente do rascunho atual';
+            if (hashGate === null) return 'medido, mas o rascunho não foi informado (passe "rascunho")';
+            if (!casaHash(hash)) return 'medido em texto diferente do rascunho atual';
             return 'ALVO ATINGIDO';
           };
-          const varianciaOk =
-            session.varianciaAtingida === true &&
-            (!hashRascunho || session.varianciaHash === hashRascunho);
-          const lexicoOk =
-            session.lexicoAtingido === true &&
-            (!hashRascunho || session.lexicoHash === hashRascunho);
+          const varianciaOk = session.varianciaAtingida === true && casaHash(session.varianciaHash);
+          const lexicoOk = session.lexicoAtingido === true && casaHash(session.lexicoHash);
           // Gate da Fase 2: com o loop quantitativo ativo, só avança com os
           // dois alvos registrados (texto_br_variancia e texto_br_lexico).
           if (session.currentPhase === 2 && session.variancia && !forcar && !(varianciaOk && lexicoOk)) {
@@ -92,9 +94,7 @@ export function register(server, session) {
           }
           // Gate da Fase 5: em tipos longos, só avança com o alvo de naturalidade
           // estrutural atingido (texto_br_estrutura). Advisory nos demais tipos.
-          const estruturaOk =
-            session.estruturaAtingida === true &&
-            (!hashRascunho || session.estruturaHash === hashRascunho);
+          const estruturaOk = session.estruturaAtingida === true && casaHash(session.estruturaHash);
           if (
             session.currentPhase === 5 &&
             TIPOS_ESTRUTURA_GATE.includes(session.tipo) &&

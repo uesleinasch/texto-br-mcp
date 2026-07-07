@@ -74,19 +74,19 @@ export const SessionState = {
   // veredicto vale para o próprio texto curto analisado).
   registrarVariancia(atingido, texto) {
     this.varianciaAtingida = atingido;
-    this.varianciaHash = this.hashTexto(texto);
+    this.varianciaHash = texto === null ? null : this.hashTexto(texto);
     this.persist();
   },
 
   registrarLexico(atingido, texto) {
     this.lexicoAtingido = atingido;
-    this.lexicoHash = this.hashTexto(texto);
+    this.lexicoHash = texto === null ? null : this.hashTexto(texto);
     this.persist();
   },
 
   registrarEstrutura(atingido, texto) {
     this.estruturaAtingida = atingido;
-    this.estruturaHash = this.hashTexto(texto);
+    this.estruturaHash = texto === null ? null : this.hashTexto(texto);
     this.persist();
   },
 
