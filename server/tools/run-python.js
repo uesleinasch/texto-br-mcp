@@ -14,29 +14,37 @@ const TIMEOUT_MS = Number(process.env.TEXTO_BR_PYTHON_TIMEOUT_MS) || 30000;
 // e devolvendo o JSON parseado do stdout.
 export function runPython(scriptName, input) {
   return new Promise((resolve, reject) => {
-    const proc = spawn('python3', [path.join(ANALYSIS_DIR, scriptName)], {
+    const bin = process.env.TEXTO_BR_PYTHON || 'python3';
+    const proc = spawn(bin, [path.join(ANALYSIS_DIR, scriptName)], {
       stdio: ['pipe', 'pipe', 'pipe'],
       cwd: ANALYSIS_DIR, // garante que imports locais (texto_util) resolvam
+      env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
     });
+    proc.stdout.setEncoding('utf8');
+    proc.stderr.setEncoding('utf8');
     let stdout = '';
     let stderr = '';
+    let stdinFalhou = null;
     const timer = setTimeout(() => {
       proc.kill('SIGKILL');
       reject(new Error(`Análise excedeu o tempo limite de ${TIMEOUT_MS / 1000}s.`));
     }, TIMEOUT_MS);
 
-    // EPIPE se o Python morrer antes de consumir o stdin: rejeitar em vez de
-    // derrubar o servidor com uncaughtException
+    // EPIPE se o Python morrer antes de consumir o stdin: registrar e deixar
+    // o handler de close reportar com o stderr real (traceback), que é útil —
+    // rejeitar aqui esconderia a causa.
     proc.stdin.on('error', (err) => {
-      clearTimeout(timer);
-      reject(err);
+      stdinFalhou = err;
     });
 
     proc.on('error', (err) => {
       clearTimeout(timer);
       reject(
         err.code === 'ENOENT'
-          ? new Error('python3 não encontrado no PATH; as análises quantitativas requerem Python 3.')
+          ? new Error(
+              `${bin} não encontrado no PATH; as análises quantitativas requerem Python 3 ` +
+                '(configure TEXTO_BR_PYTHON se o binário tiver outro nome).'
+            )
           : err
       );
     });
@@ -45,7 +53,8 @@ export function runPython(scriptName, input) {
     proc.on('close', (code) => {
       clearTimeout(timer);
       if (code !== 0) {
-        return reject(new Error(`Analisador falhou (exit ${code}): ${stderr.slice(0, 300)}`));
+        const detalhe = stderr.slice(0, 300) || stdinFalhou?.message || '';
+        return reject(new Error(`Analisador falhou (exit ${code}): ${detalhe}`));
       }
       try {
         resolve(JSON.parse(stdout));
