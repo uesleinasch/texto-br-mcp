@@ -19,6 +19,9 @@ export function register(server, session) {
     async ({ texto }) => {
       try {
         const resultado = await runPython('variancia.py', texto);
+        if (resultado.erro && !resultado.inaplicavel) {
+          return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
+        }
         if (session) {
           if (resultado.inaplicavel) {
             // Análise inaplicável (texto curto): não há o que medir, não trava o

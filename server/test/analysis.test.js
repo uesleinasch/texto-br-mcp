@@ -30,6 +30,13 @@ test('variancia: texto variado atinge o alvo', async () => {
   assert.ok(r.metricas.nao_canonicas >= 0);
 });
 
+test('lexico: seção 10 vazia é erro real, não aprovação silenciosa', async () => {
+  const r = await runPython('lexico.py', JSON.stringify({ texto: TEXTO_VARIADO, secao10: '' }));
+  assert.ok(r.erro, 'deveria retornar erro');
+  assert.ok(!r.inaplicavel, 'erro real, não inaplicabilidade');
+  assert.notEqual(r.atingiu_alvo, true);
+});
+
 test('lexico: parseia as 6 categorias da seção 10 e detecta pivots', async () => {
   const secao10 = getSection('humanizacao-algoritmos', 10);
   const r = await runPython('lexico.py', JSON.stringify({ texto: TEXTO_PIVOT, secao10 }));

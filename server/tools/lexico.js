@@ -22,6 +22,9 @@ export function register(server, session) {
       try {
         const secao10 = getSection('humanizacao-algoritmos', 10);
         const resultado = await runPython('lexico.py', JSON.stringify({ texto, secao10 }));
+        if (resultado.erro && !resultado.inaplicavel) {
+          return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
+        }
         if (session) {
           if (resultado.inaplicavel) {
             // Análise inaplicável (texto curto): não há o que medir, não trava o

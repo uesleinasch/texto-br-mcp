@@ -101,15 +101,22 @@ export function register(server, session) {
             !forcar &&
             !estruturaOk
           ) {
+            // Distingue "nunca medido" (null) de "medido e reprovado" (false):
+            // só neste último caso o score real ficou abaixo do alvo, então
+            // só aqui faz sentido afirmar "score < 70".
+            const estado = estadoCampo(session.estruturaAtingida, session.estruturaHash);
+            const detalheAlvo =
+              session.estruturaAtingida === false
+                ? ` (score < 70 para o tipo "${session.tipo}")`
+                : ` para o tipo "${session.tipo}"`;
             return {
               isError: true,
               content: [
                 {
                   type: 'text',
                   text:
-                    'Gate da Fase 5: a naturalidade estrutural ainda não atingiu o alvo ' +
-                    `(score < 70 para o tipo "${session.tipo}"; estado: ` +
-                    `${estadoCampo(session.estruturaAtingida, session.estruturaHash)}). Rode ` +
+                    'Gate da Fase 5: a naturalidade estrutural ainda não atingiu o alvo' +
+                    `${detalheAlvo}; estado: ${estado}. Rode ` +
                     'texto_br_estrutura com o rascunho atual, aplique o plano de perturbação até ' +
                     '"ALVO ATINGIDO" e tente avançar de novo. Para avançar mesmo assim (a pedido ' +
                     'do usuário), use forcar: true.',

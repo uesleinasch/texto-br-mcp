@@ -23,6 +23,9 @@ export function register(server, session) {
       try {
         const tipoEfetivo = tipo ?? session?.tipo ?? 'geral';
         const resultado = await runPython('estrutura.py', JSON.stringify({ texto, tipo: tipoEfetivo }));
+        if (resultado.erro && !resultado.inaplicavel) {
+          return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
+        }
         let relatorio = resultado.relatorio;
         if (session) {
           if (tipoEfetivo === session.tipo) {

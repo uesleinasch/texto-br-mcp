@@ -201,6 +201,40 @@ test('e2e: gate da Fase 5 — blog bloqueia sem alvo e avança com alvo; chat é
   }
 });
 
+test('e2e: gate da Fase 5 diz "não medido" quando nada foi medido', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-f5-naomedido-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-f5-naomedido', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    // blog: avança até a Fase 5 sem nunca chamar texto_br_estrutura
+    // (loop quantitativo desligado para não travar nas fases 2-4 aqui)
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'hábitos', tipo: 'blog', variancia: false },
+    });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 1 -> 2
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 2 -> 3
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 3 -> 4
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 4 -> 5
+
+    // estruturaAtingida nunca foi medida (null): o gate deve dizer "não
+    // medido", não afirmar "score < 70" como se já tivesse reprovado.
+    const r = await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} });
+    assert.equal(r.isError, true);
+    assert.match(r.content[0].text, /não medido/i);
+    assert.doesNotMatch(r.content[0].text, /score < 70/);
+  } finally {
+    await client.close();
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
 test('e2e: texto curto não trava o gate da Fase 2 (inaplicável)', async () => {
   const stateFile = path.join(os.tmpdir(), `texto-br-test-inaplicavel-${process.pid}.json`);
   const transport = new StdioClientTransport({

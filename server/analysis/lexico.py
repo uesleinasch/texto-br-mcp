@@ -119,6 +119,13 @@ def analisar(texto, secao10):
         }
 
     categorias = parsear_tabelas(secao10)
+    if not categorias:
+        return {
+            "erro": (
+                "Tabelas de vocabulário pivot da seção 10 não carregadas; "
+                "análise lexical não pode validar o alvo (verifique as references)."
+            )
+        }
     diagnostico = []
 
     # 1. Ocorrências de vocabulário pivot
