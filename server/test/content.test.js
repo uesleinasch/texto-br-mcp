@@ -4,6 +4,7 @@ import { loadAll } from '../content/loader.js';
 import {
   buildIndexes,
   validateAll,
+  validaChecklists,
   composePhaseSections,
   getTypeSpec,
   getSection,
@@ -75,6 +76,30 @@ test('roteamento adaptativo: payload conversacional é menor que o de produção
   }
   // fases sem override herdam o mapa cheio (Fase 6 entrega = vazia para todos)
   assert.equal(composePhaseSections(6, 'chat'), composePhaseSections(6, 'blog'));
+});
+
+test('validaChecklists avisa quando uma seção de checklist não existe', () => {
+  const avisos = [];
+  const orig = console.error;
+  console.error = (...args) => avisos.push(args.join(' '));
+  try {
+    validaChecklists({ 99: { file: 'humanizacao-algoritmos', section: '999' } });
+  } finally {
+    console.error = orig;
+  }
+  assert.ok(avisos.some((m) => /999/.test(m) && /humanizacao-algoritmos/.test(m)));
+});
+
+test('validaChecklists não avisa para os checklists reais', () => {
+  const avisos = [];
+  const orig = console.error;
+  console.error = (...args) => avisos.push(args.join(' '));
+  try {
+    validaChecklists();
+  } finally {
+    console.error = orig;
+  }
+  assert.deepEqual(avisos, []);
 });
 
 test('checklists apontam para seções existentes', () => {

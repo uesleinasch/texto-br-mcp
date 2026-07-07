@@ -5,6 +5,7 @@ import {
   PHASE_SECTIONS_CONVERSACIONAL,
   TIPOS_CONVERSACIONAIS,
   TIPOS_VALIDOS,
+  CHECKLISTS,
 } from '../knowledge/phases.js';
 
 // Conhecimento estrutural sobre as references: seções numeradas por arquivo,
@@ -20,6 +21,16 @@ export function buildIndexes() {
   for (const [, body] of parsed.get('tipos-de-texto')) {
     const m = body.match(/\*\*ID:\*\*\s*`([^`]+)`/);
     if (m) slugIndex.set(m[1], body);
+  }
+}
+
+// Valida que os checklists (CHECKLISTS de knowledge/phases.js) apontam para
+// seções existentes. Exportada para teste com mapa injetado.
+export function validaChecklists(mapa = CHECKLISTS, warn = (m) => console.error(`[texto-br] aviso: ${m}`)) {
+  for (const [fase, ref] of Object.entries(mapa)) {
+    if (!parsed.get(ref.file)?.has(ref.section)) {
+      warn(`checklist da fase ${fase}: seção ${ref.section} não encontrada em ${ref.file}.md`);
+    }
   }
 }
 
@@ -43,8 +54,18 @@ export function validateAll() {
     if (!slugIndex.has(slug)) warn(`tipo "${slug}" sem seção em tipos-de-texto.md`);
   }
 
-  if (!extractH1Block(getFile('tipos-de-texto'), 'Apêndice: Decisão rápida de tipo')) {
-    warn('apêndice "Decisão rápida de tipo" não encontrado em tipos-de-texto.md');
+  validaChecklists(CHECKLISTS, warn);
+
+  for (const mapa of [PHASE_SECTIONS, PHASE_SECTIONS_CONVERSACIONAL]) {
+    for (const phase of Object.values(mapa)) {
+      for (const ref of phase) {
+        if (!ref.section.startsWith('h1:')) continue;
+        const heading = ref.section.slice(3);
+        if (!extractH1Block(getFile(ref.file), heading)) {
+          warn(`bloco h1 "${heading}" não encontrado em ${ref.file}.md`);
+        }
+      }
+    }
   }
 }
 
