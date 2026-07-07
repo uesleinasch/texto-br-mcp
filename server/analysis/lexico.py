@@ -34,8 +34,14 @@ ainda até bem cada coisa coisas dia onde pode podem porque qualquer quanto
 sobre todo toda todos todas outro outra outros outras
 """.split())
 
-# Sufixo flexional tolerado depois do radical de um verbo pivot
-SUFIXO_VERBAL = r"(?:[aeiou]\w{0,6})?"
+# Desinências verbais toleradas depois do radical de um verbo pivot (com
+# fronteira final): alternância explícita em vez de sufixo genérico, para não
+# casar derivados nominais como "abordagem" a partir do radical de "abordar".
+SUFIXO_VERBAL = (
+    r"(?:o|a|e|am|em|ou|ei|ia|iam|ava|avam|amos|emos|imos|"
+    r"ará|arão|erá|erão|irá|irão|aria|ariam|eria|eriam|iria|iriam|"
+    r"ando|endo|indo|ado|ada|ados|adas|ido|ida|idos|idas|ar|er|ir)\b"
+)
 
 
 def parsear_tabelas(secao10):
@@ -91,9 +97,11 @@ def regex_para(termo, categoria):
         else:
             base = re.escape(termo) + r"s?"
         return re.compile(r"\b" + base + r"\b", re.IGNORECASE)
-    # conectores, aberturas, fechamentos: frase com espaços flexíveis
+    # conectores, aberturas, fechamentos: frase com espaços flexíveis e
+    # fronteira final, para não casar dentro de outra palavra (ex.: "além
+    # disso" não pode casar o prefixo de "além dissonante").
     return re.compile(
-        r"\b" + r"\s+".join(re.escape(p) for p in palavras), re.IGNORECASE
+        r"\b" + r"\s+".join(re.escape(p) for p in palavras) + r"\b", re.IGNORECASE
     )
 
 
