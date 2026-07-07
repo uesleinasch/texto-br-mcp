@@ -38,7 +38,8 @@ sobre todo toda todos todas outro outra outros outras
 # fronteira final): alternância explícita em vez de sufixo genérico, para não
 # casar derivados nominais como "abordagem" a partir do radical de "abordar".
 SUFIXO_VERBAL = (
-    r"(?:o|a|e|am|em|ou|ei|ia|iam|ava|avam|amos|emos|imos|"
+    r"(?:o|a|e|am|em|ou|eu|iu|ei|ia|iam|ava|avam|amos|emos|imos|"
+    r"aram|eram|iram|"
     r"ará|arão|erá|erão|irá|irão|aria|ariam|eria|eriam|iria|iriam|"
     r"ando|endo|indo|ado|ada|ados|adas|ido|ida|idos|idas|ar|er|ir)\b"
 )

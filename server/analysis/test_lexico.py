@@ -10,6 +10,7 @@ SECAO10 = """### 10.1 Verbos pivot de LLM
 | Evitar       | Trocar por                                   |
 | ------------ | --------------------------------------------- |
 | abordar      | tratar de, falar de, encarar                 |
+| estabelecer  | criar, definir, montar, fixar                |
 
 ### 10.4 Conectores pivot
 
@@ -46,6 +47,23 @@ class TestFronteiras(unittest.TestCase):
         encontrados = " ".join(o["encontrado"].lower() for o in r["ocorrencias"])
         self.assertIn("aborda", encontrados)
         self.assertIn("além disso", encontrados)
+
+    # Fix pós-review: pretérito perfeito (3ª pessoa singular e plural) também
+    # é flexão real de verbo pivot e precisa casar — sem reabrir a porta para
+    # derivados nominais ("abordagem").
+    def test_preterito_terceira_singular_casa(self):
+        texto = TEXTO_LIMPO + " O comitê estabeleceu novas regras."
+        r = analisar(texto, SECAO10)
+        encontrados = [o["encontrado"].lower() for o in r["ocorrencias"]]
+        self.assertIn("estabeleceu", encontrados)
+        self.assertNotIn("abordagem", encontrados)
+
+    def test_preterito_terceira_plural_casa(self):
+        texto = TEXTO_LIMPO + " Os autores abordaram o tema."
+        r = analisar(texto, SECAO10)
+        encontrados = [o["encontrado"].lower() for o in r["ocorrencias"]]
+        self.assertIn("abordaram", encontrados)
+        self.assertNotIn("abordagem", encontrados)
 
 
 if __name__ == "__main__":
