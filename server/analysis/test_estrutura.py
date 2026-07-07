@@ -1,6 +1,6 @@
 import unittest
 
-from estrutura import calcular
+from estrutura import calcular, resolver_gate, TIPOS_GATE
 
 # 6 parágrafos sem heading (obriga o detector de progressão a ser aplicável:
 # len(paras) >= 6, já que sem títulos com_titulo fica vazio).
@@ -43,6 +43,21 @@ class TestSignposts(unittest.TestCase):
         diagnosticos = diagnosticos_de(r)
         aberturas = [d for d in diagnosticos if "signpost" in d.lower()]
         self.assertNotEqual(aberturas, [])
+
+
+class TestGateViaStdin(unittest.TestCase):
+    # D5: TIPOS_ESTRUTURA_GATE de knowledge/phases.js é a fonte de verdade;
+    # estrutura.js injeta `gate` no payload do stdin e estrutura.py deve
+    # respeitá-lo, caindo no fallback local (TIPOS_GATE) só quando ausente.
+    def test_gate_do_payload_sobrepoe_fallback(self):
+        # tipo fora do fallback, mas presente no gate injetado → deve valer
+        payload = {"texto": "Um texto qualquer.", "tipo": "email", "gate": ["email"], "alvo": 70}
+        gate = resolver_gate(payload)
+        self.assertIn("email", gate)
+
+    def test_gate_ausente_usa_fallback(self):
+        gate = resolver_gate({"texto": "x", "tipo": "blog"})
+        self.assertEqual(gate, TIPOS_GATE)
 
 
 if __name__ == "__main__":

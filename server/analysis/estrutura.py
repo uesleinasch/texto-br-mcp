@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """Análise macroestrutural (naturalidade estrutural) para o pipeline texto-br.
 
-Lê JSON no stdin: {"texto": rascunho, "tipo": id do tipo}. Mede sinais
-macroestruturais de IA ("estrutura encaixada demais") via um registry de
-detectores e os compõe num score 0-100. Este script mede e diagnostica; quem
-reescreve (perturba a estrutura) é o modelo.
+Lê JSON no stdin: {"texto": rascunho, "tipo": id do tipo, "gate": [...],
+"alvo": 70}. Mede sinais macroestruturais de IA ("estrutura encaixada
+demais") via um registry de detectores e os compõe num score 0-100. Este
+script mede e diagnostica; quem reescreve (perturba a estrutura) é o modelo.
 
 Detectores (peso): simetria de seções (25), inflação de subtópicos (20),
 parágrafo-lição/kicker uniforme (20), frases de efeito em sequência (15),
 progressão sinalizada (20). Só os aplicáveis entram no score, re-normalizado
 pelos pesos aplicáveis. Alvo: score >= 70.
 
-Calibração por tipo: o conjunto de gate (TIPOS_GATE) e o alvo replicam
-TIPOS_ESTRUTURA_GATE / ALVO de knowledge/phases.js (fonte de verdade lá).
+Calibração por tipo: o conjunto de gate e o alvo vêm do payload (`gate`,
+`alvo`), injetados por estrutura.js a partir de TIPOS_ESTRUTURA_GATE em
+knowledge/phases.js (fonte de verdade lá). TIPOS_GATE/ALVO_PADRAO abaixo são
+só o fallback para uso standalone do script (payload sem esses campos).
 """
 
 import json
@@ -29,9 +31,19 @@ from texto_util import (
     primeiro_termo,
 )
 
-# Espelha TIPOS_ESTRUTURA_GATE em knowledge/phases.js.
+# Fallback local do gate da Fase 5 (fonte de verdade: TIPOS_ESTRUTURA_GATE em
+# knowledge/phases.js, injetado via stdin por estrutura.js). Mantidos aqui só
+# para uso standalone do script (sem o payload `gate`/`alvo`).
 TIPOS_GATE = ["blog", "capitulo", "tecnico", "explicativo", "podcast", "video"]
 ALVO_PADRAO = 70
+
+
+def resolver_gate(payload):
+    """Gate efetivo da Fase 5: usa `gate` do payload (injetado por
+    estrutura.js a partir de knowledge/phases.js) quando presente e não
+    vazio; senão cai no fallback local TIPOS_GATE."""
+    gate = payload.get("gate")
+    return gate if isinstance(gate, list) and gate else TIPOS_GATE
 
 MARCADORES_LICAO = [
     "no fim das contas", "no fim", "no fundo", "afinal", "é isso",
@@ -329,7 +341,9 @@ DETECTORES = [
 ]
 
 
-def calcular(texto, tipo):
+def calcular(texto, tipo, gate=None, alvo=None):
+    gate = gate if isinstance(gate, list) and gate else TIPOS_GATE
+    alvo = alvo if alvo is not None else ALVO_PADRAO
     blocos = parsear_blocos(texto)
     outline = montar_outline(blocos)
     paras = paragrafos_de_prosa(outline)
@@ -339,7 +353,6 @@ def calcular(texto, tipo):
             "inaplicavel": True,
         }
 
-    alvo = ALVO_PADRAO
     resultados = [d(outline, blocos, tipo) for d in DETECTORES]
     aplic = [r for r in resultados if r["aplicavel"]]
     if not aplic:
@@ -350,7 +363,7 @@ def calcular(texto, tipo):
     atingiu = total >= alvo or not aplic
 
     return {
-        "score": {"total": total, "alvo": alvo, "tipo": tipo, "gate": tipo in TIPOS_GATE},
+        "score": {"total": total, "alvo": alvo, "tipo": tipo, "gate": tipo in gate},
         "atingiu_alvo": atingiu,
         "detectores": resultados,
         "outline": {"secoes": len(outline["secoes"]), "tem_headings": outline["tem_headings"]},
@@ -392,7 +405,9 @@ def formatar_relatorio(resultado):
 
 def main():
     entrada = json.load(sys.stdin)
-    resultado = calcular(entrada["texto"], entrada.get("tipo", "geral"))
+    gate = resolver_gate(entrada)
+    alvo = entrada.get("alvo", ALVO_PADRAO)
+    resultado = calcular(entrada["texto"], entrada.get("tipo", "geral"), gate=gate, alvo=alvo)
     resultado["relatorio"] = formatar_relatorio(resultado)
     json.dump(resultado, sys.stdout, ensure_ascii=False)
 
