@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -21,6 +22,9 @@ const CAMPOS = [
   'varianciaAtingida',
   'lexicoAtingido',
   'estruturaAtingida',
+  'varianciaHash',
+  'lexicoHash',
+  'estruturaHash',
 ];
 
 export const SessionState = {
@@ -34,6 +38,9 @@ export const SessionState = {
   varianciaAtingida: null, // último veredicto de texto_br_variancia(_aplicar)
   lexicoAtingido: null, // último veredicto de texto_br_lexico
   estruturaAtingida: null, // último veredicto de texto_br_estrutura (Fase 5)
+  varianciaHash: null, // hash SHA-256 do texto medido em texto_br_variancia/score
+  lexicoHash: null, // hash SHA-256 do texto medido em texto_br_lexico/score
+  estruturaHash: null, // hash SHA-256 do texto medido em texto_br_estrutura
 
   start(briefing, tipo, tamanho, variancia) {
     this.briefing = briefing;
@@ -46,6 +53,40 @@ export const SessionState = {
     this.varianciaAtingida = null;
     this.lexicoAtingido = null;
     this.estruturaAtingida = null;
+    this.varianciaHash = null;
+    this.lexicoHash = null;
+    this.estruturaHash = null;
+    this.persist();
+  },
+
+  // SHA-256 (hex) do texto, para amarrar um veredicto de gate ao texto exato
+  // que foi medido (evita que medir um rascunho alheio destrave o gate de
+  // outro rascunho — achado C3).
+  hashTexto(texto) {
+    return createHash('sha256').update(String(texto).trim()).digest('hex');
+  },
+
+  // Métodos explícitos de registro (em vez de um helper genérico): os nomes
+  // dos flags de veredicto divergem (varianciaAtingida, lexicoAtingido,
+  // estruturaAtingida), então a clareza de três métodos nomeados vence a
+  // economia de um helper genérico. `texto` é o texto efetivamente medido;
+  // o hash gravado é o dele (inclusive no caso "inaplicavel", em que o
+  // veredicto vale para o próprio texto curto analisado).
+  registrarVariancia(atingido, texto) {
+    this.varianciaAtingida = atingido;
+    this.varianciaHash = this.hashTexto(texto);
+    this.persist();
+  },
+
+  registrarLexico(atingido, texto) {
+    this.lexicoAtingido = atingido;
+    this.lexicoHash = this.hashTexto(texto);
+    this.persist();
+  },
+
+  registrarEstrutura(atingido, texto) {
+    this.estruturaAtingida = atingido;
+    this.estruturaHash = this.hashTexto(texto);
     this.persist();
   },
 
@@ -76,6 +117,27 @@ export const SessionState = {
     }
     if (!Number.isInteger(fase) || fase < 1 || fase > 6) {
       throw new Error('Fase inválida: use um inteiro de 1 a 6.');
+    }
+    if (fase > this.currentPhase) {
+      throw new Error(
+        `Reposicionamento é apenas para trás (fase atual: ${this.currentPhase}). ` +
+          'Para avançar, conclua a fase atual e chame sem o parâmetro "fase" ' +
+          '(os gates se aplicam); não é possível pular para uma fase futura.'
+      );
+    }
+    // Revisitar uma fase invalida os vereditos (e hashes) das medições que
+    // dependiam do texto que existia antes da volta — achado C5. O rascunho
+    // pode mudar entre a volta e a nova tentativa de avançar, então exige
+    // nova medição.
+    if (fase <= 2) {
+      this.varianciaAtingida = null;
+      this.lexicoAtingido = null;
+      this.varianciaHash = null;
+      this.lexicoHash = null;
+    }
+    if (fase <= 5) {
+      this.estruturaAtingida = null;
+      this.estruturaHash = null;
     }
     this.currentPhase = fase;
     this.persist();

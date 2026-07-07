@@ -54,16 +54,26 @@ export function register(server, session) {
         if (fase !== undefined) {
           phase = session.goTo(fase);
         } else {
+          // Veredictos só contam se o hash do texto medido bater com o do
+          // rascunho que está sendo usado para tentar avançar agora (achado
+          // C3): medir um texto alheio não pode destravar o gate de outro.
+          // Sem rascunho nesta chamada, o hash não é exigido (avanço sem
+          // reenviar o texto, típico após uma medição bem-sucedida).
+          const hashRascunho = rascunho ? session.hashTexto(rascunho) : null;
+          const estadoCampo = (atingido, hash) => {
+            if (atingido !== true) return atingido === false ? 'não atingido' : 'não medido';
+            if (hashRascunho && hash !== hashRascunho) return 'medido em texto diferente do rascunho atual';
+            return 'ALVO ATINGIDO';
+          };
+          const varianciaOk =
+            session.varianciaAtingida === true &&
+            (!hashRascunho || session.varianciaHash === hashRascunho);
+          const lexicoOk =
+            session.lexicoAtingido === true &&
+            (!hashRascunho || session.lexicoHash === hashRascunho);
           // Gate da Fase 2: com o loop quantitativo ativo, só avança com os
           // dois alvos registrados (texto_br_variancia e texto_br_lexico).
-          if (
-            session.currentPhase === 2 &&
-            session.variancia &&
-            !forcar &&
-            !(session.varianciaAtingida === true && session.lexicoAtingido === true)
-          ) {
-            const estado = (v) =>
-              v === true ? 'ALVO ATINGIDO' : v === false ? 'não atingido' : 'não medido';
+          if (session.currentPhase === 2 && session.variancia && !forcar && !(varianciaOk && lexicoOk)) {
             return {
               isError: true,
               content: [
@@ -71,8 +81,8 @@ export function register(server, session) {
                   type: 'text',
                   text:
                     'Gate da Fase 2: o loop quantitativo ainda não fechou ' +
-                    `(variância sintática: ${estado(session.varianciaAtingida)}; ` +
-                    `perturbação lexical: ${estado(session.lexicoAtingido)}). ` +
+                    `(variância sintática: ${estadoCampo(session.varianciaAtingida, session.varianciaHash)}; ` +
+                    `perturbação lexical: ${estadoCampo(session.lexicoAtingido, session.lexicoHash)}). ` +
                     'Rode texto_br_variancia e texto_br_lexico com o rascunho atual, reescreva ' +
                     'os pontos apontados até ambos retornarem ALVO ATINGIDO, e tente avançar de ' +
                     'novo. Para avançar mesmo assim (a pedido do usuário), use forcar: true.',
@@ -82,11 +92,14 @@ export function register(server, session) {
           }
           // Gate da Fase 5: em tipos longos, só avança com o alvo de naturalidade
           // estrutural atingido (texto_br_estrutura). Advisory nos demais tipos.
+          const estruturaOk =
+            session.estruturaAtingida === true &&
+            (!hashRascunho || session.estruturaHash === hashRascunho);
           if (
             session.currentPhase === 5 &&
             TIPOS_ESTRUTURA_GATE.includes(session.tipo) &&
             !forcar &&
-            session.estruturaAtingida !== true
+            !estruturaOk
           ) {
             return {
               isError: true,
@@ -95,9 +108,11 @@ export function register(server, session) {
                   type: 'text',
                   text:
                     'Gate da Fase 5: a naturalidade estrutural ainda não atingiu o alvo ' +
-                    `(score < 70 para o tipo "${session.tipo}"). Rode texto_br_estrutura com o ` +
-                    'rascunho atual, aplique o plano de perturbação até "ALVO ATINGIDO" e tente ' +
-                    'avançar de novo. Para avançar mesmo assim (a pedido do usuário), use forcar: true.',
+                    `(score < 70 para o tipo "${session.tipo}"; estado: ` +
+                    `${estadoCampo(session.estruturaAtingida, session.estruturaHash)}). Rode ` +
+                    'texto_br_estrutura com o rascunho atual, aplique o plano de perturbação até ' +
+                    '"ALVO ATINGIDO" e tente avançar de novo. Para avançar mesmo assim (a pedido ' +
+                    'do usuário), use forcar: true.',
                 },
               ],
             };

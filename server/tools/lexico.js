@@ -24,12 +24,12 @@ export function register(server, session) {
         const resultado = await runPython('lexico.py', JSON.stringify({ texto, secao10 }));
         if (session) {
           if (resultado.inaplicavel) {
-            // Análise inaplicável (texto curto): não há o que medir, não trava o gate.
-            session.lexicoAtingido = true;
+            // Análise inaplicável (texto curto): não há o que medir, não trava o
+            // gate. O veredicto vale para este texto curto (hash dele).
+            session.registrarLexico(true, texto);
           } else if (!resultado.erro) {
-            session.lexicoAtingido = resultado.atingiu_alvo === true;
+            session.registrarLexico(resultado.atingiu_alvo === true, texto);
           }
-          session.persist();
         }
         return { content: [{ type: 'text', text: resultado.relatorio }] };
       } catch (err) {

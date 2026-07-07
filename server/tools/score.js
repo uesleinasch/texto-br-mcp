@@ -22,11 +22,11 @@ export function register(server, session) {
         const secao10 = getSection('humanizacao-algoritmos', 10);
         const resultado = await runPython('score.py', JSON.stringify({ texto, secao10 }));
         if (resultado.inaplicavel) {
-          // Análise inaplicável (texto curto): não há o que medir, não trava o gate.
+          // Análise inaplicável (texto curto): não há o que medir, não trava o
+          // gate. O veredicto vale para este texto curto (hash dele).
           if (session) {
-            session.varianciaAtingida = true;
-            session.lexicoAtingido = true;
-            session.persist();
+            session.registrarVariancia(true, texto);
+            session.registrarLexico(true, texto);
           }
           return { content: [{ type: 'text', text: resultado.relatorio }] };
         }
@@ -34,9 +34,14 @@ export function register(server, session) {
           return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
         }
         if (session) {
-          session.varianciaAtingida = resultado.ritmo.atingiu_alvo === true || resultado.atingiu_alvo === true;
-          session.lexicoAtingido = resultado.lexico.atingiu_alvo === true || resultado.atingiu_alvo === true;
-          session.persist();
+          session.registrarVariancia(
+            resultado.ritmo.atingiu_alvo === true || resultado.atingiu_alvo === true,
+            texto
+          );
+          session.registrarLexico(
+            resultado.lexico.atingiu_alvo === true || resultado.atingiu_alvo === true,
+            texto
+          );
         }
         return { content: [{ type: 'text', text: resultado.relatorio }] };
       } catch (err) {

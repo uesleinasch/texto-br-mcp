@@ -7,6 +7,10 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 const TEXTO_BOM = `Comecei a meditar num sábado qualquer de 2019, mais por teimosia do que por convicção, e o tédio dos primeiros dias quase me venceu logo de cara. Desisti? Quase. Mas na terceira semana o sono melhorou primeiro, depois veio uma paciência esquisita nas reuniões, dessas que os colegas percebem antes de você mesmo notar qualquer mudança. Não virei outra pessoa. Só parei de correr atrás de um relógio que ninguém me cobrava.`;
 
+// Outro texto humano, também bom (score >= 80), usado para provar que medir um
+// rascunho diferente não destrava o gate do rascunho real (hash amarrado ao texto).
+const OUTRO_TEXTO_BOM = `Aprendi a consertar minha bicicleta sozinho num domingo chuvoso de outubro, mais por falta de dinheiro do que por vontade de aprender coisa nova. A corrente saltou de novo na primeira tentativa. Um desastre só. Só na quarta vez que a marcha engatou sem travar, e aí, quando finalmente a roda girou lisa, entendi que tinha aprendido mais com aquele erro do que em qualquer vídeo que eu tinha visto antes. Não virei mecânico. Só parei de empurrar a bike até a loja toda vez que ela range.`;
+
 const ESTR_IA = `# Hábitos que transformam
 
 ## Entendendo o problema
@@ -128,12 +132,16 @@ test('e2e: gate da Fase 5 — blog bloqueia sem alvo e avança com alvo; chat é
   await client.connect(transport);
 
   try {
-    // blog: posiciona direto na Fase 5
+    // blog: avança até a Fase 5 (goTo só reposiciona para trás; loop
+    // quantitativo desligado, então as fases 2-4 não têm gate aqui)
     await client.callTool({
       name: 'texto_br_start',
       arguments: { briefing: 'hábitos', tipo: 'blog', variancia: false },
     });
-    const j = await client.callTool({ name: 'texto_br_proxima_fase', arguments: { fase: 5 } });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 1 -> 2
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 2 -> 3
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 3 -> 4
+    const j = await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 4 -> 5
     assert.ok(j.content[0].text.includes('# Fase 5'));
 
     // sem medir, o gate bloqueia
@@ -160,13 +168,16 @@ test('e2e: gate da Fase 5 — blog bloqueia sem alvo e avança com alvo; chat é
     const chk = await client.callTool({ name: 'texto_br_checklist', arguments: { fase: 5 } });
     assert.ok(chk.content[0].text.includes('[ ]'));
 
-    // chat (advisory): posiciona na Fase 5 e avança sem medir
+    // chat (advisory): avança até a Fase 5 e segue sem medir
     await client.callTool({
       name: 'texto_br_start',
       arguments: { briefing: 'oi', tipo: 'chat', variancia: false },
     });
-    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { fase: 5 } });
-    const chatOk = await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 1 -> 2
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 2 -> 3
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 3 -> 4
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 4 -> 5
+    const chatOk = await client.callTool({ name: 'texto_br_proxima_fase', arguments: {} }); // 5 -> 6
     assert.ok(chatOk.content[0].text.includes('# Fase 6'));
   } finally {
     await client.close();
@@ -213,6 +224,97 @@ test('e2e: texto curto não trava o gate da Fase 2 (inaplicável)', async () => 
     });
     assert.ok(!r.isError, r.content[0].text);
     assert.ok(r.content[0].text.includes('# Fase 3'));
+  } finally {
+    await client.close();
+  }
+});
+
+test('e2e: gate da Fase 2 ignora medição de texto alheio (hash)', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-hash-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-hash', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'artigo sobre café', tipo: 'blog' },
+    });
+    await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: TEXTO_BOM },
+    }); // 1 -> 2
+
+    // mede OUTRO texto (também bom) — não pode destravar o gate do rascunho real
+    await client.callTool({ name: 'texto_br_score', arguments: { texto: OUTRO_TEXTO_BOM } });
+
+    const r = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: TEXTO_BOM },
+    });
+    assert.equal(r.isError, true, 'gate deveria bloquear: o rascunho nunca foi medido');
+    assert.match(r.content[0].text, /não medido|texto diferente/i);
+  } finally {
+    await client.close();
+  }
+});
+
+test('e2e: proxima_fase não pula fases para frente', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-nofwd-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-nofwd', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'artigo', tipo: 'blog' },
+    });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: 'x' } }); // 1 -> 2
+    const r = await client.callTool({ name: 'texto_br_proxima_fase', arguments: { fase: 6 } });
+    assert.equal(r.isError, true);
+    assert.match(r.content[0].text, /para trás|fase futura|avançar/i);
+  } finally {
+    await client.close();
+  }
+});
+
+test('e2e: voltar para a Fase 2 zera os vereditos', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-zera-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-zera', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'artigo', tipo: 'blog' },
+    });
+    const rascunho = TEXTO_BOM;
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho } }); // 1 -> 2
+    await client.callTool({ name: 'texto_br_score', arguments: { texto: rascunho } }); // atinge alvos
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho } }); // 2 -> 3
+    await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { fase: 2, rascunho },
+    }); // volta
+    const r = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: 'texto novo reescrito' },
+    });
+    assert.equal(r.isError, true, 'gate deveria exigir nova medição após voltar');
   } finally {
     await client.close();
   }

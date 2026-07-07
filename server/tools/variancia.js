@@ -21,12 +21,12 @@ export function register(server, session) {
         const resultado = await runPython('variancia.py', texto);
         if (session) {
           if (resultado.inaplicavel) {
-            // Análise inaplicável (texto curto): não há o que medir, não trava o gate.
-            session.varianciaAtingida = true;
+            // Análise inaplicável (texto curto): não há o que medir, não trava o
+            // gate. O veredicto vale para este texto curto (hash dele).
+            session.registrarVariancia(true, texto);
           } else if (!resultado.erro) {
-            session.varianciaAtingida = resultado.atingiu_alvo === true;
+            session.registrarVariancia(resultado.atingiu_alvo === true, texto);
           }
-          session.persist();
         }
         return { content: [{ type: 'text', text: resultado.relatorio }] };
       } catch (err) {
