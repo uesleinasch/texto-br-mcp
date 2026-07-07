@@ -20,16 +20,22 @@ class TestNaoCanonicas(unittest.TestCase):
     # A4: "Mundo"/"Segundo"/"Casos" não são ordem não-canônica
     def test_sem_falsos_positivos(self):
         r = analisar(
-            "Mundo estranho é este nosso. Segundo o relatório, nada mudou por aqui. "
-            "Casos assim se repetem sempre. A vida segue o seu curso normal."
+            "Mundo estranho é este nosso, cheio de coisas que ninguém consegue "
+            "explicar direito. Segundo o relatório, nada mudou por aqui desde "
+            "o mês passado. Casos assim se repetem sempre em cidades pequenas "
+            "do interior. A vida segue o seu curso normal, sem grandes "
+            "sobressaltos ou surpresas."
         )
         # "Segundo o relatório" não é gerúndio nem subordinador; "Mundo" idem.
         self.assertEqual(r["metricas"]["nao_canonicas"], 0)
 
     def test_gerundio_e_subordinada_reais_contam(self):
         r = analisar(
-            "Pensando bem, ele tinha razão. Quando a chuva parou, saímos. "
-            "A rua estava vazia e escura naquela hora da noite."
+            "Pensando bem, ele tinha razão sobre quase tudo que discutimos "
+            "naquela tarde longa de trabalho. Quando a chuva parou, saímos "
+            "direto para a rua sem nem pegar o guarda-chuva. A rua estava "
+            "vazia e escura naquela hora da noite, com poucas pessoas "
+            "passando por ali."
         )
         self.assertEqual(r["metricas"]["nao_canonicas"], 2)
 
@@ -66,6 +72,30 @@ class TestCriteriosProporcionais(unittest.TestCase):
             r["atingiu_alvo"],
             msg=f"burstiness={r['metricas']['burstiness']} diag={r['diagnostico']}",
         )
+
+
+class TestInaplicavelPorPoucasPalavras(unittest.TestCase):
+    # C? (achado Important): 3+ sentenças mas < 30 palavras precisa ser
+    # inaplicável, senão diverge do léxico (que já marca inaplicavel < 30
+    # palavras) e reintroduz o deadlock do C1 no caminho das tools separadas.
+    def test_poucas_sentencas_curtas_e_menos_de_30_palavras_e_inaplicavel(self):
+        r = analisar("Oi. Tudo bem? Como você está? Precisamos conversar.")
+        self.assertTrue(r.get("inaplicavel"))
+        self.assertNotIn("atingiu_alvo", r)
+
+    def test_30_ou_mais_palavras_com_3_ou_mais_sentencas_nao_e_inaplicavel(self):
+        # Guarda: mesmo tendo sentenças curtas, se o total de palavras da
+        # prosa bate 30+, a análise continua normal (não vira inaplicável
+        # por engano).
+        r = analisar(
+            "A reunião começou tarde e ninguém sabia exatamente qual era o "
+            "motivo do atraso registrado. Custos operacionais subiram "
+            "bastante durante o trimestre inteiro sem qualquer aviso prévio "
+            "da diretoria. No fim, decidiram remarcar a próxima reunião "
+            "geral para a semana seguinte com calma."
+        )
+        self.assertNotIn("inaplicavel", r)
+        self.assertIn("atingiu_alvo", r)
 
 
 if __name__ == "__main__":

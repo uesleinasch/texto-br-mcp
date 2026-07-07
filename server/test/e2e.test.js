@@ -281,6 +281,59 @@ test('e2e: texto curto não trava o gate da Fase 2 (inaplicável)', async () => 
   }
 });
 
+test('e2e: 3+ sentenças mas < 30 palavras não trava o gate via tools separadas (achado Important)', async () => {
+  // Caso-limite do achado: 4 sentenças (>= 3, então o antigo corte de
+  // variância não pegava) mas só 8 palavras (< 30). Antes da correção,
+  // texto_br_variancia analisava normalmente (burstiness baixíssimo,
+  // atingiu_alvo: false) enquanto texto_br_lexico já marcava inaplicavel,
+  // divergindo entre os dois caminhos oficiais de medição da Fase 2 e
+  // travando o gate para sempre pelo caminho das tools separadas.
+  const TEXTO_CURTO = 'Oi. Tudo bem? Como você está? Precisamos conversar.';
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-inaplicavel-variancia-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-inaplicavel-variancia', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'responder um oi', tipo: 'chat' },
+    });
+    await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: TEXTO_CURTO },
+    }); // 1 -> 2
+
+    // texto_br_variancia e texto_br_lexico chamados separadamente (não via
+    // texto_br_score): os dois precisam concordar que o texto é inaplicável.
+    const v = await client.callTool({
+      name: 'texto_br_variancia',
+      arguments: { texto: TEXTO_CURTO },
+    });
+    assert.match(v.content[0].text, /não se aplica/i);
+    const l = await client.callTool({
+      name: 'texto_br_lexico',
+      arguments: { texto: TEXTO_CURTO },
+    });
+    assert.match(l.content[0].text, /não se aplica/i);
+
+    // o gate deve liberar a saída da Fase 2 sem forçar
+    const r = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { rascunho: TEXTO_CURTO },
+    });
+    assert.ok(!r.isError, r.content[0].text);
+    assert.ok(r.content[0].text.includes('# Fase 3'));
+  } finally {
+    await client.close();
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
 test('e2e: gate da Fase 2 ignora medição de texto alheio (hash)', async () => {
   const stateFile = path.join(os.tmpdir(), `texto-br-test-hash-${process.pid}.json`);
   const transport = new StdioClientTransport({

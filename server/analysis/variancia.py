@@ -73,6 +73,7 @@ def analisar(texto):
         sentencas.extend(ss)
 
     comprimentos = [contar_palavras(s) for s in sentencas]
+    total_palavras = sum(comprimentos)
     diagnostico = []
 
     if len(sentencas) < 3:
@@ -80,6 +81,15 @@ def analisar(texto):
             "erro": (
                 "Texto com menos de 3 sentenças de prosa analisáveis; "
                 "variância sintática não se aplica."
+            ),
+            "inaplicavel": True,
+        }
+
+    if total_palavras < 30:
+        return {
+            "erro": (
+                "Texto curto demais (< 30 palavras) para variância sintática; "
+                "análise não se aplica."
             ),
             "inaplicavel": True,
         }
@@ -227,7 +237,7 @@ def analisar(texto):
     return {
         "metricas": {
             "sentencas": len(sentencas),
-            "palavras": sum(comprimentos),
+            "palavras": total_palavras,
             "paragrafos": len(paragrafos),
             "comprimentos": comprimentos,
             "media": round(media, 2),
