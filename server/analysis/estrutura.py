@@ -62,10 +62,10 @@ SIGNPOSTS = [
 # preposição de citação de fonte ("segundo o IBGE") e "depois" é advérbio comum
 # ("depois de anos") — não são progressão sinalizada.
 SIGNPOSTS_AMBIGUOS = [
-    (re.compile(r"^segundo\s*,", re.IGNORECASE), "segundo"),
-    (re.compile(r"^em segundo lugar\b", re.IGNORECASE), "segundo"),
-    (re.compile(r"^depois\s*,", re.IGNORECASE), "depois"),
-    (re.compile(r"^depois disso\b", re.IGNORECASE), "depois"),
+    re.compile(r"^segundo\s*,", re.IGNORECASE),
+    re.compile(r"^em segundo lugar\b", re.IGNORECASE),
+    re.compile(r"^depois\s*,", re.IGNORECASE),
+    re.compile(r"^depois disso\b", re.IGNORECASE),
 ]
 def interp(valor, ruim, bom):
     """Qualidade 0-1: valor no ponto `ruim` → 0, no ponto `bom` → 1, linear no
@@ -85,7 +85,7 @@ def comeca_com_signpost(texto):
     ambíguos (regex) antes de cair na lista simples que perdeu "segundo"/
     "depois"."""
     base = texto.strip().lstrip("\"'«( ")
-    if any(padrao.match(base) for padrao, _ in SIGNPOSTS_AMBIGUOS):
+    if any(padrao.match(base) for padrao in SIGNPOSTS_AMBIGUOS):
         return True
     return comeca_com(texto, SIGNPOSTS)
 

@@ -170,7 +170,7 @@ export const SessionState = {
   },
 
   persist() {
-    if (this.currentPhase !== null && this.currentPhase >= 6) {
+    if (this.currentPhase >= 6) {
       // Pipeline entregue (Fase 6): nada a restaurar num restart futuro,
       // então não deixa sessão fantasma no disco (achado R7).
       return this.clearPersisted();
@@ -193,7 +193,9 @@ export const SessionState = {
         typeof dados === 'object' &&
         (dados.currentPhase === null || Number.isInteger(dados.currentPhase)) &&
         (dados.rascunhos === undefined ||
-          (typeof dados.rascunhos === 'object' && dados.rascunhos !== null));
+          (!Array.isArray(dados.rascunhos) &&
+            typeof dados.rascunhos === 'object' &&
+            dados.rascunhos !== null));
       if (!valido) return;
       for (const campo of CAMPOS) {
         if (campo in dados) this[campo] = dados[campo];

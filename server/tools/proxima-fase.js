@@ -45,8 +45,14 @@ export function register(server, session) {
         session.variancia = variancia;
         session.persist();
       }
+      // Fase de destino do rascunho: ao reposicionar (fase !== undefined), o
+      // texto passado é o do destino (para onde a sessão está indo), não o
+      // da fase de origem — senão o fallback de hashGate abaixo (que lê
+      // session.rascunhos[session.currentPhase] já reposicionado) nunca
+      // encontraria o rascunho que acabou de ser salvo.
+      const faseParaSalvarRascunho = fase !== undefined ? fase : session.currentPhase;
       if (rascunho && session.currentPhase !== null) {
-        session.salvarRascunho(session.currentPhase, rascunho);
+        session.salvarRascunho(faseParaSalvarRascunho, rascunho);
       }
 
       let phase;

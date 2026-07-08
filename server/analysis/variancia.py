@@ -45,8 +45,9 @@ INICIOS_NEUTROS = {
 }
 
 # Falsos gerúndios frequentes: palavras terminadas em "ndo" que não são
-# gerúndio quando abrem sentença.
-FALSOS_GERUNDIOS = {"mundo", "segundo", "quando", "lindo", "fundo", "bando"}
+# gerúndio quando abrem sentença. Não inclua "quando" aqui: SUBORDINADORES_INICIAIS
+# já o intercepta antes, no loop acima, tornando uma entrada aqui inalcançável.
+FALSOS_GERUNDIOS = {"mundo", "segundo", "lindo", "fundo", "bando"}
 
 
 def analisar(texto):
