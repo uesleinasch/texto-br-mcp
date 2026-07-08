@@ -11,7 +11,8 @@ export function register(server, session) {
       description:
         'Função objetivo unificada da Fase 2: compõe ritmo sintático (burstiness, sequências, ' +
         'ordem não-canônica), léxico (pivots, diversidade, trigramas) e estrutura (parágrafos, ' +
-        'impacto, conectivos) num score 0-100 com breakdown por componente e diagnósticos. ' +
+        'impacto, conectivos) num score 0-100 (probabilidade de texto humano × 100, modelo ' +
+        'calibrado no corpus) com contribuição por sinal e diagnósticos. ' +
         'Alvo >= ' + ALVO_SCORE + '; atingir o alvo satisfaz o gate da Fase 2 numa única chamada (substitui ' +
         'chamar texto_br_variancia e texto_br_lexico separadamente).',
       inputSchema: {

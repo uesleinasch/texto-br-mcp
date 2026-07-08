@@ -64,7 +64,7 @@ test('score: separa texto humano (>= alvo calibrado) de texto LLM (< alvo)', asy
   const ruim = await runPython('score.py', JSON.stringify({ texto: TEXTO_PIVOT, secao10 }));
   assert.ok(ruim.score.total < ruim.score.alvo, `texto pivot pontuou ${ruim.score.total} (alvo ${ruim.score.alvo})`);
   assert.equal(ruim.atingiu_alvo, false);
-  assert.ok(ruim.relatorio.includes('| Componente | Pontos |'));
+  assert.ok(ruim.relatorio.includes('| Sinal | Valor (0-1) | Contribuição |'));
 
   // separação relativa: o texto bom deve pontuar bem acima do texto ruim,
   // independente de onde o ALVO calibrado esteja hoje (evita magic number

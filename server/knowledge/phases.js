@@ -32,7 +32,7 @@ export const ALVO_ESTRUTURA = 70;
 // Alvo do score de humanidade da Fase 2 (0-100). Fonte única do lado JS,
 // espelho de score.ALVO (Python, congelado pela calibração) — o teste de
 // paridade em test/alvo-paridade.test.js trava a igualdade.
-export const ALVO_SCORE = 74.4;
+export const ALVO_SCORE = 93.6;
 
 export const REGRAS_ABSOLUTAS = `## Regras absolutas (valem em todas as fases)
 
@@ -248,7 +248,7 @@ export const TIPOS_ESTRUTURA_GATE = ['blog', 'capitulo', 'tecnico', 'explicativo
 // Ativo por default; desligado apenas com variancia: false a pedido do usuário.
 export const LOOP_QUANTITATIVO_GUIDANCE = `## Loop quantitativo (ATIVADO)
 
-Depois de aplicar as cinco técnicas de superfície acima, otimize contra o score de humanidade (0-100, alvo >= ${ALVO_SCORE}):
+Depois de aplicar as cinco técnicas de superfície acima, otimize contra o score de humanidade (probabilidade de texto humano × 100; alvo >= ${ALVO_SCORE}):
 
 1. **Via automática (preferencial se disponível)**: chame texto_br_otimizar com o rascunho completo. Ela roda a subida de encosta inteira (medir → reescrever → medir, rejeitando iterações que piorem o score) e devolve o texto otimizado com a trajetória. Se retornar erro de credencial, siga a via manual.
 2. **Via manual**: chame texto_br_score com o rascunho e corrija os componentes fracos apontados:
