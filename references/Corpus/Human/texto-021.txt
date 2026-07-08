@@ -1,0 +1,291 @@
+Open in app                                                                                          Sign up     Sign in
+
+                                     Search
+
+     Parceiro de cresci…         · Follow publication
+
+     As Diferenças entre AI, ML e DL
+     10 min read · Apr 9, 2021
+
+             IPNET Growth Partner         Follow
+
+             Share
+
+     Se te perguntassem sobre as diferenças entre Artificial Intelligence, Machine Learning
+     e Deep Learning, você saberia responder?
+
+     Sua resposta é Não? Fica tranquilo. Este artigo foi escrito exatamente para te ajudar
+     a entender as sutis diferenças entre essas tecnologias que fazem parte do nosso
+     cotidiano e que ganharam tanta relevância nos últimos anos. Mas, se você já sabe as
+     diferenças, fica aqui também. Aposto que você irá aprender coisas novas.
+     Preparado?
+
+                                                       Fonte: tenor.com
+
+     Em 10 de fevereiro de 1996, Garry Kasparov, considerado por muitos o maior
+     enxadrista de todos os tempos, travava uma batalha épica entre homem e máquina
+     em uma série de 6 partidas de xadrez contra o Deep Blue, o supercomputador da
+     IBM desenvolvido especialmente para esta finalidade, capaz de analisar cerca de 200
+     milhões de posições por segundo.
+
+     Apesar de Kasparov ter perdido apenas uma partida, este fato marcou a
+     superioridade inédita da Inteligência Artificial (ou AI) contra um humano em
+     jogos. E isso despertou o interesse de todo o mundo no real potencial da AI em
+     superar os humanos não apenas em jogos, mas em diversas outras atividades.
+
+     Como esperado, as AI evoluíram ao longo dos anos seguintes e, em 2016, vinte anos
+     após a partida entre Kasparov e Deep Blue, homem e máquina voltaram a se
+     enfrentar em mais um jogo de tabuleiro. Desta vez, o AlphaGo, desenvolvido pela
+     DeepMind, empresa pertencente ao grupo Alphabet (proprietário da Google), foi
+     capaz de derrotar o super campeão Lee Sedol, em uma partida de Go.
+
+     Nesse último caso, por exemplo, os termos AI, Machine Learning e Deep Learning
+     foram muito utilizados por parte da mídia para descrever e explicar o motivo de o
+     AlphaGo ter superado Lee Sedol no famoso jogo de tabuleiro. De fato, essas três
+     tecnologias tiveram participações diretas na vitória do algoritmo da DeepMind, mas
+     é importante enfatizar que elas não são a mesma coisa.
+
+     Para compreender como essas áreas estão relacionadas, imagine círculos
+     concêntricos, onde a AI — mais abrangente e mais antiga — ocupando o círculo
+     mais externo e, em seguida, vem o Machine Learning — que nasceu depois e,
+     posteriormente, o Deep Learning, que mescla as duas tecnologias anteriores e que,
+     atualmente, é a área mais poderosa de AI.
+
+     Inteligência Artificial — Da Aurora ao Ápice
+
+                                    LEE, Kai-Fu. Inteligência artificial. Globo Livros, 2014
+
+     O maior sonho dos pesquisadores da área de AI é desenvolver máquinas capazes de
+     abstrair, tomar decisões, aprender e agir em diferentes situações. Ou seja, máquinas
+     totalmente autônomas capazes de “pensar”.
+
+     O fato de você estar lendo este artigo significa que, provavelmente, você teve
+     contato com diversos mecanismos baseados em Inteligência Artificial, desde a
+     pesquisa que você fez na Internet ou clique em algum link, até a disponibilização do
+     conteúdo na tela do seu computador ou smartphone, por exemplo.
+
+     “De forma simples e direta, IA é a capacidade de uma máquina imitar o comportamento
+     humano.”
+
+     Vamos te explicar o que isso significa, na prática.
+
+     Antes de nos aprofundarmos nos detalhes, é importante deixar claro que a AI não é
+     tão recente como a maioria das pessoas imaginam. Na verdade, as primeiras
+     pesquisas envolvendo Inteligência Artificial tiveram seu início por volta de 1940.
+
+     A seguir, são apresentados fluxogramas com os principais acontecimentos da
+     história da AI para você compreender a evolução dessa tecnologia:
+
+                                    Fonte: Adaptado de TAIL: Uma Breve História da IA
+
+     Em poucos anos, a AI passou de mera especulação e sonhos e, de pouca aplicação
+     prática, para uma das principais áreas de pesquisa da TI. E desde então não para de
+     evoluir, apresentando novidades e aplicações nos mais variados campos da Ciência.
+
+     Hoje, a Inteligência Artificial ainda é um tema envolto de mistério para a maior
+     parte das pessoas, e essa visão é bastante influenciada devido à forma
+     demasiadamente futurística com que o tema é frequentemente abordado em livros
+     de ficção científica e no cinema, por exemplo, com cenários em que robôs
+     substituem humanos em determinadas atividades ou dominam o mundo.
+
+     De fato, vale ressaltar, algumas dessas ideias não estão muito distantes de se tornar
+     realidade, pois a Inteligência Artificial possui um potencial gigante e, é muito
+     provável que as tecnologias baseadas em AI se tornem capazes de realizar e cuidar
+     de diversas tarefas cotidianas e aprender de acordo com a experiência. Afinal, isso
+     já está acontecendo e pode ser que você nem perceba. Contudo, saiba que a AI vai
+     muito além da automação.
+     Onde encontramos IA?
+     As tecnologias que contém Inteligência Artificial são tantas que, em diversas vezes,
+     nem percebemos que estamos em constante contato com elas.
+
+     Não acredita? então, se liga…
+
+     Aquela foto que fica ainda mais legal quando você aplica filtros no Instagram, ou
+     quando a câmera do smartphone detecta o seu rosto, é AI.
+
+     Ao terminar de assistir uma série na Netflix e receber outra série/filme como
+     recomendação, ou quando o Spotify faz playlists automáticas baseadas nos seus
+     artistas favoritos, é AI.
+
+     Os famosos carros autônomos da Tesla e Google também são AI. E esses são apenas
+     alguns exemplos entre milhões de aplicações baseadas em Inteligência Artificial.
+
+     Como funcionam as AI?
+     Agora que você já viu um pouco de como a AI faz parte do nosso cotidiano, podemos
+     voltar à questão anterior: como as AI podem imitar o comportamento humano?
+
+     Atualmente, as Inteligências Artificiais são construídas em cima de algoritmos
+     robustos, alimentados por dados, executando tarefas e funções que, se feitas por
+     humanos, seriam consideradas inteligentes. E essas atividades “inteligentes” irão
+     determinar se a AI está conseguindo alcançar a performance desejada.
+
+     Para conseguir desempenhar essas características, as Inteligências Artificiais se
+     baseiam em alguns pilares, como Machine Learning e Deep Learning, como veremos
+     adiante.
+
+     Quer conhecer mais sobre Inteligência Artificial? Recomendamos este livro:
+
+     Machine Learning
+     De acordo com Yoshua Bengio, vencedor do Prêmio Turing de 2018,
+
+     A pesquisa em aprendizado de máquina faz parte da pesquisa em Inteligência Artificial,
+     que busca fornecer conhecimento aos computadores por meio de dados, observações e
+     interação com o mundo. Esse conhecimento adquirido permite que os computadores
+     generalizem corretamente para novas configurações.
+
+     A essência do Machine Learning consiste em fazer com que os computadores
+     aprendam sem serem explicitamente programados.
+
+     Isso é fascinante, não é?
+
+     O Aprendizado de Máquina é um ramo especializado da AI e, não à toa, o interesse
+     por essa área tem se renovado e crescido bastante nos últimos anos. Afinal, o
+     Aprendizado de Máquina nos fornece um processamento computacional mais
+
+     poderoso e barato, permitindo construir, de forma rápida e automática, modelos
+     capazes de analisar dados maiores e mais complexos.
+
+     O Machine Learning está presente em praticamente todas as aplicações de AI como
+     Robótica, Visão Computacional e Processamento de Linguagem Natural, e esse pode
+     ser um dos motivos que causa tanta confusão entre essas duas áreas. Alguns dos
+     usos mais comuns do Aprendizado de Máquina são: detecção de fraudes, sistemas
+     de recomendação, reconhecimento facial, chatbots, diagnósticos de doenças,
+     previsão de demanda, entre outros.
+
+     Mas, como ocorre o processo de aprendizado dos algoritmos de Machine Learning?
+
+                              Get IPNET Growth Partner’s stories in your inbox
+                                    Join Medium for free to get updates from this writer.
+
+                                          Enter your email
+
+                                                           Subscribe
+
+                                                 Remember me for faster sign in
+
+     Basicamente, os métodos de aprendizagem desses algoritmos se dividem da
+     seguinte forma:
+
+          Aprendizado Supervisionado: são modelos treinados através de exemplos
+          rotulados, como uma entrada na qual a saída desejada é conhecida;
+
+          Aprendizado Não-Supervisionado: são treinados com dados que não possuem
+          históricos de rótulos, ou seja, a “resposta correta” não é informada ao modelo; e
+
+          Aprendizado por Reforço: neste caso, o algoritmo realiza ações através de testes
+          de ‘tentativa e erro’ e tenta descobrir quais dessas ações geram as maiores
+          recompensas até aprender a resposta correta.
+
+     Através de todos esses métodos, os modelos de Machine Learning são capazes de
+     aprender a realizar diversas tarefas a partir de um grande volume de dados. Existem
+     vários modelos que são utilizados para cada situação específica, que podem ser
+     problemas de regressão, classificação, agrupamento, redução de dimensionalidade,
+     entre outros.
+
+     Quer conhecer mais sobre Machine Learning? Recomendamos este livro:
+
+     Redes Neurais Artificiais
+     Antes de abordar o tema sobre Aprendizado Profundo, é muito importante
+     comentar sobre Redes Neurais Artificiais (RNA), afinal, o Deep Learning é um
+     resultado direto da aplicação desses algoritmos.
+
+     Mas, afinal, o que são as redes neurais artificiais e como elas funcionam?
+
+                                               Designed by upklyak on Freepik
+
+     As redes neurais, criadas em 1943 por Warren McCulloch e Walter Pitts, derivam
+     diretamente do Machine Learning, e foram criadas para tentar simular as redes de
+     neurônios biológicas, especialmente, a humana. Apesar de o objetivo original das
+
+     RNAs ter sido criar um sistema computacional capaz de resolver problemas como o
+     cérebro humano, essa abordagem foi sendo alterada ao longo dos anos, saindo de
+     um campo específico para serem usadas em diversas tarefas.
+
+     As RNAs são capazes de aprender e modelar relações entre os dados de entrada e
+     saída, mesmo que esses dados sejam não-lineares e complexos.
+
+     Para compreender o funcionamento das RNAs, devemos antes entender como
+     ocorre o processo biológico do raciocínio humano através da unidade básica do
+     cérebro: os neurônios; e o cérebro humano possui, em média, 86 bilhões deles.
+
+     O neurônio é constituído por 3 partes principais: a soma ou corpo celular; os
+     dentritos, que são ramificações desde o corpo celular; e há também outra
+     ramificação que parte do corpo celular, porém mais extensa, chamada de axônio.
+     Este último possui terminais nervosos em sua extremidade que são responsáveis
+     pela transmissão de informação para outros neurônios, e esse processo é conhecido
+     como sinapse.
+
+                              Fonte: Mundo Educação | Estrutura de um neurônio biológico.
+
+     A física é a poesia da natureza. A matemática é o idioma.
+
+     Em diversos outros casos, o ser humano se inspira na natureza e utiliza modelos
+     matemáticos para tentar modelar fenômenos e processos que são observados. Essa
+     ideia não é diferente quando se trata do neurônio.
+
+     Basicamente, o neurônio artificial recebe vários sinais (entradas) e calcula, de
+     maneira ponderada, o somatório entre eles; então são aplicadas funções e, em
+
+     seguida, passa o resultado adiante. Os dados recebidos de outros neurônios
+     representam os impulsos nervosos responsáveis por transmitir informação para
+     treinar o algoritmo. O neurônio receptor será mais ou menos excitado com o sinal
+     recebido devido à soma ponderada realizada e esta operação é comandada pelos
+     pesos sinápticos. Todos esses neurônios se conectam, formando redes.
+
+     Desta forma, o neurônio artificial tenta imitar o comportamento biológico através
+     de funções matemáticas.
+
+     De forma simplificada, a estrutura de uma rede neural artificial inclui uma camada
+     de entrada, outra de saída e, entre essas, uma camada oculta. Por sua vez, essas
+     camadas são conectadas através de nós, formando uma rede.
+
+     Quer conhecer mais sobre Redes Neurais Artificiais? Recomendamos este livro:
+
+     Deep Learning
+
+                                                        Fonte: slon.pics
+
+     Agora que já abordamos os conceitos fundamentais como AI e ML, o entendimento
+     de Deep Learning fica muito mais simples, pois o DL é uma subárea específica do
+     Machine Learning.
+
+     Deep Learning é uma rede neural artificial com múltiplos níveis na hidden layer. Simples
+     assim, sem mistério.
+
+     Uma das principais diferenças entre uma rede neural simples para uma
+     multicamada é que, nesta última, as funções matemáticas são muito mais
+     complexas, permitindo processar maiores volumes de dados e, ainda assim,
+     aprender de forma mais rápida.
+
+     Mesmo problemas que envolvem diversas variáveis e que são difíceis de serem
+     resolvidos são simplificados quando a rede neural passa a ter várias camadas
+     ocultas. Assim, o Deep Learning usa uma cascata de diversas camadas de unidades
+     de processamento não-linear para a extração e transformação de características.
+
+     Durante algumas décadas, no início das pesquisas com redes neurais, o
+     Aprendizado Profundo enfrentou algumas dificuldades, pois mesmo as redes
+     neurais mais simples exigiam muito poder computacional, o que dificultava
+     bastante o avanço das pesquisas e uma abordagem mais prática, já que até então
+     eram conhecidas apenas as CPU’s (Unidades de Processamento Central). Esse
+     cenário só foi mudar radicalmente, com a implementação das GPUs (Unidades de
+
+     Processamento Gráfico), que inicialmente foram criadas para renderização de
+     gráficos, mas seu baixo custo e alta performance fizeram com que se tornassem
+     padrão no processamento de imagens.
+
+     As GPUs são especializadas em processar aplicações e repetir a mesma operação
+     várias vezes, de forma rápida e eficiente, o que as tornam ideais para o
+     processamento iterativo, que é a base dos algoritmos de Machine Learning.
+
+     Hoje, o Deep Learning é o que há de mais poderoso na Inteligência Artificial,
+     fornecendo aos computadores a capacidade de ver, aprender e reagir a situações
+     complexas tão bem quanto ou melhor que os humanos.
+
+     Quer conhecer mais sobre Deep Learning? Recomendamos este livro:
+
+     Autor: Jefferson Veríssimo
+
+     Gostou desse conteúdo e acredita que outras pessoas podem se interessar
+     também? Então, compartilhe o artigo.
+
+                                                       Fonte: tenor.com

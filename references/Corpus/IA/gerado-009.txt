@@ -1,0 +1,15 @@
+Fotossíntese
+
+Fotossíntese é o processo bioquímico pelo qual organismos como plantas, algas e algumas bactérias convertem energia luminosa em energia química, armazenada na forma de compostos orgânicos, principalmente carboidratos. Esse processo é fundamental para a manutenção da vida na Terra, pois constitui a base da cadeia alimentar da maioria dos ecossistemas e é responsável pela produção do oxigênio presente na atmosfera terrestre.
+
+O processo ocorre principalmente nas folhas das plantas, mais especificamente em organelas celulares chamadas cloroplastos, que contêm um pigmento verde denominado clorofila. A clorofila é responsável por absorver a luz solar, especialmente nas faixas do espectro correspondentes às cores azul e vermelha, refletindo a luz verde, o que explica a coloração característica da maioria das plantas.
+
+A fotossíntese pode ser dividida em duas etapas principais: as reações dependentes de luz, também chamadas de fase clara, e as reações independentes de luz, conhecidas como fase escura ou ciclo de Calvin. Na fase clara, que ocorre nas membranas dos tilacoides dos cloroplastos, a energia luminosa é utilizada para quebrar moléculas de água, liberando oxigênio como subproduto e gerando moléculas energéticas, como ATP e NADPH.
+
+Na fase escura, que não depende diretamente da luz, embora ocorra normalmente durante o dia, as moléculas de ATP e NADPH produzidas na fase anterior são utilizadas para converter dióxido de carbono atmosférico em glicose, por meio de uma série de reações enzimáticas conhecidas como ciclo de Calvin. Esse açúcar produzido pode ser utilizado imediatamente pela planta como fonte de energia ou armazenado na forma de amido para uso posterior.
+
+A equação geral simplificada da fotossíntese pode ser resumida da seguinte forma: seis moléculas de dióxido de carbono e seis moléculas de água, na presença de luz solar, são convertidas em uma molécula de glicose e seis moléculas de oxigênio. Essa reação, embora simplificada, ilustra bem a importância do processo tanto para a produção de matéria orgânica quanto para a manutenção dos níveis de oxigênio na atmosfera.
+
+Além de sua relevância ecológica, a fotossíntese desempenha papel central na regulação do ciclo do carbono no planeta. As plantas atuam como importantes sumidouros de carbono, absorvendo dióxido de carbono da atmosfera e contribuindo para a mitigação do efeito estufa, o que torna a preservação de florestas e demais ecossistemas vegetais um tema estratégico nas discussões contemporâneas sobre mudanças climáticas.
+
+Atualmente, pesquisadores em diversas áreas da biotecnologia estudam formas de otimizar artificialmente processos inspirados na fotossíntese natural, buscando desenvolver tecnologias mais eficientes de captura de energia solar e de conversão de carbono atmosférico em compostos úteis, em uma área de pesquisa conhecida como fotossíntese artificial.

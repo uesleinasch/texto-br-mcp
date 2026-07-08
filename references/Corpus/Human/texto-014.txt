@@ -1,0 +1,152 @@
+O que é CI/CD? Onde eu uso isso?
+     5 min read · Jul 4, 2019
+
+             Gabriel Faraday       Follow
+
+             Share
+
+     Neste artigo, vou falar sobre CI/CD e sobre o Gitlab, uma solução incrível para
+     iniciar (e continuar) usando o CI/CD.
+
+     Integração contínua
+     A Integração Contínua, ou apenas o CI (Continuous Integration) como é conhecida, “é
+     uma prática de desenvolvimento de software na qual você compila e testa software toda
+     vez que um desenvolvedor envia código para a aplicação, e isso acontece várias vezes ao
+     dia”.
+
+     Basicamente, quando você envia um código para o seu repositório de código, ele
+     inicia um processo que obtém o código que você acabou de enviar e compila sua
+     solução, de acordo com sua linguagem ou plataforma (executa o build para uma
+     aplicação .NET por exemplo), baixa os pacotes necessários e executa testes
+     automatizados em seu código. E aqui eu quero dizer teste de unidade, teste de
+     integração, etc. Depende do que você quer realmente! Você configura.
+
+     Por que isso é importante ou necessário? Imagine você trabalhando em um time
+     com outras 5 pessoas, e todos vocês trabalhando nos mesmos códigos, mudando
+     tudo ao mesmo tempo. Tudo bem, cada um pode garantir que o código em que está
+     trabalhando esteja integrado ao código no repositório, execute os testes, etc, mas
+     em sua máquina, manualmente. Se você automatiza isso é muito melhor. E além
+     disso, você estará totalmente garantido que as validações e processos necessários
+     serão verificados.
+
+     E outro ponto para ter atenção é sobre o teste. Se você não testou seu código, não faz
+     muito sentido ter CI, na minha opinião.
+     Open in app                                                                                           Sign up     Sign in
+
+     Bem, o CI é uma prática primária se você quiser disseminar a cultura DevOps em
+                                     Search
+     sua equipe. É o começo e o primeiro passo para depois alcançar a Entrega Contínua.
+
+     Entrega contínua
+     A Entrega Contínua, ou apenas CD (Continuos Delivery), como é conhecido, “é uma
+     abordagem de engenharia de software na qual a integração contínua, testes
+     automatizados e recursos de implantação automatizada permitem que o software seja
+     desenvolvido e implementado de forma rápida, confiável e repetitiva com intervenção
+     humana mínima. Ainda assim, a implantação na produção é definida estrategicamente e
+     acionada manualmente ”.
+
+     Veja que a implantação (deploy) é automatizada, mas ainda disparada por um ser
+     humano. Eu diria que é meio automatizado. É considerado automatizado porque a
+     única coisa que a pessoa precisa fazer é clicar em um botão e tudo o mais é feito
+     automaticamente.
+
+     Por que isso é importante ou necessário? Imagine que sua equipe esteja trabalhando
+     todos os dias da semana no código, mantendo tudo integrado e testado via CI e a
+
+     empresa que você suporta precisa que sua equipe implante no ambiente de
+     produção a cada 2 ou 3 dias, ou mesmo a cada 2 semanas. E se além disso, cada vez
+     que você precisar implantar houverem 4 ou 5 aplicações? Alguém precisaria
+     interromper seu trabalho por algumas horas para lidar com esse trabalho de deploy.
+     Com uma configuração de CD, clicar em alguns botões seria todo o trabalho que o
+     implantador teria. E interessante: qualquer um poderia fazer esse trabalho, até
+     mesmo uma pessoa não técnica!
+
+     Assim, com o CD, você faz com que a equipe se concentre no desenvolvimento em
+     vez da implantação, embora a segunda também seja importante.
+
+     Você consegue ver os Princípios Ágeis sendo aplicados aqui? Se você não os
+conhece, verifique.
+
+     Bem, para um ambiente de produção, a Entrega Contínua é muito interessante,
+     porque você pode colocar o software em produção “assim que estiver pronto, com o
+     mínimo de intervenção humana possível”. Mas e se eu não quiser tocar em nada para
+     implantá-lo? Para um ambiente de testes, por exemplo? Para isso, temos o Deploy
+     Contínuo.
+
+     Deploy Contínuo
+     Deploy contínuo, também conhecido como CD (Continuous Deployment), “é uma
+     prática de desenvolvimento de software na qual cada alteração de código passa por todo o
+     pipeline e é colocada em produção automaticamente, resultando em muitas implantações
+     de produção todos os dias. Faz tudo o que a Entrega Contínua faz, mas o processo é
+     totalmente automatizado, não há intervenção humana ”.
+
+     Sim! Totalmente automatizado! Excelente!
+
+                                  Get Gabriel Faraday’s stories in your inbox
+                                    Join Medium for free to get updates from this writer.
+
+                                          Enter your email
+
+                                                           Subscribe
+
+                                                  Remember me for faster sign in
+
+     Mas tenha cuidado! Para conseguir isso com excelência, você deve ter um nível de
+     maturidade super alto em sua equipe, quero dizer excelente qualidade de código,
+     boa cobertura de código, boa cobertura de teste, um processo de desenvolvimento
+     bem definido, caso contrário você pode enviar um erro drástico direto para a
+     produção! E você não quer isso, acredite em mim.
+
+     Por isso, recomendo que você inicie o deploy contínuo apenas em um ambiente de
+     teste ou staging, e isso já lhe dará uma grande vantagem.
+
+     Bem, muito legal, como posso colocar tudo isso para funcionar? Se você pesquisar
+     na internet, encontrará várias ferramentas e aplicativos que podem ajudar você.
+     Hoje eu sugiro que você dê uma olhada no Gitlab.
+
+     Gitlab
+Você ainda não conhece o Gitlab? Verifique.
+
+     O Gitlab é uma aplicação muito interessante, com várias ferramentas e recursos
+     para ajudar e suportar os desenvolvedores em seu processo de DevOps.
+
+     “Desde o planejamento do projeto e gerenciamento do código-fonte ao CI/CD e
+     monitoramento, o GitLab é um aplicativo único para o ciclo de vida completo do
+     DevOps.” (gitlab.com)
+
+     Você pode ter sua própria instância local (on-premises) ou na nuvem pública ou até
+     mesmo usar a oferta SaaS hospedada pelo GitLab! E acredite, ambos têm uma opção
+grátis! Verifique.
+
+Algumas citações acima são de,
+onde você pode encontrar mais
+     informações sobre o que é CI/CD.
+
+     No site deles podemos ver a imagem abaixo, que mostra exatamente onde está o CI
+     e o CD em todo o processo e o que está envolvido com cada um deles:
+
+     Esta imagem e muitas outras informações sobre o CI/CD e o Gitlab podem ser
+encontradas em.
+
+     Conclusão
+     CI significa integração contínua e CD pode ser entrega contínua ou deploy contínuo.
+     A entrega contínua ainda precisa de uma interação humana mínima e o deploy
+     contínuo é totalmente automatizado.
+
+     O Gitlab é uma das várias soluções que podem ajudar você a configurar o CI/CD.
+
+     E você pode estar pensando: é possível ter CI/CD com a linguagem ou plataforma
+     com que eu trabalho? Provavelmente sim! Verifique.
+
+     Nesse link não temos exemplo para aplicações .NET até a escrita deste artigo, e
+     também não é tão fácil encontrar conteúdo que explique como configurá-lo para
+     .NET.
+
+     Então, no próximo artigo que vou escrever, mostrarei um exemplo muito simples de
+     CI/CD com .NET e Gitlab. Será básico, mas acredito que isso dará uma idéia do que é
+     possível fazer com o Gitlab.
+
+     Espero ter te ajudado!
+        Continuous Integration          Continuous Delivery           Continuous Deployment              Gitlab
+
+        Gitlab Ci

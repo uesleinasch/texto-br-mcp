@@ -1,0 +1,19 @@
+Testes automatizados em pipelines de integração contínua
+
+A adoção de testes automatizados tornou-se um pilar essencial no desenvolvimento de software moderno, especialmente em equipes que trabalham com integração contínua e entrega contínua, práticas conhecidas pela sigla CI/CD. Neste artigo, discutiremos os principais tipos de testes automatizados, sua integração em pipelines de CI/CD e as boas práticas recomendadas para garantir maior confiabilidade nas entregas de software.
+
+De maneira geral, os testes automatizados podem ser organizados em diferentes níveis, frequentemente representados pela chamada pirâmide de testes. Na base da pirâmide estão os testes unitários, responsáveis por validar pequenas unidades de código de forma isolada, como funções e métodos individuais. Por serem rápidos de executar e simples de manter, os testes unitários costumam representar a maior parte da suíte de testes de um projeto.
+
+No nível intermediário, encontram-se os testes de integração, cujo objetivo é verificar se diferentes componentes do sistema funcionam corretamente quando combinados, como a interação entre uma aplicação e um banco de dados, ou entre diferentes serviços em uma arquitetura de microsserviços. Esses testes tendem a ser mais lentos que os testes unitários, mas oferecem maior confiança sobre o comportamento real do sistema.
+
+No topo da pirâmide, estão os testes end-to-end, que simulam o comportamento de um usuário real interagindo com a aplicação, geralmente por meio da interface gráfica. Embora sejam extremamente valiosos para validar fluxos completos de negócio, esses testes costumam ser mais lentos, mais frágeis e mais custosos de manter, razão pela qual recomenda-se utilizá-los de forma mais criteriosa, cobrindo apenas os fluxos mais críticos da aplicação.
+
+A integração desses testes em um pipeline de CI/CD costuma seguir uma sequência lógica: a cada alteração de código enviada ao repositório, o pipeline executa automaticamente os testes unitários, seguidos pelos testes de integração e, por fim, pelos testes end-to-end, geralmente em um ambiente de homologação dedicado. Caso qualquer uma dessas etapas falhe, o processo de entrega é interrompido, evitando que código com problemas avance para produção.
+
+Entre as boas práticas mais recomendadas está a manutenção de uma suíte de testes rápida o suficiente para não comprometer a velocidade do processo de desenvolvimento. Pipelines muito lentos tendem a desmotivar a equipe e podem levar à adoção de atalhos perigosos, como a desativação temporária de testes para acelerar entregas urgentes.
+
+Outro ponto importante é a necessidade de manter os testes independentes entre si, evitando dependências de estado compartilhado que possam causar falhas intermitentes, conhecidas popularmente como testes "flaky". Esse tipo de instabilidade compromete a confiança da equipe na suíte de testes como um todo, podendo levar, paradoxalmente, à ignorância de falhas legítimas no futuro.
+
+Por fim, é fundamental que a cobertura de testes seja tratada como um indicador de qualidade, e não como uma meta a ser perseguida isoladamente. Uma alta porcentagem de cobertura não garante, por si só, a ausência de bugs, especialmente quando os testes não avaliam adequadamente os cenários de borda e as condições de erro do sistema. Equipes maduras tendem a equilibrar métricas quantitativas com uma avaliação qualitativa constante da suíte de testes, ajustando sua estratégia conforme o sistema evolui.
+
+Em suma, testes automatizados bem estruturados, combinados a um pipeline de integração contínua confiável, formam a base para entregas de software mais rápidas, seguras e sustentáveis ao longo do tempo.

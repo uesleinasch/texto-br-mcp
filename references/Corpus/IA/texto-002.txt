@@ -1,0 +1,122 @@
+A R T I G O T É C N I C O D E AG R O N O M I A
+
+Diretrizes para o Cultivo de Alta
+Produtividade da Beterraba (Beta vulgaris L.)
+Departamento de Ciências Agrárias e Tecnologia Sustentável
+Publicado em Julho de 2026
+
+   RESUMO
+
+   A beterraba (Beta vulgaris L.) representa uma das olerícolas de raiz mais expressivas do cenário agrícola
+   nacional, valorizada tanto por seu perfil nutricional quanto pela sua rentabilidade em pequenas e médias
+   propriedades. Este artigo apresenta uma análise técnica aprofundada dos principais fatores condicionantes
+   para o sucesso do cultivo, abordando desde as exigências edafoclimáticas e o manejo de fertilidade até os
+   tratamentos fitossanitários e a colheita, visando otimizar o rendimento e a qualidade comercial das raízes.
+
+1. Introdução
+
+Originária das regiões temperadas da Europa e do Norte da África, a beterraba adaptou-se muito bem a
+diferentes condições climáticas no Brasil, embora apresente melhor desempenho produtivo sob temperaturas
+amenas. O principal produto comercial da cultura é a sua raiz tuberosa, rica em açúcares, betalaínas
+(pigmentos antioxidantes), vitaminas do complexo B e minerais essenciais.
+
+Para o produtor moderno, alcançar altos índices de produtividade e garantir raízes de formato uniforme, sem
+rachaduras ou fibras lenhosas, exige a aplicação rigorosa de boas práticas agrícolas. O manejo integrado do
+solo, da água e dos nutrientes dita diretamente o valor comercial final obtido no mercado.
+
+2. Exigências Edafoclimáticas
+
+A beterraba é classificada como uma cultura de clima ameno. O desenvolvimento ideal ocorre em faixas
+térmicas específicas, conforme sumarizado na tabela abaixo:
+
+Artigo Técnico: Cultivo da Beterraba                                                                             1
+  Parâmetro Climático                  Faixa Ideal           Efeitos Práticos no Cultivo
+
+  Temperatura de Germinação            10°C a 25°C           Emergência rápida e uniforme das plântulas.
+
+  Temperatura de                                             Favorece o acúmulo de açúcares e coloração
+                                       15°C a 20°C
+  Desenvolvimento                                            intensa.
+
+                                                             Estimula a atividade fotossintética e enchimento
+  Luminosidade                         Alta fotoperíodo
+                                                             da raiz.
+
+                                       Franco a franco-      Permite a expansão livre da raiz sem deformações
+  Tipo de Solo
+                                       arenoso               físicas.
+
+Temperaturas excessivamente elevadas (acima de 30°C) causam a indução de estresse térmico, resultando
+no aparecimento de anéis brancos concêntricos na polpa da raiz, reduzindo drasticamente seu valor de
+mercado. Quanto ao solo, este deve ser profundo, leve, bem drenado e livre de pedras ou detritos
+compactados.
+
+3. Manejo de Solo, Calagem e Adubação
+
+A cultura é extremamente sensível à acidez do solo. O pH ideal situa-se na faixa de 6,0 a 6,8. A calagem
+deve ser realizada com antecedência de 60 a 90 dias do plantio, utilizando calcário dolomítico para elevar a
+saturação por bases para 70% a 80%.
+
+A adubação deve ser balanceada, com atenção especial ao Nitrogênio (N), Fósforo (P) e Potássio (K). Uma
+recomendação de referência genérica para produtividade de excelência pode ser estabelecida pela seguinte
+relação matemática de exportação de nutrientes:
+
+                           E_{total} = Q_{alvo} imes (1.8\,N + 0.5\,P_2O_5 + 3.2\,K_2O)
+
+Onde E_{total} representa a exportação total de nutrientes em kg/ha e Q_{alvo} é a produtividade esperada
+em toneladas por hectare. O Micronutriente Boro (B) desempenha um papel vital; sua deficiência severa
+provoca uma anomalia fisiológica conhecida como "coração preto", caracterizada por tecidos internos secos
+e necrosados no centro da raiz.
+
+4. Implantação da Cultura e Tratos Culturais
+
+O plantio da beterraba pode ser realizado por semeadura direta ou via produção de mudas em bandejas
+(transplante), sendo este último o mais recomendado para evitar o gasto excessivo com desbaste e garantir o
+estande correto de plantas desde o início.
+
+4.1. Espaçamento e Densidade
+
+  • Espaçamento entre fileiras: 20 a 25 cm.
+
+Artigo Técnico: Cultivo da Beterraba                                                                            2
+  • Espaçamento entre plantas: 8 a 10 cm.
+
+  • Profundidade de semeadura: 1,0 a 1,5 cm.
+
+               400.000                         60 a 80                           35 a 45
+             PLANTAS / HECTARE               DIAS CICLO TOTAL                 PRODUTIVIDADE (T/HA)
+
+4.2. Irrigação
+
+O manejo hídrico deve ser rigoroso. O sistema de irrigação por aspersão ou gotejamento deve manter o solo
+constantemente úmido, mas nunca encharcado. Flutuações drásticas na umidade do solo (períodos de seca
+seguidos por irrigação pesada) provocam pressões internas na raiz que culminam em fendas longitudinais e
+rachaduras de crescimento, inviabilizando o produto comercialmente.
+
+5. Manejo Fitossanitário
+
+A principal enfermidade fúngica que acomete a cultura é a Cercosporiose (causada por Cercospora beticola),
+que se manifesta por pequenas manchas necróticas circulares com bordas arroxeadas nas folhas
+severamente afetadas, reduzindo a capacidade fotossintética da planta. O controle preventivo envolve
+rotação de culturas por no mínimo 3 anos, uso de cultivares tolerantes e aplicação criteriosa de fungicidas
+registrados quando as condições climáticas forem favoráveis à doença (calor e alta umidade).
+
+6. Colheita e Pós-Colheita
+
+O ponto de colheita é determinado visualmente quando as folhas mais velhas começam a amarelecer e
+deitar, e as raízes atingem o diâmetro comercial preferencial de 5 a 9 cm. A operação é majoritariamente
+manual em pequenas propriedades: as plantas são arrancadas, lavadas para remoção da terra aderida, e as
+folhas são ou não retidas (comercialização em maços ou em caixas granel de 20 kg).
+
+Para o armazenamento prolongado, as raízes devem ser mantidas sob refrigeração de 0°C a 2°C com
+umidade relativa de 95%, condições nas quais mantêm o rigor comercial por até algumas semanas.
+
+7. Conclusão
+
+O cultivo da beterraba, embora tecnicamente exigente em aspectos de solo e nutrição, posiciona-se como
+uma excelente alternativa de alta rentabilidade por área. O sucesso do produtor baseia-se na escolha correta
+do solo, fornecimento preciso de Boro, controle rigoroso da oscilação de água na irrigação e colheita no
+ponto ideal de maturação, assegurando a aceitação mercadológica em canais de distribuição cada vez mais
+exigentes.
+
+Artigo Técnico: Cultivo da Beterraba                                                                      3
