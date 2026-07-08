@@ -123,8 +123,8 @@ def matriz_features(dir_corpus, secao10=None):
 
 def relatorio_baseline(dir_corpus, secao10=None):
     """Baseline com os pesos MANUAIS (fixos, pré-calibração) — reproduzível do
-    repo independente do estado atual de score.PESOS (que Task 6 congelou nos
-    valores calibrados)."""
+    repo independente do modelo de runtime congelado em score.MODELO (Task 13),
+    que não expõe mais pesos aditivos (PESOS foi removido; ver PESOS_MANUAIS)."""
     X, y, nomes, chaves = matriz_features(dir_corpus, secao10)
     scores = [score_ponderado(x, score.PESOS_MANUAIS, chaves) for x in X]
     a = auc(scores, y)
@@ -423,7 +423,7 @@ def _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida):
 def _emitir_fit(dir_corpus):
     X, y, nomes, chaves = matriz_features(dir_corpus)
     Xs, medias, desvios = padronizar(X)
-    # prior fixo (pesos manuais) — reproduz os pesos congelados em score.PESOS
+    # prior fixo (pesos manuais, score.PESOS_MANUAIS) — determinístico e
     # independente de recalibrações futuras. Escala do prior no espaço padronizado.
     # .get(k, 0.0): sinais novos (Bloco A/B) não têm peso manual — prior 0.
     prior = [score.PESOS_MANUAIS.get(k, 0.0) / 10.0 for k in chaves]

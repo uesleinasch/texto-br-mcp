@@ -2,18 +2,22 @@
 """Score de humanidade unificado para o pipeline texto-br.
 
 Lê JSON no stdin: {"texto": rascunho, "secao10": seção 10 das references}.
-Compõe os dois analisadores (variância sintática + perturbação lexical) numa
-função objetivo 0-100, usada como critério único do loop de otimização da
-Fase 2.
+Compõe os dois analisadores (variância sintática + perturbação lexical) em
+17 sinais 0-1 (`sinais()`), dos quais um modelo de regressão logística
+calibrado (Etapa 4, calibrar.py --fit-logistico sobre references/Corpus,
+k=9 λ=1.0, AUC LOO-CV 0.902) usa 9 para estimar P(texto ser humano).
+score = P(humano) x 100. O modelo (MODELO) e o alvo (ALVO) são congelados
+no runtime — sem fitting, sem I/O de corpus em tempo de execução; ver
+modelo-calibrado.json para a proveniência dos valores.
 
-Pesos e ALVO calibrados empiricamente na Etapa 3 sobre o corpus rotulado
-(calibrar.py --fit; ver PESOS/ALVO abaixo e pesos-calibrados.json). Os 10
-sinais que compõem o score estão definidos em `sinais()`. PESOS_MANUAIS é a
-referência histórica pré-calibração (pesos escolhidos a olho) — usada como
-prior fixo e determinístico da calibração, não como pesos de runtime.
+PESOS_MANUAIS é a referência histórica pré-calibração (pesos escolhidos a
+olho, Etapa 0) — usada como prior fixo e determinístico da calibração e como
+baseline do teste de separação (test_separacao.py), não como pesos de
+runtime.
 """
 
 import json
+import math
 import os
 import sys
 
@@ -29,9 +33,10 @@ with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                        "referencia_humana.json"), encoding="utf-8") as _f:
     REFERENCIA = json.load(_f)
 
-# Pesos manuais originais (pré-Etapa-3), escolhidos a olho. Referência FIXA
-# usada como prior/baseline da calibração em calibrar.py — não mexer, mesmo
-# quando PESOS (abaixo) for recalibrado. Soma 100.
+# Pesos manuais originais (pré-Etapa-3), escolhidos a olho. Referência
+# histórica e baseline do teste de separação (test_separacao.py) — prior
+# fixo e determinístico usado por calibrar.py, reproduzível do repo
+# independente de qualquer recalibração posterior. Não mexer. Soma 100.
 PESOS_MANUAIS = {
     "burstiness": 25.0,
     "sem_sequencias_uniformes": 5.0,
@@ -45,23 +50,77 @@ PESOS_MANUAIS = {
     "sem_corrente_de_conectivos": 6.0,
 }
 
-# Pesos e ALVO calibrados na Etapa 3 (calibrar.py --fit sobre references/Corpus).
-# ALVO = p75 dos scores humanos (política p75_humano; decisão de produto sobre
-# o ponto de Youden). Ver pesos-calibrados.json.
-ALVO = 74.4
-
-PESOS = {
-    "burstiness": 21.3,
-    "sem_sequencias_uniformes": 2.0,
-    "sem_inicios_repetidos": 10.2,
-    "ordem_nao_canonica": 6.4,
-    "sem_pivots": 23.0,
-    "diversidade_lexical": 2.5,
-    "sem_trigramas_repetidos": 2.0,
-    "paragrafos_variados": 10.6,
-    "sentenca_de_impacto": 13.7,
-    "sem_corrente_de_conectivos": 8.3,
+# Modelo logístico calibrado na Etapa 4 (calibrar.py --fit-logistico sobre
+# references/Corpus; ver modelo-calibrado.json — os valores aqui são cópia
+# congelada byte-a-byte). score = P(humano) x 100. ALVO = p75 das
+# probabilidades humanas x 100 (política p75_humano, decisão de produto).
+#
+# Nota sobre o coeficiente negativo de razao_compressao (-0.369619): é
+# correção de colinearidade dentro do modelo de 9 coeficientes — só é válido
+# lido em conjunto com os outros 8; isoladamente, valor bruto MENOR de
+# razao_compressao indica humano (ver NORMALIZACAO_NOVOS abaixo), então não
+# leia o sinal do coeficiente como a direção do sinal.
+MODELO = {
+    "chaves": [
+        "burstiness_gb",
+        "burstiness",
+        "zipf",
+        "sentenca_de_impacto",
+        "razao_compressao",
+        "burrows_delta",
+        "yule_k",
+        "cross_entropy_trigramas",
+        "sem_pivots",
+    ],
+    "coeficientes": {
+        "burstiness_gb": 0.603605,
+        "burstiness": 0.289515,
+        "zipf": 0.638093,
+        "sentenca_de_impacto": 0.834445,
+        "razao_compressao": -0.369619,
+        "burrows_delta": 0.729567,
+        "yule_k": 0.51813,
+        "cross_entropy_trigramas": 1.257221,
+        "sem_pivots": 1.338965,
+    },
+    "intercepto": 0.019577,
+    "medias": {
+        "burstiness_gb": 0.544985,
+        "burstiness": 0.601766,
+        "zipf": 0.430624,
+        "sentenca_de_impacto": 0.678571,
+        "razao_compressao": 0.497146,
+        "burrows_delta": 0.606136,
+        "yule_k": 0.647133,
+        "cross_entropy_trigramas": 0.515391,
+        "sem_pivots": 0.267857,
+    },
+    "desvios": {
+        "burstiness_gb": 0.309631,
+        "burstiness": 0.17922,
+        "zipf": 0.285577,
+        "sentenca_de_impacto": 0.467025,
+        "razao_compressao": 0.294521,
+        "burrows_delta": 0.310421,
+        "yule_k": 0.274024,
+        "cross_entropy_trigramas": 0.272366,
+        "sem_pivots": 0.343359,
+    },
 }
+
+# round(alvo_p75_humano_prob_precisa * 100, 1) de modelo-calibrado.json —
+# o campo preciso (4 casas), não o grosseiro alvo_p75_humano_prob (1 casa,
+# arredondado na escala 0-100 da antiga rota aditiva).
+ALVO = 93.6
+
+
+def probabilidade(s):
+    """P(humano) do modelo logístico congelado sobre o dict de sinais."""
+    z = MODELO["intercepto"]
+    for k in MODELO["chaves"]:
+        z += (MODELO["coeficientes"][k]
+              * (s[k] - MODELO["medias"][k]) / MODELO["desvios"][k])
+    return 1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z))))
 
 
 # Normalização dos sinais novos (Etapa 4): (lo, hi, invertido).
@@ -153,19 +212,22 @@ def calcular(texto, secao10):
         return resultado
 
     s = sinais(ritmo, lex, texto)
-    componentes = {k: round(s[k] * PESOS[k], 1) for k in PESOS}
-    total = round(sum(componentes.values()), 1)
-    atingiu = total >= ALVO
-    maximos = dict(PESOS)
+    p = probabilidade(s)
+    total = round(p * 100, 1)
+    contribuicoes = {
+        k: round(MODELO["coeficientes"][k]
+                 * (s[k] - MODELO["medias"][k]) / MODELO["desvios"][k], 2)
+        for k in MODELO["chaves"]
+    }
 
     return {
         "score": {
             "total": total,
             "alvo": ALVO,
-            "componentes": componentes,
-            "maximos": maximos,
+            "componentes": contribuicoes,
+            "sinais": {k: round(s[k], 2) for k in MODELO["chaves"]},
         },
-        "atingiu_alvo": atingiu,
+        "atingiu_alvo": total >= ALVO,
         "ritmo": ritmo,
         "lexico": lex,
     }
@@ -178,13 +240,17 @@ def formatar_relatorio(resultado):
     linhas = [
         "## Score de humanidade",
         "",
-        f"**Total: {s['total']} / 100** | alvo >= {s['alvo']} | "
+        f"**Total: {s['total']} / 100** (probabilidade de texto humano) | alvo >= {s['alvo']} | "
         f"veredicto: {'ALVO ATINGIDO' if resultado['atingiu_alvo'] else 'REESCREVER E MEDIR DE NOVO'}",
         "",
-        "| Componente | Pontos |",
-        "| --- | --- |",
+        "| Sinal | Valor (0-1) | Contribuição |",
+        "| --- | --- | --- |",
     ]
-    linhas += [f"| {nome} | {pontos} |" for nome, pontos in s["componentes"].items()]
+    linhas += [
+        f"| {nome} | {s['sinais'][nome]} | {pontos:+} |"
+        for nome, pontos in sorted(s["componentes"].items(), key=lambda kv: kv[1])
+    ]
+    linhas += ["", "Contribuição negativa puxa o texto para 'IA'; corrija esses sinais primeiro."]
     linhas += ["", "### Diagnóstico de ritmo", ""]
     linhas += [f"- {d}" for d in resultado["ritmo"]["diagnostico"]]
     if not resultado["ritmo"]["atingiu_alvo"] and resultado["ritmo"]["candidatas_quebra_fusao"]:
