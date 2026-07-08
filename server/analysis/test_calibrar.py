@@ -65,6 +65,17 @@ class TestMapeamentoPesos(unittest.TestCase):
         self.assertAlmostEqual(pesos["anticorrelacionado"], 2.0, places=6)
         self.assertGreater(pesos["bom"], pesos["anticorrelacionado"])
 
+    def test_coef_para_pesos_todos_nao_positivos_distribui_uniforme(self):
+        # Caso degenerado: nenhum coeficiente positivo (corpus sem discriminação)
+        # Sem base para diferenciar, distribui uniformemente (não despeja o
+        # resíduo num único componente arbitrário).
+        chaves = ["a", "b", "c", "d"]
+        pesos = calibrar.coef_para_pesos([-1.0, -0.5, 0.0, -2.0], chaves, piso=2.0)
+        self.assertAlmostEqual(sum(pesos.values()), 100.0, places=6)
+        for k in chaves:
+            self.assertAlmostEqual(pesos[k], 25.0, places=6,
+                                   msg=f"{k} deveria receber 100/4 no caso degenerado")
+
 
 class TestYouden(unittest.TestCase):
     def test_escolhe_corte_que_separa(self):

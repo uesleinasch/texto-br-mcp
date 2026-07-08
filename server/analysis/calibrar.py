@@ -164,7 +164,17 @@ def coef_para_pesos(coef, chaves, piso=2.0):
     Coeficiente <= 0 (sinal que não indica humano no corpus) fica só no piso —
     não se recompensa um sinal anticorrelacionado."""
     contrib = [max(0.0, c) for c in coef]
-    total = sum(contrib) or 1.0
+    if not any(contrib):
+        # Caso degenerado: nenhum sinal com evidência positiva no corpus.
+        # Sem base para diferenciar, distribui uniformemente (não despeja o
+        # resíduo num único componente arbitrário).
+        uniforme = round(100.0 / len(chaves), 1)
+        pesos = {k: uniforme for k in chaves}
+        resto = round(100.0 - sum(pesos.values()), 1)
+        kfirst = chaves[0]
+        pesos[kfirst] = round(pesos[kfirst] + resto, 1)
+        return pesos
+    total = sum(contrib)
     livre = 100.0 - piso * len(chaves)
     brutos = {k: piso + livre * (contrib[i] / total) for i, k in enumerate(chaves)}
     # arredonda para 1 casa e corrige o resíduo no maior peso
