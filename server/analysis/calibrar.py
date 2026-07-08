@@ -162,7 +162,8 @@ def coef_para_pesos(coef, chaves, piso=2.0):
     """Mapeia a contribuição discriminativa (coef positivo = sinal indica humano)
     para 100 pontos, com piso por componente (preserva o breakdown) e soma 100.
     Coeficiente <= 0 (sinal que não indica humano no corpus) fica só no piso —
-    não se recompensa um sinal anticorrelacionado."""
+    não se recompensa um sinal anticorrelacionado. Caso degenerado (nenhum
+    coeficiente positivo): distribui os 100 pontos uniformemente entre as chaves."""
     contrib = [max(0.0, c) for c in coef]
     if not any(contrib):
         # Caso degenerado: nenhum sinal com evidência positiva no corpus.

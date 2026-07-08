@@ -76,6 +76,21 @@ class TestMapeamentoPesos(unittest.TestCase):
             self.assertAlmostEqual(pesos[k], 25.0, places=6,
                                    msg=f"{k} deveria receber 100/4 no caso degenerado")
 
+    def test_degenerado_residuo_de_divisao_nao_exata_vai_para_primeira_chave(self):
+        # 3 chaves: 100/3 arredonda para 33.3 cada (soma 99.9); o resto de 0.1
+        # deve ir para a PRIMEIRA chave (33.4), mantendo a soma exata em 100.0.
+        chaves = ["a", "b", "c"]
+        pesos = calibrar.coef_para_pesos([-1.0, 0.0, -0.5], chaves, piso=2.0)
+        self.assertAlmostEqual(sum(pesos.values()), 100.0, places=6)
+        self.assertAlmostEqual(pesos["a"], 33.4, places=6)
+        self.assertAlmostEqual(pesos["b"], 33.3, places=6)
+        self.assertAlmostEqual(pesos["c"], 33.3, places=6)
+
+    def test_degenerado_com_uma_chave_recebe_100(self):
+        # 1 chave: uniforme = 100.0, resto 0.0 — o único componente leva tudo.
+        pesos = calibrar.coef_para_pesos([-1.0], ["unica"], piso=2.0)
+        self.assertAlmostEqual(pesos["unica"], 100.0, places=6)
+
 
 class TestYouden(unittest.TestCase):
     def test_escolhe_corte_que_separa(self):
