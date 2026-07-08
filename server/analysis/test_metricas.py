@@ -106,3 +106,32 @@ class TestZipfAjuste(unittest.TestCase):
     def test_poucas_palavras_inaplicavel(self):
         self.assertIsNone(metricas.zipf_ajuste(["a"] * 49))
         self.assertIsNone(metricas.zipf_ajuste(["a", "b"] * 30))  # < 10 types
+
+
+class TestConstruirReferencia(unittest.TestCase):
+    TEXTOS = [
+        "O gato subiu no telhado da casa amarela. A vizinha, sem entender nada, "
+        "chamou os bombeiros que nunca chegaram naquela tarde quente de verão.",
+        "A reunião terminou sem acordo entre as partes. O diretor saiu batendo "
+        "a porta e os analistas ficaram olhando uns para os outros em silêncio.",
+    ]
+
+    def test_shape_e_determinismo(self):
+        r1 = metricas.construir_referencia(self.TEXTOS, top_n=100)
+        r2 = metricas.construir_referencia(self.TEXTOS, top_n=100)
+        self.assertEqual(r1, r2)
+        self.assertLessEqual(len(r1["logprobs"]), 100)
+        self.assertLess(r1["logp_oov"], min(r1["logprobs"].values()) + 1e-9)
+        self.assertEqual(r1["n_textos"], 2)
+        for w, st in r1["funcionais"].items():
+            self.assertIn(w, metricas.PALAVRAS_FUNCIONAIS)
+            self.assertGreaterEqual(st["media"], 0.0)
+            self.assertGreaterEqual(st["desvio"], 0.0)
+
+    def test_frequencias_funcionais(self):
+        freq = metricas.frequencias_funcionais(
+            ["o", "gato", "e", "o", "rato"], ["o", "e", "de"])
+        self.assertAlmostEqual(freq["o"], 2 / 5, places=6)
+        self.assertAlmostEqual(freq["e"], 1 / 5, places=6)
+        self.assertAlmostEqual(freq["de"], 0.0, places=6)
+        self.assertIsNone(metricas.frequencias_funcionais([], ["o"]))
