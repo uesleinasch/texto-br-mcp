@@ -78,6 +78,40 @@ class TestBoilerplate(unittest.TestCase):
         # linha de prosa normal com acento preservada
         self.assertIn("acentuação e deve ser preservado", limpo)
 
+    def test_pontuacao_de_sentenca_colada_na_url_e_preservada(self):
+        self.assertEqual(
+            cp.limpar_boilerplate("Verifique https://about.gitlab.com/."),
+            "Verifique.",
+        )
+        self.assertEqual(
+            cp.limpar_boilerplate("(veja www.x.com)"),
+            "(veja)",
+        )
+        self.assertEqual(
+            cp.limpar_boilerplate("a https://x.com, b"),
+            "a, b",
+        )
+        # URL sem pontuação colada: some sem deixar pontuação, espaço colapsado
+        self.assertEqual(
+            cp.limpar_boilerplate("veja https://x.com aqui"),
+            "veja aqui",
+        )
+
+    def test_pontuacao_terminal_de_url_em_linha_a_parte_e_reatada(self):
+        # (A) URL hifenizada quebrada: a cauda "final/." leva o ponto de volta
+        limpo_a = cp.limpar_boilerplate(
+            "veja em https://exemplo.com/caminho-longo-\nfinal/.\nNova frase aqui."
+        )
+        self.assertIn("veja em.", limpo_a)
+        self.assertNotIn("final/", limpo_a)
+        self.assertIn("Nova frase aqui.", limpo_a)
+        # (B) URL sozinha na linha seguinte: o ponto termina a frase anterior
+        limpo_b = cp.limpar_boilerplate(
+            "Confira o guia oficial\nhttps://exemplo.com/guia/.\nContinua aqui."
+        )
+        self.assertIn("Confira o guia oficial.", limpo_b)
+        self.assertNotIn("exemplo.com", limpo_b)
+
 
 class TestManifesto(unittest.TestCase):
     def test_entrada_tem_todos_os_campos(self):

@@ -31,8 +31,19 @@ def extrair_pdf(caminho):
 
 
 _URL_RE = re.compile(r"https?://\S+|www\.\S+")
+# URL inline (com o espaço à esquerda): removemos a URL + o espaço, mas
+# PRESERVAMOS a run de pontuação de sentença colada no fim dela.
+_URL_INLINE_RE = re.compile(r"\s*(?:https?://|www\.)\S+")
 _URL_CORTADA_RE = re.compile(r"(?:https?://|www\.)\S*-$")  # URL hifenizada no fim
 _ACENTO_RE = re.compile(r"[À-ÿ]")
+
+
+def _remover_url_preservando_pontuacao(m):
+    """Substituição para _URL_INLINE_RE: descarta a URL e o espaço à esquerda,
+    mas devolve a pontuação de sentença colada no fim ('.', ',', ';', ':', '!',
+    '?', ')'). Um '.'/'.com' no MEIO da URL não é pontuação final (o match
+    termina em letra), então só a pontuação no fim do token é preservada."""
+    return re.search(r"[.,;:!?)]*$", m.group(0)).group(0)
 
 
 def _eh_fragmento_url(token):
@@ -66,6 +77,21 @@ def limpar_boilerplate(texto):
     contagem = Counter(s for s in (l.strip() for l in linhas_brutas) if s)
     linhas = []
     esperar_cauda = False  # linha anterior terminou com URL hifenizada
+
+    def _anexar_pontuacao(pont):
+        """Anexa uma run de pontuação de sentença (que estava colada a uma URL
+        removida numa linha à parte) ao fim da última linha de prosa já mantida,
+        para não perder o ponto/!/? que terminava a frase. Evita duplicar
+        pontuação terminal."""
+        if not pont:
+            return
+        for i in range(len(linhas) - 1, -1, -1):
+            if linhas[i].strip():
+                ult = linhas[i].rstrip()
+                if not (pont[0] in ".!?…" and ult[-1:] in ".!?…"):
+                    linhas[i] = ult + pont
+                return
+
     for linha in linhas_brutas:
         s = linha.strip()
         if not s:
@@ -86,12 +112,16 @@ def limpar_boilerplate(texto):
 
         texto_linha = s
         modificada = False
+        cauda_esperada = esperar_cauda  # a linha ANTERIOR terminou com URL cortada?
 
         # (2) cauda de URL quebrada: fragmento de caminho no início desta linha
         if esperar_cauda:
             partes = texto_linha.split(None, 1)
-            cabeca = partes[0].rstrip(".,;:") if partes else ""
+            cabeca_bruta = partes[0] if partes else ""
+            cabeca = cabeca_bruta.rstrip(".,;:!?)")
             if cabeca and _eh_fragmento_url(cabeca):
+                # a pontuação colada ao fim do fragmento termina a frase anterior
+                _anexar_pontuacao(cabeca_bruta[len(cabeca):])
                 texto_linha = partes[1] if len(partes) > 1 else ""
                 modificada = True
                 if not texto_linha.strip():
@@ -99,21 +129,29 @@ def limpar_boilerplate(texto):
                     continue
         esperar_cauda = False
 
-        # fragmento de caminho de URL isolado ocupando a linha inteira
-        if (" " not in texto_linha and "/" in texto_linha
+        # fragmento de caminho de URL isolado na linha inteira — só descarta se a
+        # linha anterior tinha URL cortada (senão uma linha técnica legítima
+        # isolada como "config/prod.yml" seria derrubada indevidamente)
+        if (cauda_esperada and " " not in texto_linha and "/" in texto_linha
                 and re.fullmatch(r"\d+\s*/\s*\d+", texto_linha) is None
                 and _ACENTO_RE.search(texto_linha) is None
                 and re.fullmatch(r"[\w][\w./%-]*", texto_linha) is not None
                 and (len(texto_linha) >= 12 or "." in texto_linha)):
             continue
 
-        # (1) remove URLs inline preservando a prosa ao redor
+        # (1) remove URLs inline preservando a prosa (e a pontuação) ao redor
         if _URL_RE.search(texto_linha):
             esperar_cauda = bool(_URL_CORTADA_RE.search(texto_linha))
-            texto_linha = re.sub(r"\s+", " ", _URL_RE.sub(" ", texto_linha)).strip()
+            texto_linha = _URL_INLINE_RE.sub(
+                _remover_url_preservando_pontuacao, texto_linha
+            )
+            texto_linha = re.sub(r"\s+", " ", texto_linha).strip()
             modificada = True
             if not texto_linha or re.fullmatch(r"\W+", texto_linha):
-                continue  # linha era só URL/pontuação
+                # linha era só URL (+pontuação de sentença numa linha à parte):
+                # preserva a pontuação anexando-a à prosa anterior e descarta
+                _anexar_pontuacao(texto_linha)
+                continue
 
         linhas.append(texto_linha if modificada else linha)
     # colapsa 3+ quebras em 2
