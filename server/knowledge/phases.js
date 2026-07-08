@@ -134,11 +134,13 @@ Se o usuário pedir explicitamente, mostre também o rascunho da Fase 1 para com
 export const TIPOS_CONVERSACIONAIS = ['email', 'comentario-blog', 'comentario-jira', 'chat'];
 
 // Mapa declarativo: quais seções de quais references cada fase recebe.
-// Notações especiais: "type:{slug}" (seção do tipo ativo, resolvida em runtime)
-// e "h1:Texto" (bloco de heading nível 1 com texto exato).
+// Notações especiais: "type:{slug}" (seção do tipo ativo, resolvida em runtime),
+// "h1:Texto" (bloco de heading nível 1 com texto exato) e "h2:Texto" (idem,
+// nível 2, até o próximo heading de nível <= 2).
 export const PHASE_SECTIONS = {
   0: [{ file: 'tipos-de-texto', section: 'h1:Apêndice: Decisão rápida de tipo' }],
   1: [
+    { file: 'tipos-de-texto', section: 'h2:Princípios gerais aplicáveis a todos os tipos' },
     { file: 'tipos-de-texto', section: 'type:{slug}' },
     { file: 'gramatica-pt-br', section: '2' }, // acentuação
     { file: 'gramatica-pt-br', section: '3' }, // hifenização
@@ -193,6 +195,7 @@ export const PHASE_SECTIONS = {
 // Seções podadas continuam acessíveis sob demanda via texto_br_gramatica etc.
 export const PHASE_SECTIONS_CONVERSACIONAL = {
   1: [
+    { file: 'tipos-de-texto', section: 'h2:Princípios gerais aplicáveis a todos os tipos' },
     { file: 'tipos-de-texto', section: 'type:{slug}' },
     { file: 'gramatica-pt-br', section: '4' }, // ortografia (porquês, mau/mal, a/há...)
     { file: 'gramatica-pt-br', section: '5' }, // pontuação (regra dos travessões)

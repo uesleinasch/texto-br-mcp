@@ -69,3 +69,23 @@ export function extractH1Block(rawMarkdown, headingText) {
   }
   return lines.slice(start.index, end).join('\n').trim();
 }
+
+// Extrai um bloco iniciado por heading nível 2 com texto exato
+// (ex.: "Princípios gerais aplicáveis a todos os tipos") até o próximo
+// heading de nível <= 2 (não inclui esse próximo heading).
+export function extractH2Block(rawMarkdown, headingText) {
+  const lines = rawMarkdown.split('\n');
+  const headings = [...headingLines(lines)];
+
+  const start = headings.find((h) => h.level === 2 && h.text === headingText);
+  if (!start) return null;
+
+  let end = lines.length;
+  for (const h of headings) {
+    if (h.index > start.index && h.level <= 2) {
+      end = h.index;
+      break;
+    }
+  }
+  return lines.slice(start.index, end).join('\n').trim();
+}
