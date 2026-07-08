@@ -27,7 +27,7 @@ class TestSinais(unittest.TestCase):
         lex = lexico.analisar(TEXTO_BOM, SECAO10)
         s = score.sinais(ritmo, lex, TEXTO_BOM)
         self.assertEqual(set(s.keys()), set(score.CHAVES_SINAIS))
-        self.assertEqual(len(score.CHAVES_SINAIS), 14)  # 10 antigos + Bloco A
+        self.assertEqual(len(score.CHAVES_SINAIS), 15)  # 10 antigos + Bloco A + zipf
         for k, v in s.items():
             self.assertGreaterEqual(v, 0.0, k)
             self.assertLessEqual(v, 1.0, k)

@@ -80,3 +80,29 @@ class TestAutocorrelacaoLag1(unittest.TestCase):
 
     def test_poucas_sentencas_inaplicavel(self):
         self.assertIsNone(metricas.autocorrelacao_lag1([5, 20, 8]))
+
+
+class TestZipfAjuste(unittest.TestCase):
+    def _zipfiano(self):
+        # frequências ~ 1/rank: palavra0 x60, palavra1 x30, palavra2 x20...
+        palavras = []
+        for r in range(1, 21):
+            palavras += [f"palavra{r}"] * max(1, 60 // r)
+        return palavras
+
+    def test_slope_negativo_e_r2_alto_em_distribuicao_zipfiana(self):
+        resultado = metricas.zipf_ajuste(self._zipfiano())
+        self.assertIsNotNone(resultado)
+        inclinacao, r2 = resultado
+        self.assertLess(inclinacao, -0.5)
+        self.assertGreater(r2, 0.9)
+
+    def test_uniforme_tem_r2_menor(self):
+        uniforme = [f"palavra{i % 25}" for i in range(200)]
+        _, r2_uni = metricas.zipf_ajuste(uniforme)
+        _, r2_zipf = metricas.zipf_ajuste(self._zipfiano())
+        self.assertLess(r2_uni, r2_zipf)
+
+    def test_poucas_palavras_inaplicavel(self):
+        self.assertIsNone(metricas.zipf_ajuste(["a"] * 49))
+        self.assertIsNone(metricas.zipf_ajuste(["a", "b"] * 30))  # < 10 types

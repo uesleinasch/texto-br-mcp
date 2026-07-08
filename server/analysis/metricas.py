@@ -67,3 +67,28 @@ def autocorrelacao_lag1(comprimentos):
         (comprimentos[i] - mu) * (comprimentos[i + 1] - mu) for i in range(n - 1)
     )
     return num / den
+
+
+def zipf_ajuste(palavras):
+    """Ajuste de mínimos quadrados de log(freq) ~ log(rank) sobre a
+    distribuição de frequências. Retorna (inclinacao, r2): inclinacao ~ -1 e
+    r2 alto = aderência à lei de Zipf. None se < 50 palavras ou < 10 types."""
+    if len(palavras) < 50:
+        return None
+    freqs = sorted(Counter(palavras).values(), reverse=True)
+    if len(freqs) < 10:
+        return None
+    xs = [math.log(r) for r in range(1, len(freqs) + 1)]
+    ys = [math.log(f) for f in freqs]
+    n = len(xs)
+    mx = sum(xs) / n
+    my = sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    if sxx == 0:
+        return None
+    b = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / sxx
+    a = my - b * mx
+    ss_res = sum((y - (a + b * x)) ** 2 for x, y in zip(xs, ys))
+    ss_tot = sum((y - my) ** 2 for y in ys)
+    r2 = 1.0 - ss_res / ss_tot if ss_tot else 0.0
+    return b, r2

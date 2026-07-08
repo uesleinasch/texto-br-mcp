@@ -66,6 +66,11 @@ NORMALIZACAO_NOVOS = {
     "yule_k": (74.01, 143.25, True),
     "burstiness_gb": (-0.53, -0.12, False),
     "autocorrelacao_lag1": (-0.40, 0.30, False),
+    # zipf usa a INCLINAÇÃO (não o r2): no corpus, |AUC-0.5| da inclinação
+    # (0.265) supera o do r2 (0.246) — humano tem inclinação mais negativa
+    # (mais aderente à lei de Zipf) que IA; invertido=True porque o AUC bruto
+    # da inclinação é 0.235 (< 0.5, sinal cru favorece IA sem inversão).
+    "zipf": (-0.82, -0.51, True),
 }
 
 # Ordem congelada dos sinais — costura única entre runtime e calibração.
@@ -105,6 +110,8 @@ def sinais(ritmo, lex, texto):
     s["yule_k"] = _norm("yule_k", metricas.yule_k(palavras))
     s["burstiness_gb"] = _norm("burstiness_gb", metricas.burstiness_goh_barabasi(comprimentos))
     s["autocorrelacao_lag1"] = _norm("autocorrelacao_lag1", metricas.autocorrelacao_lag1(comprimentos))
+    ajuste = metricas.zipf_ajuste(palavras)
+    s["zipf"] = _norm("zipf", None if ajuste is None else ajuste[0])
     return s
 
 

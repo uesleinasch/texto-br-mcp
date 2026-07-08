@@ -19,6 +19,7 @@
     "razao_compressao": 0.658,
     "yule_k": 0.649,
     "burstiness_gb": 0.833,
-    "autocorrelacao_lag1": 0.581
+    "autocorrelacao_lag1": 0.581,
+    "zipf": 0.765
   }
 }

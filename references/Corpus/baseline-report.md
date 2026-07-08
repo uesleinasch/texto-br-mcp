@@ -10,6 +10,7 @@
 | --- | --- |
 | burstiness_gb | 0.833 |
 | burstiness | 0.832 |
+| zipf | 0.765 |
 | sentenca_de_impacto | 0.762 |
 | razao_compressao | 0.658 |
 | yule_k | 0.649 |
