@@ -14,12 +14,20 @@ prior fixo e determinístico da calibração, não como pesos de runtime.
 """
 
 import json
+import os
 import sys
 
 import lexico
 import metricas
 import variancia
 from texto_util import clamp, limpar_markdown, listar_palavras
+
+# Referência humana congelada (gerada por referencia_prep.py a partir do lado
+# humano do corpus; versionada). Carga única na importação — artefato fixo do
+# runtime, não I/O de corpus.
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       "referencia_humana.json"), encoding="utf-8") as _f:
+    REFERENCIA = json.load(_f)
 
 # Pesos manuais originais (pré-Etapa-3), escolhidos a olho. Referência FIXA
 # usada como prior/baseline da calibração em calibrar.py — não mexer, mesmo
@@ -71,6 +79,13 @@ NORMALIZACAO_NOVOS = {
     # (mais aderente à lei de Zipf) que IA; invertido=True porque o AUC bruto
     # da inclinação é 0.235 (< 0.5, sinal cru favorece IA sem inversão).
     "zipf": (-0.82, -0.51, True),
+    # Bloco B (Task 9/10): burrows_delta e cross_entropy_trigramas contra a
+    # referência humana (score.REFERENCIA, os 29 humanos elegíveis). Menor
+    # valor bruto = mais próximo/previsível pelo perfil humano de referência
+    # -> invertido=True (AUC bruto 0.347/0.381, < 0.5 sem inversão, confirma
+    # a direção: humano tem valor bruto menor que IA nos dois sinais).
+    "burrows_delta": (0.58, 1.17, True),
+    "cross_entropy_trigramas": (7.05, 7.69, True),
 }
 
 # Ordem congelada dos sinais — costura única entre runtime e calibração.
@@ -87,9 +102,14 @@ def _norm(nome, valor):
     return 1.0 - v if invertido else v
 
 
-def sinais(ritmo, lex, texto):
+def sinais(ritmo, lex, texto, referencia=None):
     """Os sinais normalizados 0-1 (1 = mais humano) que compõem o score.
-    Costura única entre o runtime e a calibração (calibrar.py)."""
+    Costura única entre o runtime e a calibração (calibrar.py).
+
+    `referencia`: estatísticas de referência humana (burrows_delta,
+    cross_entropy_trigramas). None -> REFERENCIA congelada (runtime); a
+    calibração passa a referência do fold (sem vazamento no LOO-CV)."""
+    ref = referencia if referencia is not None else REFERENCIA
     mr, ml = ritmo["metricas"], lex["metricas"]
     texto_limpo, _ = limpar_markdown(texto)
     palavras = listar_palavras(texto_limpo)
@@ -112,6 +132,9 @@ def sinais(ritmo, lex, texto):
     s["autocorrelacao_lag1"] = _norm("autocorrelacao_lag1", metricas.autocorrelacao_lag1(comprimentos))
     ajuste = metricas.zipf_ajuste(palavras)
     s["zipf"] = _norm("zipf", None if ajuste is None else ajuste[0])
+    s["burrows_delta"] = _norm("burrows_delta", metricas.burrows_delta(palavras, ref))
+    s["cross_entropy_trigramas"] = _norm(
+        "cross_entropy_trigramas", metricas.cross_entropy_trigramas(texto_limpo, ref))
     return s
 
 

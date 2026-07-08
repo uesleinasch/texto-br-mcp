@@ -1,5 +1,9 @@
+import os
 import unittest
 import calibrar
+
+DIR_CORPUS = os.path.join(os.path.dirname(__file__), "..", "..", "references", "Corpus")
+_MANIFEST = os.path.join(DIR_CORPUS, "manifest.json")
 
 
 class TestAUC(unittest.TestCase):
@@ -98,6 +102,17 @@ class TestYouden(unittest.TestCase):
         labels = [0, 0, 1, 1]
         alvo = calibrar.melhor_alvo(scores, labels)
         self.assertTrue(20 < alvo <= 80)
+
+
+@unittest.skipUnless(os.path.exists(_MANIFEST), "corpus não preprocessado")
+class TestReferenciaPorFold(unittest.TestCase):
+    def test_fold_de_humano_nao_ve_o_proprio_texto(self):
+        corpus = calibrar.carregar_corpus(DIR_CORPUS)
+        folds = calibrar.folds_com_referencia(corpus)
+        n_humanos_total = sum(1 for e in corpus if e["y"] == 1)
+        for i, fold in enumerate(folds):
+            esperado = n_humanos_total - (1 if corpus[i]["y"] == 1 else 0)
+            self.assertEqual(fold["referencia"]["n_textos"], esperado)
 
 
 if __name__ == "__main__":

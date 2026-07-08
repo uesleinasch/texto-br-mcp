@@ -13,7 +13,9 @@
 | zipf | 0.765 |
 | sentenca_de_impacto | 0.762 |
 | razao_compressao | 0.658 |
+| burrows_delta | 0.657 |
 | yule_k | 0.649 |
+| cross_entropy_trigramas | 0.619 |
 | sem_pivots | 0.584 |
 | autocorrelacao_lag1 | 0.581 |
 | ordem_nao_canonica | 0.542 |

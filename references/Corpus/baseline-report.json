@@ -20,6 +20,8 @@
     "yule_k": 0.649,
     "burstiness_gb": 0.833,
     "autocorrelacao_lag1": 0.581,
-    "zipf": 0.765
+    "zipf": 0.765,
+    "burrows_delta": 0.657,
+    "cross_entropy_trigramas": 0.619
   }
 }

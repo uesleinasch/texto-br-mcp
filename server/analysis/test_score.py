@@ -27,10 +27,18 @@ class TestSinais(unittest.TestCase):
         lex = lexico.analisar(TEXTO_BOM, SECAO10)
         s = score.sinais(ritmo, lex, TEXTO_BOM)
         self.assertEqual(set(s.keys()), set(score.CHAVES_SINAIS))
-        self.assertEqual(len(score.CHAVES_SINAIS), 15)  # 10 antigos + Bloco A + zipf
+        self.assertEqual(len(score.CHAVES_SINAIS), 17)  # 10 antigos + Bloco A/zipf + Bloco B
         for k, v in s.items():
             self.assertGreaterEqual(v, 0.0, k)
             self.assertLessEqual(v, 1.0, k)
+
+    def test_referencia_padrao_e_a_congelada(self):
+        import variancia, lexico
+        ritmo = variancia.analisar(TEXTO_BOM)
+        lex = lexico.analisar(TEXTO_BOM, SECAO10)
+        s_padrao = score.sinais(ritmo, lex, TEXTO_BOM)
+        s_explicito = score.sinais(ritmo, lex, TEXTO_BOM, referencia=score.REFERENCIA)
+        self.assertEqual(s_padrao, s_explicito)
 
     def test_chaves_antigas_preservadas(self):
         for k in score.PESOS:

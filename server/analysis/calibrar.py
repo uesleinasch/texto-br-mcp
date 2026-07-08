@@ -15,6 +15,7 @@ import statistics
 import sys
 
 import lexico
+import metricas
 import score
 import variancia
 
@@ -60,25 +61,59 @@ def _secao10_real(dir_corpus):
 CHAVES = list(score.CHAVES_SINAIS)
 
 
-def matriz_features(dir_corpus, secao10=None):
+def carregar_corpus(dir_corpus, secao10=None):
+    """Textos elegíveis com ritmo/lex pré-computados (independem de
+    referência) — evita reanalisar a cada fold do LOO-CV."""
     secao10 = secao10 if secao10 is not None else _secao10_real(dir_corpus)
     with open(os.path.join(dir_corpus, "manifest.json"), encoding="utf-8") as f:
         manifesto = json.load(f)
-    X, y, nomes = [], [], []
+    corpus = []
     for e in manifesto:
         if not e["incluir_calibracao"]:
             continue
-        caminho = os.path.join(dir_corpus, e["arquivo"])
-        with open(caminho, encoding="utf-8") as f:
+        with open(os.path.join(dir_corpus, e["arquivo"]), encoding="utf-8") as f:
             texto = f.read()
         ritmo = variancia.analisar(texto)
         lex = lexico.analisar(texto, secao10)
         if "erro" in ritmo or "erro" in lex:
             continue  # inaplicável apesar do manifesto; pula com segurança
-        s = score.sinais(ritmo, lex, texto)
+        corpus.append({
+            "arquivo": e["arquivo"], "texto": texto,
+            "y": 1 if e["classe"] == "humano" else 0,
+            "ritmo": ritmo, "lex": lex,
+        })
+    return corpus
+
+
+def matriz_com_referencia(corpus, referencia):
+    X, y = [], []
+    for e in corpus:
+        s = score.sinais(e["ritmo"], e["lex"], e["texto"], referencia=referencia)
         X.append([s[k] for k in CHAVES])
-        y.append(1 if e["classe"] == "humano" else 0)
-        nomes.append(e["arquivo"])
+        y.append(e["y"])
+    return X, y
+
+
+def folds_com_referencia(corpus):
+    """Por fold i do LOO: a referência construída SEM o texto held-out (se ele
+    for humano). Sem vazamento: nenhuma estatística do held-out entra no
+    treino do fold. Referências são cacheadas por conjunto de humanos."""
+    humanos = [e["texto"] for e in corpus if e["y"] == 1]
+    ref_completa = metricas.construir_referencia(humanos)
+    folds = []
+    for e in corpus:
+        if e["y"] == 1:
+            treino = [t for t in humanos if t is not e["texto"]]
+            folds.append({"referencia": metricas.construir_referencia(treino)})
+        else:
+            folds.append({"referencia": ref_completa})
+    return folds
+
+
+def matriz_features(dir_corpus, secao10=None):
+    corpus = carregar_corpus(dir_corpus, secao10)
+    X, y = matriz_com_referencia(corpus, score.REFERENCIA)
+    nomes = [e["arquivo"] for e in corpus]
     return X, y, nomes, CHAVES
 
 
