@@ -4,7 +4,7 @@
   "auc_total": 0.853,
   "media_humano": 65.2,
   "media_ia": 53.3,
-  "alvo_atual": 74.4,
+  "alvo_atual": 93.6,
   "discriminacao_por_componente": {
     "burstiness": 0.832,
     "sem_sequencias_uniformes": 0.475,

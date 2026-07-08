@@ -129,6 +129,10 @@ def probabilidade(s):
 # invertido=True quando valor MENOR indica humano. AUC é invariante a
 # transformação monótona: a escolha de lo/hi não vaza informação de rótulo.
 NORMALIZACAO_NOVOS = {
+    # razao_compressao e autocorrelacao_lag1: a direção medida neste corpus
+    # saiu invertida da intuição inicial (esperava-se IA mais compressível e
+    # mais autocorrelacionada); o corpus mostrou o oposto nos dois — refletido
+    # no invertido de cada um abaixo (True ou False, conforme o caso).
     "razao_compressao": (0.36, 0.52, True),
     "yule_k": (74.01, 143.25, True),
     "burstiness_gb": (-0.53, -0.12, False),
@@ -247,7 +251,7 @@ def formatar_relatorio(resultado):
         "| --- | --- | --- |",
     ]
     linhas += [
-        f"| {nome} | {s['sinais'][nome]} | {pontos:+} |"
+        f"| {nome} | {s['sinais'][nome]} | {pontos:+.2f} |"
         for nome, pontos in sorted(s["componentes"].items(), key=lambda kv: kv[1])
     ]
     linhas += ["", "Contribuição negativa puxa o texto para 'IA'; corrija esses sinais primeiro."]

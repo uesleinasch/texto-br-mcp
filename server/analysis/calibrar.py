@@ -2,7 +2,8 @@
 """Calibração empírica do score sobre o corpus rotulado (offline, stdlib puro).
 
 Modos:
-  --baseline      mede a separação humano/IA com os PESOS atuais e emite relatório.
+  --baseline      mede a separação humano/IA com os PESOS_MANUAIS (baseline histórico
+                  fixo, pré-calibração) e emite relatório.
   --fit           ajusta a regressão logística e emite pesos-calibrados.json (Task 5).
   --fit-logistico busca (k, λ) por LOO-CV honesto e emite modelo-calibrado.json
                   + relatorio-etapa4.md, para o gate do usuário (Task 11).

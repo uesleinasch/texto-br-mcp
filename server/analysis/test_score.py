@@ -8,6 +8,9 @@ import score
 # para 93.6 (p75 das probabilidades humanas no modelo logístico), apenas ~24%
 # dos 29 textos humanos do corpus atingem o alvo — o antigo TEXTO_BOM sintético
 # pontuava 90.4, abaixo do novo alvo. Este texto pontua 98.7.
+# Nota: por estar NO corpus/referência, este é um smoke test in-reference (o
+# modelo já "viu" este texto no fit); não prova generalização — isso é
+# responsabilidade de test_separacao.py (LOO-CV honesto, sem vazamento).
 TEXTO_BOM = (
     "Há poucos dias assisti a uma palestra sobre motivação e liderança com o Dr. "
     "Jamiro Wanderley e em determinado momento ele falou uma coisa que não sabia "
