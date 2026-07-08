@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { runPython } from './run-python.js';
 import { getSection } from '../content/registry.js';
+import { ALVO_SCORE } from '../knowledge/phases.js';
 
 export function register(server, session) {
   server.registerTool(
@@ -11,7 +12,7 @@ export function register(server, session) {
         'Função objetivo unificada da Fase 2: compõe ritmo sintático (burstiness, sequências, ' +
         'ordem não-canônica), léxico (pivots, diversidade, trigramas) e estrutura (parágrafos, ' +
         'impacto, conectivos) num score 0-100 com breakdown por componente e diagnósticos. ' +
-        'Alvo >= 80; atingir o alvo satisfaz o gate da Fase 2 numa única chamada (substitui ' +
+        'Alvo >= ' + ALVO_SCORE + '; atingir o alvo satisfaz o gate da Fase 2 numa única chamada (substitui ' +
         'chamar texto_br_variancia e texto_br_lexico separadamente).',
       inputSchema: {
         texto: z.string().min(1).describe('Rascunho completo a pontuar (markdown ou texto puro)'),

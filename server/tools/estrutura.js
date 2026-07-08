@@ -10,7 +10,7 @@ export function register(server, session) {
       description:
         'Mede sinais macroestruturais de IA num rascunho: simetria de seções, inflação de ' +
         'subtópicos, parágrafo-lição (kicker uniforme), frases de efeito em sequência e ' +
-        'progressão sinalizada. Compõe um score 0-100 de naturalidade estrutural (alvo >= 70) ' +
+        `progressão sinalizada. Compõe um score 0-100 de naturalidade estrutural (alvo >= ${ALVO_ESTRUTURA}) ` +
         'e devolve um plano de perturbação priorizado. Use na Fase 5: medir → perturbar a ' +
         'estrutura conforme o plano → medir de novo, até "ALVO ATINGIDO". O tipo calibra a ' +
         'análise e o gate (default: tipo da sessão).',

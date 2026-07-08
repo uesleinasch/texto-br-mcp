@@ -2,12 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { runPython } from './run-python.js';
 import { getSection } from '../content/registry.js';
+import { ALVO_SCORE } from '../knowledge/phases.js';
 
 const MODEL = process.env.TEXTO_BR_MODEL || 'claude-opus-4-8';
 const MAX_ITERACOES = 4;
 const MAX_SEM_MELHORA = 2;
 
-const SYSTEM = `Você é um editor de humanização de textos em português brasileiro. Receberá um texto e um diagnóstico quantitativo (score 0-100 com componentes de ritmo, léxico e estrutura; alvo >= 80). Reescreva o texto corrigindo APENAS o que o diagnóstico aponta:
+const SYSTEM = `Você é um editor de humanização de textos em português brasileiro. Receberá um texto e um diagnóstico quantitativo (score 0-100 com componentes de ritmo, léxico e estrutura; alvo >= ${ALVO_SCORE}). Reescreva o texto corrigindo APENAS o que o diagnóstico aponta:
 
 RITMO:
 - Quebre sentenças longas ou uniformes (candidatas apontadas) criando 1-2 sentenças muito curtas de impacto (1-5 palavras).
@@ -185,7 +186,7 @@ export function register(server, session) {
         'Otimiza um rascunho automaticamente contra o score de humanidade (texto_br_score): ' +
         'subida de encosta garantida por código que mede, reescreve via Claude API (ritmo, ' +
         'léxico e estrutura) e remede, REJEITANDO iterações que piorem o score ' +
-        '(anti-degradação). Para em alvo atingido (>= 80), convergência ou 4 iterações. ' +
+        `(anti-degradação). Para em alvo atingido (>= ${ALVO_SCORE}), convergência ou 4 iterações. ` +
         'Requer ANTHROPIC_API_KEY no ambiente do servidor; sem credencial, use texto_br_score ' +
         'e reescreva manualmente.',
       inputSchema: {
