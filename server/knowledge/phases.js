@@ -234,6 +234,11 @@ export const CHECKLISTS = {
 // Fonte de verdade replicada em analysis/estrutura.py (TIPOS_GATE).
 export const TIPOS_ESTRUTURA_GATE = ['blog', 'capitulo', 'tecnico', 'explicativo', 'podcast', 'video'];
 
+// Alvo do score de naturalidade estrutural da Fase 5 (0-100). Fonte única:
+// estrutura.js injeta este valor no payload do script Python, que só cai no
+// próprio ALVO_PADRAO (analysis/estrutura.py) em uso standalone (sem payload).
+export const ALVO_ESTRUTURA = 70;
+
 // Loop quantitativo da Fase 2 (variância sintática + perturbação lexical).
 // Ativo por default; desligado apenas com variancia: false a pedido do usuário.
 export const LOOP_QUANTITATIVO_GUIDANCE = `## Loop quantitativo (ATIVADO)

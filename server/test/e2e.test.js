@@ -620,6 +620,45 @@ test('e2e: reposicionar (goTo) salva o rascunho sob a fase de destino, não a de
   }
 });
 
+test('e2e: reposicionamento inválido para a frente não suja o slot de destino (Minor E2-T6)', async () => {
+  // goTo só aceita ir para trás; pedir uma fase à frente da atual lança. O
+  // rascunho passado nessa tentativa não pode ser gravado em rascunhos[fase]
+  // antes de goTo validar — senão o slot da fase de destino fica sujo mesmo
+  // com a chamada terminando em erro (fail-closed, mas não deveria escrever).
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-goto-invalido-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-goto-invalido', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'hábitos', tipo: 'blog', variancia: false },
+    });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: 'R1' } }); // 1 -> 2
+
+    // da Fase 2, tenta reposicionar para a Fase 4 (à frente): inválido.
+    const rInvalido = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { fase: 4, rascunho: 'TEXTO_ISCA' },
+    });
+    assert.equal(rInvalido.isError, true);
+    assert.match(rInvalido.content[0].text, /apenas para trás/);
+
+    // o slot de destino (4) não pode ter sido gravado pela tentativa inválida
+    const rascunhoFase4 = await client.callTool({ name: 'texto_br_rascunho', arguments: { fase: 4 } });
+    assert.equal(rascunhoFase4.isError, true);
+    assert.doesNotMatch(rascunhoFase4.content[0].text, /TEXTO_ISCA/);
+  } finally {
+    await client.close();
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
 test('e2e: texto_br_lexico retorna isError quando a análise dá erro real (não inaplicável)', async () => {
   // Stub de "python3" que ignora o texto de entrada e sempre devolve um erro
   // real (sem "inaplicavel"), simulando a seção 10 não carregada/parseável.

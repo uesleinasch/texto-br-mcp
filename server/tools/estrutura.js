@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { runPython } from './run-python.js';
-import { TIPOS_VALIDOS, TIPOS_ESTRUTURA_GATE } from '../knowledge/phases.js';
+import { TIPOS_VALIDOS, TIPOS_ESTRUTURA_GATE, ALVO_ESTRUTURA } from '../knowledge/phases.js';
 
 export function register(server, session) {
   server.registerTool(
@@ -24,7 +24,7 @@ export function register(server, session) {
         const tipoEfetivo = tipo ?? session?.tipo ?? 'geral';
         const resultado = await runPython(
           'estrutura.py',
-          JSON.stringify({ texto, tipo: tipoEfetivo, gate: TIPOS_ESTRUTURA_GATE, alvo: 70 })
+          JSON.stringify({ texto, tipo: tipoEfetivo, gate: TIPOS_ESTRUTURA_GATE, alvo: ALVO_ESTRUTURA })
         );
         if (resultado.erro && !resultado.inaplicavel) {
           return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
