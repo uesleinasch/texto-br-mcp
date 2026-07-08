@@ -32,9 +32,20 @@ MARCADORES_LICAO = [
     "moral da história", "e é por isso", "é sobre isso", "se há algo",
 ]
 SIGNPOSTS = [
-    "primeiro", "segundo", "terceiro", "em seguida", "depois", "por fim",
+    "primeiro", "terceiro", "em seguida", "por fim",
     "finalmente", "a seguir", "para começar", "em primeiro lugar",
     "em segundo lugar", "por último", "agora que",
+]
+# Signposts que exigem desambiguação: só contam como progressão sinalizada
+# nas formas enumerativas ("Segundo, ..." / "Em segundo lugar") ou sequenciais
+# explícitas ("Depois, ..." / "Depois disso"). Fora dessas formas, "segundo" é
+# preposição de citação de fonte ("segundo o IBGE") e "depois" é advérbio comum
+# ("depois de anos") — não são progressão sinalizada.
+SIGNPOSTS_AMBIGUOS = [
+    (re.compile(r"^segundo\s*,", re.IGNORECASE), "segundo"),
+    (re.compile(r"^em segundo lugar\b", re.IGNORECASE), "segundo"),
+    (re.compile(r"^depois\s*,", re.IGNORECASE), "depois"),
+    (re.compile(r"^depois disso\b", re.IGNORECASE), "depois"),
 ]
 CONECTIVOS_INICIAIS = [
     "além disso", "no entanto", "por outro lado", "portanto", "contudo",
@@ -63,6 +74,16 @@ def primeiro_termo(s):
 def comeca_com(texto, lista):
     base = texto.strip().lower().lstrip("\"'«( ")
     return any(base.startswith(p) for p in lista)
+
+
+def comeca_com_signpost(texto):
+    """Como comeca_com(texto, SIGNPOSTS), mas testa primeiro os signposts
+    ambíguos (regex) antes de cair na lista simples que perdeu "segundo"/
+    "depois"."""
+    base = texto.strip().lstrip("\"'«( ")
+    if any(padrao.match(base) for padrao, _ in SIGNPOSTS_AMBIGUOS):
+        return True
+    return comeca_com(texto, SIGNPOSTS)
 
 
 def contem_marcador(texto, lista):
@@ -274,9 +295,9 @@ def detector_progressao(outline, blocos, tipo):
         return {**base, "aplicavel": False, "subscore": 1.0, "metricas": {},
                 "diagnostico": ["Estrutura insuficiente: progressão não se aplica."], "perturbacoes": []}
 
-    titulos_signpost = sum(1 for s in com_titulo if comeca_com(s["titulo"], SIGNPOSTS)
+    titulos_signpost = sum(1 for s in com_titulo if comeca_com_signpost(s["titulo"])
                            or re.match(r"^\d+[.)]?\s", s["titulo"].strip()))
-    aberturas_signpost = sum(1 for p in paras if comeca_com(p, SIGNPOSTS))
+    aberturas_signpost = sum(1 for p in paras if comeca_com_signpost(p))
     aberturas_conectivo = sum(1 for s in com_titulo if s["paragrafos"]
                               and comeca_com(s["paragrafos"][0], CONECTIVOS_INICIAIS))
     intro_outro = False
@@ -322,7 +343,10 @@ def calcular(texto, tipo):
     outline = montar_outline(blocos)
     paras = paragrafos_de_prosa(outline)
     if len(paras) < 4:
-        return {"erro": "Texto com menos de 4 parágrafos de prosa; análise macroestrutural não se aplica."}
+        return {
+            "erro": "Texto com menos de 4 parágrafos de prosa; análise macroestrutural não se aplica.",
+            "inaplicavel": True,
+        }
 
     alvo = ALVO_PADRAO
     resultados = [d(outline, blocos, tipo) for d in DETECTORES]

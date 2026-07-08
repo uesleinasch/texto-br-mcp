@@ -30,6 +30,13 @@ test('variancia: texto variado atinge o alvo', async () => {
   assert.ok(r.metricas.nao_canonicas >= 0);
 });
 
+test('lexico: seção 10 vazia é erro real, não aprovação silenciosa', async () => {
+  const r = await runPython('lexico.py', JSON.stringify({ texto: TEXTO_VARIADO, secao10: '' }));
+  assert.ok(r.erro, 'deveria retornar erro');
+  assert.ok(!r.inaplicavel, 'erro real, não inaplicabilidade');
+  assert.notEqual(r.atingiu_alvo, true);
+});
+
 test('lexico: parseia as 6 categorias da seção 10 e detecta pivots', async () => {
   const secao10 = getSection('humanizacao-algoritmos', 10);
   const r = await runPython('lexico.py', JSON.stringify({ texto: TEXTO_PIVOT, secao10 }));
@@ -155,4 +162,25 @@ test('estrutura: progressão sinalizada (escada de signposts)', async () => {
   const p = r.detectores.find((d) => d.id === 'progressao_sinalizada');
   assert.ok(p.aplicavel);
   assert.ok(p.subscore < 0.6, `subscore ${p.subscore}`);
+});
+
+// --- Robustez da ponte Node↔Python ---
+
+test('runPython: acentuação intacta em saída grande (fronteira de chunk)', async () => {
+  // texto longo com acentos por toda parte força múltiplos chunks de stdout
+  const frase = 'A canção do coração não é solução para a aflição. ';
+  const r = await runPython('variancia.py', frase.repeat(400));
+  assert.ok(!/�/.test(JSON.stringify(r)), 'saída contém U+FFFD (corrupção UTF-8)');
+});
+
+test('runPython: binário inexistente dá mensagem amigável', async () => {
+  process.env.TEXTO_BR_PYTHON = '/caminho/inexistente-python';
+  try {
+    await assert.rejects(
+      () => runPython('variancia.py', 'Um texto qualquer para o teste.'),
+      /não encontrado|Python 3/
+    );
+  } finally {
+    delete process.env.TEXTO_BR_PYTHON;
+  }
 });

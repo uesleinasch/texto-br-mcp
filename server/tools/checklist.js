@@ -19,7 +19,19 @@ export function register(server) {
     },
     async ({ fase }) => {
       const ref = CHECKLISTS[fase];
-      return { content: [{ type: 'text', text: getSection(ref.file, ref.section) }] };
+      const secao = getSection(ref.file, ref.section);
+      if (!secao) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: `Checklist não encontrado (${ref.file} §${ref.section}); verifique as references.`,
+            },
+          ],
+        };
+      }
+      return { content: [{ type: 'text', text: secao }] };
     }
   );
 }

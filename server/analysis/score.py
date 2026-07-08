@@ -33,9 +33,15 @@ def calcular(texto, secao10):
     ritmo = variancia.analisar(texto)
     lex = lexico.analisar(texto, secao10)
     if "erro" in ritmo:
-        return {"erro": ritmo["erro"]}
+        resultado = {"erro": ritmo["erro"]}
+        if ritmo.get("inaplicavel"):
+            resultado["inaplicavel"] = True
+        return resultado
     if "erro" in lex:
-        return {"erro": lex["erro"]}
+        resultado = {"erro": lex["erro"]}
+        if lex.get("inaplicavel"):
+            resultado["inaplicavel"] = True
+        return resultado
 
     mr, ml = ritmo["metricas"], lex["metricas"]
 
@@ -54,8 +60,26 @@ def calcular(texto, secao10):
     total = round(sum(componentes.values()), 1)
     atingiu = total >= ALVO
 
+    maximos = {
+        "burstiness": 25,
+        "sem_sequencias_uniformes": 5,
+        "sem_inicios_repetidos": 5,
+        "ordem_nao_canonica": 5,
+        "sem_pivots": 25,
+        "diversidade_lexical": 10,
+        "sem_trigramas_repetidos": 5,
+        "paragrafos_variados": 8,
+        "sentenca_de_impacto": 6,
+        "sem_corrente_de_conectivos": 6,
+    }
+
     return {
-        "score": {"total": total, "alvo": ALVO, "componentes": componentes},
+        "score": {
+            "total": total,
+            "alvo": ALVO,
+            "componentes": componentes,
+            "maximos": maximos,
+        },
         "atingiu_alvo": atingiu,
         "ritmo": ritmo,
         "lexico": lex,

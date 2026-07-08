@@ -5,7 +5,23 @@ import re
 ABREVIACOES = [
     "Sr.", "Sra.", "Srta.", "Dr.", "Dra.", "Prof.", "Profa.",
     "etc.", "ex.", "p.", "pp.", "n.", "av.", "tel.", "obs.",
+    "vs.", "a.C.", "d.C.", "S.A.", "fig.", "cap.", "art.", "séc.",
 ]
+
+# A1: fronteira de palavra antes da abreviação + case-insensitive.
+# Ordena por comprimento (desc) para "S.A." casar antes de "a.".
+_ABREV_RE = [
+    (i, re.compile(r"(?<![\wÀ-ÿ])" + re.escape(a), re.IGNORECASE))
+    for i, a in sorted(enumerate(ABREVIACOES), key=lambda t: -len(t[1]))
+]
+
+# A2/A6: fim de sentença = pontuação final + fechadores opcionais + espaço,
+# somente quando a próxima sentença começa com maiúscula, dígito ou abertura
+# de citação (reticência seguida de minúscula é intra-sentencial; atribuição
+# de fala após travessão continua na mesma sentença).
+_FIM_SENTENCA = re.compile(
+    r"([.!?…]+[\"»”'\)\]]*)\s+(?=[A-ZÀ-Ý0-9«“\"'(¿])"
+)
 
 
 def limpar_markdown(texto):
@@ -31,7 +47,7 @@ def limpar_markdown(texto):
             excluidas += 1
             continue
         # headings, itens de lista, tabelas e separadores não são sentenças de prosa
-        if re.match(r"^\s*(#{1,6}\s|[-*+]\s|\d+[.)]\s|\||---+\s*$|>)", linha):
+        if re.match(r"^\s*(#{1,6}\s|[-*+]\s|\d{1,2}[.)]\s|\||---+\s*$|>)", linha):
             excluidas += 1
             continue
         linhas.append(linha)
@@ -39,7 +55,10 @@ def limpar_markdown(texto):
     texto = re.sub(r"`[^`]*`", "", texto)  # inline code
     texto = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", texto)  # imagens
     texto = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", texto)  # links -> texto
-    texto = re.sub(r"[*_]{1,3}([^*_]+)[*_]{1,3}", r"\1", texto)  # ênfase
+    texto = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r"\1", texto)  # ênfase com *
+    texto = re.sub(
+        r"(?<![\wÀ-ÿ])_{1,3}([^_]+?)_{1,3}(?![\wÀ-ÿ])", r"\1", texto
+    )  # ênfase com _ apenas em fronteira de palavra
     return texto, excluidas
 
 
@@ -48,14 +67,20 @@ def dividir_paragrafos(texto):
 
 
 def dividir_sentencas(paragrafo):
-    protegido = paragrafo
-    for i, abrev in enumerate(ABREVIACOES):
-        protegido = protegido.replace(abrev, f"\x00{i}\x00")
-    partes = re.split(r"(?<=[.!?…])\s+", protegido.replace("\n", " "))
+    protegido = paragrafo.replace("\n", " ")
+    for i, rx in _ABREV_RE:
+        protegido = rx.sub(f"\x00{i}\x00", protegido)
+    partes = _FIM_SENTENCA.split(protegido)
+    # re.split com 1 grupo de captura alterna [corpo, separador, corpo, ...]
+    brutas = []
+    for j in range(0, len(partes), 2):
+        corpo = partes[j]
+        sep = partes[j + 1] if j + 1 < len(partes) else ""
+        brutas.append(corpo + sep)
     sentencas = []
-    for parte in partes:
-        for i, abrev in enumerate(ABREVIACOES):
-            parte = parte.replace(f"\x00{i}\x00", abrev)
+    for parte in brutas:
+        for i, _ in _ABREV_RE:
+            parte = parte.replace(f"\x00{i}\x00", ABREVIACOES[i])
         parte = parte.strip()
         if parte and contar_palavras(parte) > 0:
             sentencas.append(parte)
@@ -109,7 +134,10 @@ def parsear_blocos(texto):
             fechar_prosa()
             blocos.append({"tipo": "heading", "nivel": len(m_h.group(1)), "texto": m_h.group(2).strip()})
             continue
-        if re.match(r"^\s*([-*+]\s|\d+[.)]\s)", linha):
+        if re.match(r"^\s*(-{3,}|\*{3,}|_{3,})\s*$", linha):
+            fechar_prosa()
+            continue
+        if re.match(r"^\s*([-*+]\s|\d{1,2}[.)]\s)", linha):
             fechar_prosa()
             blocos.append({"tipo": "lista", "nivel": 0, "texto": linha.strip()})
             continue

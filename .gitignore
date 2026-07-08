@@ -3,3 +3,5 @@ server/node_modules/
 .claude/settings.local.json
 __pycache__/
 *.pyc
+.env
+server/.env

@@ -54,16 +54,28 @@ export function register(server, session) {
         if (fase !== undefined) {
           phase = session.goTo(fase);
         } else {
+          // Veredictos só contam se o hash do texto medido bater com o do
+          // rascunho que a sessão conhece nesta fase (achado C3): medir um
+          // texto alheio ("isca") não pode destravar o gate de outro. O texto
+          // de comparação é o rascunho passado nesta chamada (já salvo acima)
+          // ou, na ausência dele, o rascunho salvo da fase atual.
+          // FAIL-CLOSED: se a sessão não conhece nenhum texto da fase atual
+          // (hashGate null), o gate NÃO abre — não há como confirmar que o
+          // veredicto se refere ao rascunho real.
+          const textoGate = rascunho ?? session.rascunhos?.[session.currentPhase];
+          const hashGate = textoGate ? session.hashTexto(textoGate) : null;
+          const casaHash = (hash) => hash !== null && hashGate !== null && hash === hashGate;
+          const estadoCampo = (atingido, hash) => {
+            if (atingido !== true) return atingido === false ? 'não atingido' : 'não medido';
+            if (hashGate === null) return 'medido, mas o rascunho não foi informado (passe "rascunho")';
+            if (!casaHash(hash)) return 'medido em texto diferente do rascunho atual';
+            return 'ALVO ATINGIDO';
+          };
+          const varianciaOk = session.varianciaAtingida === true && casaHash(session.varianciaHash);
+          const lexicoOk = session.lexicoAtingido === true && casaHash(session.lexicoHash);
           // Gate da Fase 2: com o loop quantitativo ativo, só avança com os
           // dois alvos registrados (texto_br_variancia e texto_br_lexico).
-          if (
-            session.currentPhase === 2 &&
-            session.variancia &&
-            !forcar &&
-            !(session.varianciaAtingida === true && session.lexicoAtingido === true)
-          ) {
-            const estado = (v) =>
-              v === true ? 'ALVO ATINGIDO' : v === false ? 'não atingido' : 'não medido';
+          if (session.currentPhase === 2 && session.variancia && !forcar && !(varianciaOk && lexicoOk)) {
             return {
               isError: true,
               content: [
@@ -71,8 +83,8 @@ export function register(server, session) {
                   type: 'text',
                   text:
                     'Gate da Fase 2: o loop quantitativo ainda não fechou ' +
-                    `(variância sintática: ${estado(session.varianciaAtingida)}; ` +
-                    `perturbação lexical: ${estado(session.lexicoAtingido)}). ` +
+                    `(variância sintática: ${estadoCampo(session.varianciaAtingida, session.varianciaHash)}; ` +
+                    `perturbação lexical: ${estadoCampo(session.lexicoAtingido, session.lexicoHash)}). ` +
                     'Rode texto_br_variancia e texto_br_lexico com o rascunho atual, reescreva ' +
                     'os pontos apontados até ambos retornarem ALVO ATINGIDO, e tente avançar de ' +
                     'novo. Para avançar mesmo assim (a pedido do usuário), use forcar: true.',
@@ -82,22 +94,32 @@ export function register(server, session) {
           }
           // Gate da Fase 5: em tipos longos, só avança com o alvo de naturalidade
           // estrutural atingido (texto_br_estrutura). Advisory nos demais tipos.
+          const estruturaOk = session.estruturaAtingida === true && casaHash(session.estruturaHash);
           if (
             session.currentPhase === 5 &&
             TIPOS_ESTRUTURA_GATE.includes(session.tipo) &&
             !forcar &&
-            session.estruturaAtingida !== true
+            !estruturaOk
           ) {
+            // Distingue "nunca medido" (null) de "medido e reprovado" (false):
+            // só neste último caso o score real ficou abaixo do alvo, então
+            // só aqui faz sentido afirmar "score < 70".
+            const estado = estadoCampo(session.estruturaAtingida, session.estruturaHash);
+            const detalheAlvo =
+              session.estruturaAtingida === false
+                ? ` (score < 70 para o tipo "${session.tipo}")`
+                : ` para o tipo "${session.tipo}"`;
             return {
               isError: true,
               content: [
                 {
                   type: 'text',
                   text:
-                    'Gate da Fase 5: a naturalidade estrutural ainda não atingiu o alvo ' +
-                    `(score < 70 para o tipo "${session.tipo}"). Rode texto_br_estrutura com o ` +
-                    'rascunho atual, aplique o plano de perturbação até "ALVO ATINGIDO" e tente ' +
-                    'avançar de novo. Para avançar mesmo assim (a pedido do usuário), use forcar: true.',
+                    'Gate da Fase 5: a naturalidade estrutural ainda não atingiu o alvo' +
+                    `${detalheAlvo}; estado: ${estado}. Rode ` +
+                    'texto_br_estrutura com o rascunho atual, aplique o plano de perturbação até ' +
+                    '"ALVO ATINGIDO" e tente avançar de novo. Para avançar mesmo assim (a pedido ' +
+                    'do usuário), use forcar: true.',
                 },
               ],
             };

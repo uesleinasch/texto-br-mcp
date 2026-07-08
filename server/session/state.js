@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -7,8 +8,13 @@ import path from 'node:path';
 // rascunhos) é restaurada no startup. O arquivo vive em tmpdir e morre no
 // reboot, o que é suficiente para o caso de uso (crash/restart do servidor).
 
+// Nome do arquivo derivado do cwd (hash curto) para que duas janelas/instâncias
+// em projetos diferentes não pisem no state uma da outra (mesma pasta ainda
+// colide, o que é aceitável: é a mesma sessão de escrita).
+const cwdId = createHash('sha256').update(process.cwd()).digest('hex').slice(0, 8);
 const STATE_FILE =
-  process.env.TEXTO_BR_STATE_FILE || path.join(os.tmpdir(), 'texto-br-session.json');
+  process.env.TEXTO_BR_STATE_FILE ||
+  path.join(os.tmpdir(), `texto-br-session-${cwdId}.json`);
 
 const CAMPOS = [
   'currentPhase',
@@ -21,6 +27,9 @@ const CAMPOS = [
   'varianciaAtingida',
   'lexicoAtingido',
   'estruturaAtingida',
+  'varianciaHash',
+  'lexicoHash',
+  'estruturaHash',
 ];
 
 export const SessionState = {
@@ -34,6 +43,9 @@ export const SessionState = {
   varianciaAtingida: null, // último veredicto de texto_br_variancia(_aplicar)
   lexicoAtingido: null, // último veredicto de texto_br_lexico
   estruturaAtingida: null, // último veredicto de texto_br_estrutura (Fase 5)
+  varianciaHash: null, // hash SHA-256 do texto medido em texto_br_variancia/score
+  lexicoHash: null, // hash SHA-256 do texto medido em texto_br_lexico/score
+  estruturaHash: null, // hash SHA-256 do texto medido em texto_br_estrutura
 
   start(briefing, tipo, tamanho, variancia) {
     this.briefing = briefing;
@@ -46,6 +58,40 @@ export const SessionState = {
     this.varianciaAtingida = null;
     this.lexicoAtingido = null;
     this.estruturaAtingida = null;
+    this.varianciaHash = null;
+    this.lexicoHash = null;
+    this.estruturaHash = null;
+    this.persist();
+  },
+
+  // SHA-256 (hex) do texto, para amarrar um veredicto de gate ao texto exato
+  // que foi medido (evita que medir um rascunho alheio destrave o gate de
+  // outro rascunho — achado C3).
+  hashTexto(texto) {
+    return createHash('sha256').update(String(texto).trim()).digest('hex');
+  },
+
+  // Métodos explícitos de registro (em vez de um helper genérico): os nomes
+  // dos flags de veredicto divergem (varianciaAtingida, lexicoAtingido,
+  // estruturaAtingida), então a clareza de três métodos nomeados vence a
+  // economia de um helper genérico. `texto` é o texto efetivamente medido;
+  // o hash gravado é o dele (inclusive no caso "inaplicavel", em que o
+  // veredicto vale para o próprio texto curto analisado).
+  registrarVariancia(atingido, texto) {
+    this.varianciaAtingida = atingido;
+    this.varianciaHash = texto === null ? null : this.hashTexto(texto);
+    this.persist();
+  },
+
+  registrarLexico(atingido, texto) {
+    this.lexicoAtingido = atingido;
+    this.lexicoHash = texto === null ? null : this.hashTexto(texto);
+    this.persist();
+  },
+
+  registrarEstrutura(atingido, texto) {
+    this.estruturaAtingida = atingido;
+    this.estruturaHash = texto === null ? null : this.hashTexto(texto);
     this.persist();
   },
 
@@ -77,6 +123,27 @@ export const SessionState = {
     if (!Number.isInteger(fase) || fase < 1 || fase > 6) {
       throw new Error('Fase inválida: use um inteiro de 1 a 6.');
     }
+    if (fase > this.currentPhase) {
+      throw new Error(
+        `Reposicionamento é apenas para trás (fase atual: ${this.currentPhase}). ` +
+          'Para avançar, conclua a fase atual e chame sem o parâmetro "fase" ' +
+          '(os gates se aplicam); não é possível pular para uma fase futura.'
+      );
+    }
+    // Revisitar uma fase invalida os vereditos (e hashes) das medições que
+    // dependiam do texto que existia antes da volta — achado C5. O rascunho
+    // pode mudar entre a volta e a nova tentativa de avançar, então exige
+    // nova medição.
+    if (fase <= 2) {
+      this.varianciaAtingida = null;
+      this.lexicoAtingido = null;
+      this.varianciaHash = null;
+      this.lexicoHash = null;
+    }
+    if (fase <= 5) {
+      this.estruturaAtingida = null;
+      this.estruturaHash = null;
+    }
     this.currentPhase = fase;
     this.persist();
     return this.currentPhase;
@@ -98,10 +165,16 @@ export const SessionState = {
       rascunhosSalvos: Object.keys(this.rascunhos),
       varianciaAtingida: this.varianciaAtingida,
       lexicoAtingido: this.lexicoAtingido,
+      estruturaAtingida: this.estruturaAtingida,
     };
   },
 
   persist() {
+    if (this.currentPhase !== null && this.currentPhase >= 6) {
+      // Pipeline entregue (Fase 6): nada a restaurar num restart futuro,
+      // então não deixa sessão fantasma no disco (achado R7).
+      return this.clearPersisted();
+    }
     try {
       const dados = Object.fromEntries(CAMPOS.map((c) => [c, this[c]]));
       writeFileSync(STATE_FILE, JSON.stringify(dados), 'utf8');
@@ -113,9 +186,19 @@ export const SessionState = {
   restore() {
     try {
       const dados = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
+      // Valida o shape mínimo antes de aplicar: um arquivo corrompido ou de
+      // outra versão não pode travar o startup do servidor (achado R7).
+      const valido =
+        dados &&
+        typeof dados === 'object' &&
+        (dados.currentPhase === null || Number.isInteger(dados.currentPhase)) &&
+        (dados.rascunhos === undefined ||
+          (typeof dados.rascunhos === 'object' && dados.rascunhos !== null));
+      if (!valido) return;
       for (const campo of CAMPOS) {
         if (campo in dados) this[campo] = dados[campo];
       }
+      if (this.rascunhos === null || typeof this.rascunhos !== 'object') this.rascunhos = {};
       if (this.currentPhase !== null) {
         console.error(
           `[texto-br] sessão anterior restaurada (fase ${this.currentPhase}, tipo ${this.tipo})`

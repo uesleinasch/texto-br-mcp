@@ -22,9 +22,17 @@ export function register(server, session) {
       try {
         const secao10 = getSection('humanizacao-algoritmos', 10);
         const resultado = await runPython('lexico.py', JSON.stringify({ texto, secao10 }));
-        if (session && !resultado.erro) {
-          session.lexicoAtingido = resultado.atingiu_alvo === true;
-          session.persist();
+        if (resultado.erro && !resultado.inaplicavel) {
+          return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
+        }
+        if (session) {
+          if (resultado.inaplicavel) {
+            // Análise inaplicável (texto curto): não há o que medir, não trava o
+            // gate. O veredicto vale para este texto curto (hash dele).
+            session.registrarLexico(true, texto);
+          } else if (!resultado.erro) {
+            session.registrarLexico(resultado.atingiu_alvo === true, texto);
+          }
         }
         return { content: [{ type: 'text', text: resultado.relatorio }] };
       } catch (err) {

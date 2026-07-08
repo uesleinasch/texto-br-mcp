@@ -42,7 +42,6 @@ export function register(server, session) {
           session.currentPhase !== null
             ? `Atenção: o pipeline anterior (Fase ${session.currentPhase}, tipo ${session.tipo ?? 'indefinido'}, briefing "${session.briefing}") foi abandonado ao iniciar esta nova escrita.`
             : null;
-        session.start(briefing, tipo, tamanho, variancia);
 
         if (!tipo) {
           const fase0 = PHASE_GUIDANCE[0];
@@ -54,12 +53,18 @@ export function register(server, session) {
           ]
             .filter(Boolean)
             .join('\n\n');
+          // Só muta a sessão depois que a composição deu certo: se
+          // composePhaseSections lançasse antes disso, a sessão anterior
+          // (se houver) permanece intacta em vez de ser sobrescrita por uma
+          // chamada que terminou em erro.
+          session.start(briefing, tipo, tamanho, variancia);
           return { content: [{ type: 'text', text }] };
         }
 
         const fase1 = PHASE_GUIDANCE[1];
+        const varianciaAtiva = variancia !== false;
         const avisoVariancia = `Loop quantitativo da Fase 2 (variância sintática + perturbação lexical): ${
-          session.variancia ? 'ATIVADO (default)' : 'desativado a pedido do usuário'
+          varianciaAtiva ? 'ATIVADO (default)' : 'desativado a pedido do usuário'
         }.`;
         const text = [
           anterior,
@@ -73,6 +78,7 @@ export function register(server, session) {
         ]
           .filter(Boolean)
           .join('\n\n');
+        session.start(briefing, tipo, tamanho, variancia);
         return { content: [{ type: 'text', text }] };
       } catch (err) {
         return { isError: true, content: [{ type: 'text', text: err.message }] };

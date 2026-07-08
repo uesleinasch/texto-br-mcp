@@ -75,7 +75,7 @@ Não mostre o rascunho ao usuário, não comente, não anuncie fase concluída. 
 
 1. Limpeza Unicode (remover invisíveis, normalizar pontuação).
 2. Reescrita lexical (substituir vocabulário pivot da lista negra).
-3. Reestruturação sintática (variar drasticamente comprimento de sentenças; burstiness > 0.6).
+3. Reestruturação sintática (variar drasticamente comprimento de sentenças; burstiness >= 0.7).
 4. Quebra de estruturas paralelas (eliminar tríades automáticas e simetria de parágrafos).
 5. Injeção de voz humana (subjetividade, contrações, expressões brasileiras conforme o tipo permitir).
 

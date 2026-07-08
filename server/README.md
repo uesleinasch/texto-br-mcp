@@ -6,7 +6,7 @@ Servidor MCP (stdio) que encapsula o workflow texto-br: escrita profissional em 
 
 - Node.js >= 18
 - Python 3 no PATH (`python3`) — usado pelos analisadores quantitativos
-- Opcional: `ANTHROPIC_API_KEY` no ambiente — habilita `texto_br_variancia_aplicar` (correção automática de ritmo via Claude API; sem a chave, a tool retorna erro amigável e o fluxo manual segue normal)
+- Opcional: `ANTHROPIC_API_KEY` no ambiente — habilita `texto_br_otimizar` (correção automática de ritmo via Claude API; sem a chave, a tool retorna erro amigável e o fluxo manual segue normal)
 
 ## Instalação e registro
 
@@ -47,7 +47,7 @@ server/
 ├── server.js             # McpServer + instructions + registro das tools
 ├── content/              # loader (cache), parser (fatiamento por heading), registry (índices)
 ├── knowledge/phases.js   # guidance das fases + mapa fase→seções (toda evolução do workflow é aqui)
-├── session/state.js      # estado da sessão, persistido em $TMPDIR/texto-br-session.json
+├── session/state.js      # estado da sessão, persistido em $TMPDIR/texto-br-session-<hash-do-cwd>.json
 ├── tools/                # uma tool por arquivo + run-python.js (spawn dos analisadores)
 ├── analysis/             # variancia.py, lexico.py, score.py, estrutura.py, texto_util.py (Python stdlib)
 └── test/                 # node --test
@@ -57,7 +57,7 @@ server/
 
 | Variável | Efeito |
 |---|---|
-| `ANTHROPIC_API_KEY` | Habilita `texto_br_variancia_aplicar` |
+| `ANTHROPIC_API_KEY` | Habilita `texto_br_otimizar` |
 | `TEXTO_BR_PYTHON_TIMEOUT_MS` | Timeout dos analisadores Python (default 30000) |
 
 ## Desenvolvimento
@@ -67,4 +67,4 @@ npm test          # testes (conteúdo, analisadores, e2e via client MCP)
 node index.js     # roda o servidor manualmente (stdio; logs em stderr)
 ```
 
-A persistência de sessão fica em `os.tmpdir()/texto-br-session.json` (sobrevive a restart do servidor, morre no reboot). Para editar o conteúdo de domínio (tipos, gramática, listas pivot, matrizes), edite os `.md` em `../references/` — o servidor parseia em runtime e o `validateAll()` avisa em stderr se alguma seção esperada sumir.
+A persistência de sessão fica em `os.tmpdir()/texto-br-session-<hash-do-cwd>.json` (sobrevive a restart do servidor, morre no reboot; o hash do `cwd` evita colisão entre janelas em projetos diferentes — mesma pasta ainda compartilha o arquivo). Use `TEXTO_BR_STATE_FILE` para fixar o caminho. Para editar o conteúdo de domínio (tipos, gramática, listas pivot, matrizes), edite os `.md` em `../references/` — o servidor parseia em runtime e o `validateAll()` avisa em stderr se alguma seção esperada sumir.

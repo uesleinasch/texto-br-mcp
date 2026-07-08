@@ -23,12 +23,24 @@ export function register(server, session) {
       try {
         const tipoEfetivo = tipo ?? session?.tipo ?? 'geral';
         const resultado = await runPython('estrutura.py', JSON.stringify({ texto, tipo: tipoEfetivo }));
-        if (session) {
-          // Análise inaplicável (texto curto demais) não tem o que perturbar: não trava o gate.
-          session.estruturaAtingida = resultado.erro ? true : resultado.atingiu_alvo === true;
-          session.persist();
+        if (resultado.erro && !resultado.inaplicavel) {
+          return { isError: true, content: [{ type: 'text', text: resultado.erro }] };
         }
-        return { content: [{ type: 'text', text: resultado.relatorio }] };
+        let relatorio = resultado.relatorio;
+        if (session) {
+          if (tipoEfetivo === session.tipo) {
+            // Análise inaplicável (texto curto demais) não tem o que perturbar: não
+            // trava o gate. Erro real (não declarado inaplicável) não libera o gate.
+            const atingido = resultado.inaplicavel ? true : resultado.atingiu_alvo === true;
+            session.registrarEstrutura(atingido, texto);
+          } else {
+            // Medição com tipo alheio ao da sessão: não conta para o gate da Fase 5.
+            relatorio +=
+              `\n\n(Nota: esta medição usou o tipo "${tipoEfetivo}", diferente do tipo ` +
+              `da sessão ("${session.tipo}"); o resultado não conta para o gate da Fase 5.)`;
+          }
+        }
+        return { content: [{ type: 'text', text: relatorio }] };
       } catch (err) {
         return { isError: true, content: [{ type: 'text', text: err.message }] };
       }
