@@ -172,6 +172,23 @@ def coef_para_pesos(coef, chaves, piso=2.0):
     return pesos
 
 
+def separacao_loocv(dir_corpus):
+    """AUC honesto: para cada amostra, treina nos N-1 restantes e prevê a que
+    ficou de fora. Reflete generalização, não ajuste in-sample."""
+    X, y, nomes, chaves = matriz_features(dir_corpus)
+    prior = [score.PESOS[k] / 10.0 for k in chaves]
+    preditos = []
+    for i in range(len(X)):
+        Xtr = [X[j] for j in range(len(X)) if j != i]
+        ytr = [y[j] for j in range(len(X)) if j != i]
+        Xs, medias, desvios = padronizar(Xtr)
+        w, b = treinar_logistica(Xs, ytr, prior=prior, l2=1.0, lr=0.3, iteracoes=1500)
+        xi = [(X[i][j] - medias[j]) / desvios[j] for j in range(len(chaves))]
+        z = b + sum(w[j] * xi[j] for j in range(len(chaves)))
+        preditos.append(1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z)))))
+    return round(auc(preditos, y), 3)
+
+
 def melhor_alvo(scores, labels):
     """Threshold que maximiza o índice J de Youden (TPR - FPR)."""
     candidatos = sorted(set(scores))
