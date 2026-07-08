@@ -60,6 +60,24 @@ class TestBoilerplate(unittest.TestCase):
             self.assertIn(p, limpo)
         self.assertIn(refrao, limpo)  # refrão 2x (< 3) preservado
 
+    def test_url_inline_removida_sem_truncar_prosa_e_cauda_quebrada(self):
+        bruto = "\n".join([
+            "veja em https://exemplo.com/foo detalhes",
+            "consulte https://exemplo.com/caminho-longo-quebrado-",
+            "foo-bar-baz/",
+            "Este parágrafo em português tem acentuação e deve ser preservado.",
+        ])
+        limpo = cp.limpar_boilerplate(bruto)
+        # URL inline removida, prosa ao redor preservada (não descartada)
+        self.assertIn("veja em detalhes", limpo)
+        self.assertNotIn("https://exemplo.com/foo", limpo)
+        # prosa antes da URL quebrada mantida
+        self.assertIn("consulte", limpo)
+        # cauda de URL quebrada pelo pdftotext removida
+        self.assertNotIn("foo-bar-baz/", limpo)
+        # linha de prosa normal com acento preservada
+        self.assertIn("acentuação e deve ser preservado", limpo)
+
 
 class TestManifesto(unittest.TestCase):
     def test_entrada_tem_todos_os_campos(self):

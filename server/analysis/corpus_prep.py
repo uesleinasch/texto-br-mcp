@@ -30,36 +30,92 @@ def extrair_pdf(caminho):
     return out.stdout
 
 
+_URL_RE = re.compile(r"https?://\S+|www\.\S+")
+_URL_CORTADA_RE = re.compile(r"(?:https?://|www\.)\S*-$")  # URL hifenizada no fim
+_ACENTO_RE = re.compile(r"[À-ÿ]")
+
+
+def _eh_fragmento_url(token):
+    """True se o token parece a continuação de um caminho de URL quebrado pelo
+    pdftotext (contém '/', sem espaços, sem acento pt-BR, charset de path). NÃO
+    trata fração de página ('1/18'). Conservador para não pegar 'CI/CD', 'e/ou'."""
+    return (
+        "/" in token
+        and re.fullmatch(r"\d+\s*/\s*\d+", token) is None
+        and _ACENTO_RE.search(token) is None
+        and re.fullmatch(r"[\w][\w./%-]*", token) is not None
+    )
+
+
 def limpar_boilerplate(texto):
     """Remove capa/marca, URLs, números/frações de página e mobília periódica.
 
     Em PDFs web-print o cabeçalho (data + título) e o rodapé (URL + fração de
-    página tipo "1/18") se repetem a cada página, muitas vezes colados na mesma
-    linha que conteúdo. Além das linhas que são só ruído, removemos qualquer
-    linha que contenha URL ou fração de página no fim, e qualquer linha que se
-    repita 3+ vezes no documento (cabeçalho/rodapé periódico). Prosa real quase
-    nunca repete uma linha verbatim 3+ vezes; um refrão que apareça < 3 vezes é
-    preservado."""
+    página tipo "1/18") se repetem a cada página. URLs longas são quebradas pelo
+    pdftotext em várias linhas; por isso NÃO descartamos a linha inteira que
+    contém URL (isso truncaria a prosa e deixaria a cauda da URL órfã). Em vez
+    disso: (1) removemos o token de URL inline, preservando a prosa ao redor, e
+    só descartamos a linha se o que sobrar for vazio/pontuação; (2) quando uma
+    URL é hifenizada no fim da linha, descartamos o fragmento de caminho que
+    inicia a linha seguinte (a cauda da URL); (3) removemos frações de página no
+    fim; (4) fazemos dedupe de linhas que se repetem 3+ vezes (mobília
+    periódica). Prosa real quase nunca repete uma linha verbatim 3+ vezes; um
+    refrão com < 3 ocorrências é preservado."""
     linhas_brutas = texto.split("\n")
     # contagem por linha (stripped, não vazia) para o dedupe de mobília periódica
     contagem = Counter(s for s in (l.strip() for l in linhas_brutas) if s)
     linhas = []
+    esperar_cauda = False  # linha anterior terminou com URL hifenizada
     for linha in linhas_brutas:
         s = linha.strip()
         if not s:
             linhas.append("")
             continue
-        if re.search(r"https?://|www\.", s):
-            continue  # URL (marca / rodapé de print) em qualquer posição da linha
+        if contagem[s] >= 3:
+            esperar_cauda = False
+            continue  # cabeçalho/rodapé periódico repetido
         if re.fullmatch(r"\d{1,4}", s):
+            esperar_cauda = False
             continue  # número de página solto
         if re.search(r"\d+\s*/\s*\d+\s*$", s):
+            esperar_cauda = False
             continue  # fração de página no fim da linha ("1/18")
         if re.fullmatch(r"[-—_·•]{1,}", s):
+            esperar_cauda = False
             continue  # régua/ornamento
-        if contagem[s] >= 3:
-            continue  # cabeçalho/rodapé periódico repetido
-        linhas.append(linha)
+
+        texto_linha = s
+        modificada = False
+
+        # (2) cauda de URL quebrada: fragmento de caminho no início desta linha
+        if esperar_cauda:
+            partes = texto_linha.split(None, 1)
+            cabeca = partes[0].rstrip(".,;:") if partes else ""
+            if cabeca and _eh_fragmento_url(cabeca):
+                texto_linha = partes[1] if len(partes) > 1 else ""
+                modificada = True
+                if not texto_linha.strip():
+                    esperar_cauda = False
+                    continue
+        esperar_cauda = False
+
+        # fragmento de caminho de URL isolado ocupando a linha inteira
+        if (" " not in texto_linha and "/" in texto_linha
+                and re.fullmatch(r"\d+\s*/\s*\d+", texto_linha) is None
+                and _ACENTO_RE.search(texto_linha) is None
+                and re.fullmatch(r"[\w][\w./%-]*", texto_linha) is not None
+                and (len(texto_linha) >= 12 or "." in texto_linha)):
+            continue
+
+        # (1) remove URLs inline preservando a prosa ao redor
+        if _URL_RE.search(texto_linha):
+            esperar_cauda = bool(_URL_CORTADA_RE.search(texto_linha))
+            texto_linha = re.sub(r"\s+", " ", _URL_RE.sub(" ", texto_linha)).strip()
+            modificada = True
+            if not texto_linha or re.fullmatch(r"\W+", texto_linha):
+                continue  # linha era só URL/pontuação
+
+        linhas.append(texto_linha if modificada else linha)
     # colapsa 3+ quebras em 2
     return re.sub(r"\n{3,}", "\n\n", "\n".join(linhas)).strip()
 

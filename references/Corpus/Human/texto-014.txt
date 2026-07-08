@@ -65,7 +65,7 @@ O que é CI/CD? Onde eu uso isso?
      vez da implantação, embora a segunda também seja importante.
 
      Você consegue ver os Princípios Ágeis sendo aplicados aqui? Se você não os
-     agile-manifesto/.
+conhece, verifique
 
      Bem, para um ambiente de produção, a Entrega Contínua é muito interessante,
      porque você pode colocar o software em produção “assim que estiver pronto, com o
@@ -105,6 +105,7 @@ O que é CI/CD? Onde eu uso isso?
      Hoje eu sugiro que você dê uma olhada no Gitlab.
 
      Gitlab
+Você ainda não conhece o Gitlab? Verifique
 
      O Gitlab é uma aplicação muito interessante, com várias ferramentas e recursos
      para ajudar e suportar os desenvolvedores em seu processo de DevOps.
@@ -115,14 +116,17 @@ O que é CI/CD? Onde eu uso isso?
 
      Você pode ter sua própria instância local (on-premises) ou na nuvem pública ou até
      mesmo usar a oferta SaaS hospedada pelo GitLab! E acredite, ambos têm uma opção
+grátis! Verifique
 
-     integration-delivery-and-deployment-with-gitlab/, onde você pode encontrar mais
+Algumas citações acima são de
+onde você pode encontrar mais
      informações sobre o que é CI/CD.
 
      No site deles podemos ver a imagem abaixo, que mostra exatamente onde está o CI
      e o CD em todo o processo e o que está envolvido com cada um deles:
 
      Esta imagem e muitas outras informações sobre o CI/CD e o Gitlab podem ser
+encontradas em
 
      Conclusão
      CI significa integração contínua e CD pode ser entrega contínua ou deploy contínuo.
