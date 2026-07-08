@@ -1,6 +1,4 @@
-08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
-
-     O que é cloud?
+O que é cloud?
      5 min read · Nov 5, 2019
 
              Gabriel Faraday      Follow
@@ -13,9 +11,6 @@
      São inúmeras as vagas onde se pedem experiência em cloud. São diversas palestras
      apresentadas mensalmente retratando aspectos e serviços de cloud. Temos eventos
      focados apenas em cloud.
-
-https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            1/12
-08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
 
      Cloud, cloud, cloud…
 
@@ -53,8 +48,6 @@ https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                  
      Dentre outras coisas, uma cloud nos fornece:
 
           Componentes brutos de rede, armazenamento e computação.
-https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            2/12
-08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
 
           Reconhecimento de fala e outros serviços cognitivos.
 
@@ -86,9 +79,6 @@ https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                  
           técnicas especializadas que podem fornecer mais segurança do que a maioria
           das organizações poderiam atingir sem eles.
 
-https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            3/12
-08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
-
                              São diversos os níveis de segurança que uma cloud nos garante
 
      E como funcionam os serviços de cloud?
@@ -115,9 +105,6 @@ https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                  
           Armazenamento
 
           Redes
-
-https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            4/12
-08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
 
           Sistemas operacionais
 
@@ -146,14 +133,8 @@ https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                  
      provedor de cloud se responsabiliza em gerenciar em cada uma das categorias,
      desde Local (on-premises) até SaaS:
 
-https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            5/12
-08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
-
      A próxima imagem é bem parecida com a anterior, porém mostra alguns aspectos
      diferentes:
-
-https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            6/12
-08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
 
      E qual cloud devo contratar?
      Bom, tudo isso que foi explicado acima, não é fornecido gratuitamente, é claro.
@@ -195,4 +176,3 @@ https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                  
 
      E para você profissional que lê este texto, sugestão: comece a olhar para cloud e
      para os serviços oferecidos (a maioria dos serviços tem um correspondente em
-https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            7/12

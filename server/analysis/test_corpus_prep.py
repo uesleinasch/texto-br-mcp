@@ -34,6 +34,32 @@ class TestBoilerplate(unittest.TestCase):
         self.assertIn("Primeira linha", limpo)
         self.assertIn("Segunda linha", limpo)
 
+    def test_remove_mobilia_periodica_de_print_preserva_prosa(self):
+        cabecalho = "1 de janeiro de 2021 · Título do Artigo"
+        rodape = "https://medium.com/artigo-abc 1/18"
+        prosa = [
+            "Primeiro parágrafo de prosa real do artigo com conteúdo único aqui.",
+            "Segundo parágrafo também único e com várias palavras reais escritas.",
+            "Terceiro trecho de prosa que não se repete em nenhum lugar do texto.",
+            "Quarto bloco de prosa, distinto dos demais, com sua própria frase.",
+            "Quinto e último parágrafo de prosa original, encerrando o artigo.",
+        ]
+        refrao = "E assim seguiu."  # aparece 2x, abaixo do limiar de dedupe
+        linhas = []
+        for i in range(5):
+            linhas.append(cabecalho)  # repetido 5x -> mobília periódica
+            linhas.append(prosa[i])
+            linhas.append(rodape)  # repetido 5x + contém URL/fração de página
+        linhas.append(refrao)
+        linhas.append(refrao)
+        limpo = cp.limpar_boilerplate("\n".join(linhas))
+        self.assertNotIn(cabecalho, limpo)
+        self.assertNotIn("medium.com/artigo-abc", limpo)
+        self.assertNotIn("1/18", limpo)
+        for p in prosa:
+            self.assertIn(p, limpo)
+        self.assertIn(refrao, limpo)  # refrão 2x (< 3) preservado
+
 
 class TestManifesto(unittest.TestCase):
     def test_entrada_tem_todos_os_campos(self):

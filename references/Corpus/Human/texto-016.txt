@@ -14,9 +14,6 @@
      nível de conhecimento sobre os processos de negócios, desenvolvimento e
      qualidade de software.
 
-https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                        1/17
-08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
-
      Esse profissional garante que os desenvolvedores tenham a melhor base para
      desenvolver softwares de última geração que atenda aos altos padrões de qualidade
      operacional, fornecendo consultoria e orientação especializada, além da
@@ -31,9 +28,6 @@ https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-s
 
      Technical
      Open in app Development Manager com foco em SAP na Bosch Sign up                                             Sign in
-
-https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                          2/17
-08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
 
      O Technical Development Manager com foco em SAP (SAP TDM) na Bosch é uma
                           Search
@@ -79,9 +73,6 @@ https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-s
      A consultoria técnica, como uma atividade sob demanda, pode ser solicitada não
      somente por desenvolvedores e analistas, mas também por gerentes de projetos e
 
-https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      3/17
-08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
-
      outros papéis que necessitam de suporte.
 
      Guidelines
@@ -123,9 +114,6 @@ https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-s
      O SAP TDM é um papel que existe localmente (no Brasil), mas também é parte
      integrante de uma organização internacional dentro da Bosch com um número
 
-https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      4/17
-08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
-
      considerável de profissionais que dão suporte ao desenvolvimento de produtos nas
      soluções SAP ECC, S/4HANA, dentre outras.
 
@@ -152,8 +140,6 @@ https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-s
           conhecimento colaborativa.
 
                               Um dos principais benefícios da organização é a otimização.
-https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      5/17
-08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
 
      Conhecimentos necessários para ser um TDM
      A formação de um Technical Development Manager demanda conhecimento e
@@ -195,8 +181,6 @@ https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-s
           Plataformas de cursos online
 
           Treinamentos
-https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      6/17
-08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
 
           Livros
 
@@ -225,5 +209,3 @@ https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-s
           Gestão de pessoas
 
           Gerenciamento de conflitos
-
-https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      7/17

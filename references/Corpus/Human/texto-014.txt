@@ -1,6 +1,4 @@
-08/07/2026, 07:57          O que é CI/CD? Onde eu uso isso?. Neste artigo, vou falar sobre CI/CD e… | by Gabriel Faraday | Medium
-
-     O que é CI/CD? Onde eu uso isso?
+O que é CI/CD? Onde eu uso isso?
      5 min read · Jul 4, 2019
 
              Gabriel Faraday       Follow
@@ -15,9 +13,6 @@
      uma prática de desenvolvimento de software na qual você compila e testa software toda
      vez que um desenvolvedor envia código para a aplicação, e isso acontece várias vezes ao
      dia”.
-
-https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73                                                 1/10
-08/07/2026, 07:57          O que é CI/CD? Onde eu uso isso?. Neste artigo, vou falar sobre CI/CD e… | by Gabriel Faraday | Medium
 
      Basicamente, quando você envia um código para o seu repositório de código, ele
      inicia um processo que obtém o código que você acabou de enviar e compila sua
@@ -57,8 +52,6 @@ https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73 
 
      Por que isso é importante ou necessário? Imagine que sua equipe esteja trabalhando
      todos os dias da semana no código, mantendo tudo integrado e testado via CI e a
-https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73                                                   2/10
-08/07/2026, 07:57          O que é CI/CD? Onde eu uso isso?. Neste artigo, vou falar sobre CI/CD e… | by Gabriel Faraday | Medium
 
      empresa que você suporta precisa que sua equipe implante no ambiente de
      produção a cada 2 ou 3 dias, ou mesmo a cada 2 semanas. E se além disso, cada vez
@@ -72,7 +65,6 @@ https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73 
      vez da implantação, embora a segunda também seja importante.
 
      Você consegue ver os Princípios Ágeis sendo aplicados aqui? Se você não os
-     conhece, verifique https://www.agilealliance.org/agile101/12-principles-behind-the-
      agile-manifesto/.
 
      Bem, para um ambiente de produção, a Entrega Contínua é muito interessante,
@@ -97,9 +89,6 @@ https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73 
 
                                                            Subscribe
 
-https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73                                                 3/10
-08/07/2026, 07:57          O que é CI/CD? Onde eu uso isso?. Neste artigo, vou falar sobre CI/CD e… | by Gabriel Faraday | Medium
-
                                                   Remember me for faster sign in
 
      Mas tenha cuidado! Para conseguir isso com excelência, você deve ter um nível de
@@ -116,7 +105,6 @@ https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73 
      Hoje eu sugiro que você dê uma olhada no Gitlab.
 
      Gitlab
-     Você ainda não conhece o Gitlab? Verifique https://about.gitlab.com/.
 
      O Gitlab é uma aplicação muito interessante, com várias ferramentas e recursos
      para ajudar e suportar os desenvolvedores em seu processo de DevOps.
@@ -127,20 +115,14 @@ https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73 
 
      Você pode ter sua própria instância local (on-premises) ou na nuvem pública ou até
      mesmo usar a oferta SaaS hospedada pelo GitLab! E acredite, ambos têm uma opção
-     grátis! Verifique https://about.gitlab.com/pricing/.
 
-     Algumas citações acima são de https://about.gitlab.com/2016/08/05/continuous-
      integration-delivery-and-deployment-with-gitlab/, onde você pode encontrar mais
      informações sobre o que é CI/CD.
 
      No site deles podemos ver a imagem abaixo, que mostra exatamente onde está o CI
      e o CD em todo o processo e o que está envolvido com cada um deles:
 
-https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73                                                 4/10
-08/07/2026, 07:57          O que é CI/CD? Onde eu uso isso?. Neste artigo, vou falar sobre CI/CD e… | by Gabriel Faraday | Medium
-
      Esta imagem e muitas outras informações sobre o CI/CD e o Gitlab podem ser
-     encontradas em https://docs.gitlab.com/ee/ci/.
 
      Conclusão
      CI significa integração contínua e CD pode ser entrega contínua ou deploy contínuo.
@@ -164,5 +146,3 @@ https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73 
         Continuous Integration          Continuous Delivery           Continuous Deployment              Gitlab
 
         Gitlab Ci
-
-https://gabriel-faraday.medium.com/o-que-é-ci-cd-onde-eu-uso-isso-57e9b8ad8c73                                                 5/10

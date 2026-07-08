@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 import sys
+from collections import Counter
 
 TIPOS_VALIDOS = [
     "blog", "tecnico", "corporativo", "email", "capitulo", "podcast", "video",
@@ -30,19 +31,34 @@ def extrair_pdf(caminho):
 
 
 def limpar_boilerplate(texto):
-    """Remove linhas de capa/marca, URLs isoladas e números de página soltos."""
+    """Remove capa/marca, URLs, números/frações de página e mobília periódica.
+
+    Em PDFs web-print o cabeçalho (data + título) e o rodapé (URL + fração de
+    página tipo "1/18") se repetem a cada página, muitas vezes colados na mesma
+    linha que conteúdo. Além das linhas que são só ruído, removemos qualquer
+    linha que contenha URL ou fração de página no fim, e qualquer linha que se
+    repita 3+ vezes no documento (cabeçalho/rodapé periódico). Prosa real quase
+    nunca repete uma linha verbatim 3+ vezes; um refrão que apareça < 3 vezes é
+    preservado."""
+    linhas_brutas = texto.split("\n")
+    # contagem por linha (stripped, não vazia) para o dedupe de mobília periódica
+    contagem = Counter(s for s in (l.strip() for l in linhas_brutas) if s)
     linhas = []
-    for linha in texto.split("\n"):
+    for linha in linhas_brutas:
         s = linha.strip()
         if not s:
             linhas.append("")
             continue
-        if re.fullmatch(r"(https?://\S+|www\.\S+)", s):
-            continue  # URL isolada (marca)
+        if re.search(r"https?://|www\.", s):
+            continue  # URL (marca / rodapé de print) em qualquer posição da linha
         if re.fullmatch(r"\d{1,4}", s):
             continue  # número de página solto
+        if re.search(r"\d+\s*/\s*\d+\s*$", s):
+            continue  # fração de página no fim da linha ("1/18")
         if re.fullmatch(r"[-—_·•]{1,}", s):
             continue  # régua/ornamento
+        if contagem[s] >= 3:
+            continue  # cabeçalho/rodapé periódico repetido
         linhas.append(linha)
     # colapsa 3+ quebras em 2
     return re.sub(r"\n{3,}", "\n\n", "\n".join(linhas)).strip()

@@ -1,6 +1,4 @@
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
-
-     Open in app                                                                                          Sign up     Sign in
+Open in app                                                                                          Sign up     Sign in
 
                                      Search
 
@@ -21,9 +19,6 @@
      cotidiano e que ganharam tanta relevância nos últimos anos. Mas, se você já sabe as
      diferenças, fica aqui também. Aposto que você irá aprender coisas novas.
      Preparado?
-
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                             1/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
 
                                                        Fonte: tenor.com
 
@@ -50,9 +45,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      tecnologias tiveram participações diretas na vitória do algoritmo da DeepMind, mas
      é importante enfatizar que elas não são a mesma coisa.
 
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           2/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
-
      Para compreender como essas áreas estão relacionadas, imagine círculos
      concêntricos, onde a AI — mais abrangente e mais antiga — ocupando o círculo
      mais externo e, em seguida, vem o Machine Learning — que nasceu depois e,
@@ -60,9 +52,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      atualmente, é a área mais poderosa de AI.
 
      Inteligência Artificial — Da Aurora ao Ápice
-
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           3/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
 
                                     LEE, Kai-Fu. Inteligência artificial. Globo Livros, 2014
 
@@ -87,9 +76,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      A seguir, são apresentados fluxogramas com os principais acontecimentos da
      história da AI para você compreender a evolução dessa tecnologia:
 
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           4/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
-
                                     Fonte: Adaptado de TAIL: Uma Breve História da IA
 
      Em poucos anos, a AI passou de mera especulação e sonhos e, de pouca aplicação
@@ -101,8 +87,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      demasiadamente futurística com que o tema é frequentemente abordado em livros
      de ficção científica e no cinema, por exemplo, com cenários em que robôs
      substituem humanos em determinadas atividades ou dominam o mundo.
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           5/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
 
      De fato, vale ressaltar, algumas dessas ideias não estão muito distantes de se tornar
      realidade, pois a Inteligência Artificial possui um potencial gigante e, é muito
@@ -141,9 +125,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
 
      Quer conhecer mais sobre Inteligência Artificial? Recomendamos este livro:
 
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           6/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
-
      Machine Learning
      De acordo com Yoshua Bengio, vencedor do Prêmio Turing de 2018,
 
@@ -160,9 +141,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      O Aprendizado de Máquina é um ramo especializado da AI e, não à toa, o interesse
      por essa área tem se renovado e crescido bastante nos últimos anos. Afinal, o
      Aprendizado de Máquina nos fornece um processamento computacional mais
-
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           7/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
 
      poderoso e barato, permitindo construir, de forma rápida e automática, modelos
      capazes de analisar dados maiores e mais complexos.
@@ -203,8 +181,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      vários modelos que são utilizados para cada situação específica, que podem ser
      problemas de regressão, classificação, agrupamento, redução de dimensionalidade,
      entre outros.
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           8/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
 
      Quer conhecer mais sobre Machine Learning? Recomendamos este livro:
 
@@ -220,8 +196,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      As redes neurais, criadas em 1943 por Warren McCulloch e Walter Pitts, derivam
      diretamente do Machine Learning, e foram criadas para tentar simular as redes de
      neurônios biológicas, especialmente, a humana. Apesar de o objetivo original das
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                           9/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
 
      RNAs ter sido criar um sistema computacional capaz de resolver problemas como o
      cérebro humano, essa abordagem foi sendo alterada ao longo dos anos, saindo de
@@ -252,9 +226,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      Basicamente, o neurônio artificial recebe vários sinais (entradas) e calcula, de
      maneira ponderada, o somatório entre eles; então são aplicadas funções e, em
 
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                          10/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
-
      seguida, passa o resultado adiante. Os dados recebidos de outros neurônios
      representam os impulsos nervosos responsáveis por transmitir informação para
      treinar o algoritmo. O neurônio receptor será mais ou menos excitado com o sinal
@@ -270,15 +241,9 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
 
      Quer conhecer mais sobre Redes Neurais Artificiais? Recomendamos este livro:
 
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                          11/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
-
      Deep Learning
 
                                                         Fonte: slon.pics
-
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                          12/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
 
      Agora que já abordamos os conceitos fundamentais como AI e ML, o entendimento
      de Deep Learning fica muito mais simples, pois o DL é uma subárea específica do
@@ -304,9 +269,6 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      eram conhecidas apenas as CPU’s (Unidades de Processamento Central). Esse
      cenário só foi mudar radicalmente, com a implementação das GPUs (Unidades de
 
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                          13/18
-08/07/2026, 09:45       As Diferenças entre AI, ML e DL. Se te perguntassem sobre as diferenças… | by IPNET Growth Partner | Parc…
-
      Processamento Gráfico), que inicialmente foram criadas para renderização de
      gráficos, mas seu baixo custo e alta performance fizeram com que se tornassem
      padrão no processamento de imagens.
@@ -327,5 +289,3 @@ https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a3
      também? Então, compartilhe o artigo.
 
                                                        Fonte: tenor.com
-
-https://medium.com/ipnet-growth-partner/as-diferenças-entre-ai-ml-e-dl-3d5898a35465                                          14/18

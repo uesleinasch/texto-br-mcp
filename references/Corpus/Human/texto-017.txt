@@ -1,6 +1,4 @@
-08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
-
-     Python para quem não sabe nada de
+Python para quem não sabe nada de
      programação
      5 min read · Apr 26, 2018
 
@@ -14,8 +12,6 @@
      Estou apenas fazendo um tutorial fácil para quem precisa entender Python. Não sou
      especialista em Python, trabalho com Java, mas essa linguagem tem sido bastante
      usada em meios acadêmicos por ser uma linguagem interpretada, de fácil
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                              1/12
-08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
 
      entendimento e ter bastante bibliotecas de apoio. Se você é um biólogo, ou
      estatístico, ou apenas precisa fazer coisas simples…. continue
@@ -50,9 +46,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
      eram instruções de máquina, que são bem mais complexas e ao mesmo tempo mais
      simples. Hoje você tem linguagem com estruturas bem mais legíveis. Tente ler um
      programa para ver se você entende:
-
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  2/12
-08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
 
        1     # This program adds two numbers
        3     num1 = 1.5
@@ -94,8 +87,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
      recomendaria fortemente usar: VSCode, Atom ou se você deseja parecer um mago
      de filmes hacker VIM. Todos esse lhe darão uma grande ajuda que é o syntax
      highlight.
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  3/12
-08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
 
      Abra sua IDE e crie o arquivo abaixo:
 
@@ -136,8 +127,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
 
      Para você entender melhor, um programa é composto de vários statements que em
      bom português significa declarações. Então ele nada mais faz do que executa um
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  4/12
-08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
 
      statement e vai para o próximo. Um statement pode conter statements. O primeiro
      statement que veremos é a atribuição.
@@ -179,9 +168,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
      Para importar uma biblioteca, basta executar: from library import module . Ou
      simplesmente import library .
 
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  5/12
-08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
-
       1     from datetime import datetime
       3     # Opa não precisa do main!!!! Mas continue colocando, fica mais organizado
       4     print(datetime.now()) # se não tivesse usado o from, teria que referenciar como datetime
@@ -222,7 +208,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
      Loop
      Temos dois statements de loop no Python: for e while .
 
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  6/12
 08/07/2026, 09:40                     Python para quem não sabe nada de programação | by Victor Osório | Medium
 
      For-Loop
@@ -230,7 +215,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
      lista.
 
           for varName in listName:
-              <bloco execução>
 
      Tente entender o que acontece no código abaixo:
 
@@ -250,7 +234,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
      condição for verdadeira.
 
           while <teste>:
-              <bloco execução>
 
      Um exemplo legal do while está abaixo:
 
@@ -263,8 +246,6 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
       while-loop.py hosted with ❤ by GitHub                                                                view raw
 
      Quem tem sorte pega números fora do intervalo [0.3, 0.6]. Entende? É preciso de um pouco de matemática!
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                    7/12
-08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
 
      Observe que not (x > 0.3 and x < 0.6) é uma expressão lógica. Enquanto ela for
      verdadeira, continuará executando o loop. E random gera um número pseudo-
@@ -280,11 +261,8 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
      Escrevo uma função!!
 
         def fn():
-            <bloco execução>
         def fnComHumArgumento(arg1):
-            <bloco execução>
         def fnComDoisArgumento(arg1, arg2):
-            <bloco execução>
 
      Aqui eu defini três funções. Argumento são valores que você passa para execução da
      função. Você já tem usado bastante com print , format , e random . Agora é hora de
@@ -303,5 +281,3 @@ https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e
       function.py hosted with ❤ by GitHub                                                                view raw
 
                                           Esse exemplo é mais do mesmo… :(
-
-https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  8/12
