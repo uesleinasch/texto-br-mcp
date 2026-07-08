@@ -11,6 +11,7 @@ import json
 import math
 import os
 import re
+import statistics
 import sys
 
 import lexico
@@ -188,6 +189,17 @@ def melhor_alvo(scores, labels):
     return round(melhor, 1)
 
 
+def p75_humano(scores, labels):
+    """Percentil 75 dos scores humanos (label 1) sob os pesos calibrados.
+    Usa statistics.quantiles(..., n=4, method="inclusive")[2] — interpolação
+    linear padrão (equivalente a PERCENTILE.INC/numpy default), determinística
+    e estável a partir da própria stdlib."""
+    hum = sorted(s for s, l in zip(scores, labels) if l == 1)
+    if len(hum) < 2:
+        return round(hum[0], 1) if hum else float("nan")
+    return round(statistics.quantiles(hum, n=4, method="inclusive")[2], 1)
+
+
 def _emitir_fit(dir_corpus):
     X, y, nomes, chaves = matriz_features(dir_corpus)
     Xs, medias, desvios = padronizar(X)
@@ -195,15 +207,20 @@ def _emitir_fit(dir_corpus):
     w, b = treinar_logistica(Xs, y, prior=prior, l2=1.0, lr=0.3, iteracoes=3000)
     pesos = coef_para_pesos(w, chaves, piso=2.0)
     scores = [score_ponderado(x, pesos, chaves) for x in X]
-    alvo = melhor_alvo(scores, y)
+    alvo_youden = melhor_alvo(scores, y)
+    alvo_p75 = p75_humano(scores, y)
     saida = {
-        "pesos": pesos, "alvo": alvo, "chaves": chaves,
+        "pesos": pesos, "chaves": chaves,
+        "alvo_youden": alvo_youden,
+        "alvo_p75_humano": alvo_p75,
+        "alvo_politica": "p75_humano",
         "auc_calibrado_in_sample": round(auc(scores, y), 3),
         "coeficientes_padronizados": {k: round(w[i], 4) for i, k in enumerate(chaves)},
     }
     with open(os.path.join(dir_corpus, "pesos-calibrados.json"), "w", encoding="utf-8") as f:
         json.dump(saida, f, ensure_ascii=False, indent=2)
-    print(f"fit: AUC in-sample {saida['auc_calibrado_in_sample']} | alvo {alvo}")
+    print(f"fit: AUC in-sample {saida['auc_calibrado_in_sample']} | alvo_youden {alvo_youden} | "
+          f"alvo_p75_humano {alvo_p75}")
     print("pesos:", json.dumps(pesos, ensure_ascii=False))
 
 

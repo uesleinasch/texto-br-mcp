@@ -41,3 +41,25 @@ class TestSinais(unittest.TestCase):
         for k, v in comp.items():
             self.assertLessEqual(v, score.PESOS[k] + 0.05, k)
         self.assertAlmostEqual(r["score"]["total"], round(sum(comp.values()), 1), places=6)
+
+
+class TestComportamentoCongelado(unittest.TestCase):
+    def test_texto_humano_bom_passa(self):
+        r = score.calcular(TEXTO_BOM, SECAO10)
+        self.assertGreaterEqual(r["score"]["total"], score.ALVO,
+                                 msg=f"score {r['score']['total']} < alvo {score.ALVO}")
+
+    def test_texto_ia_uniforme_reprova(self):
+        # prosa uniforme e previsível: burstiness baixo, sem variação
+        ia = (" ".join([
+            "A empresa oferece soluções completas para o cliente moderno.",
+            "A empresa entrega valor real para o cliente moderno.",
+            "A empresa garante qualidade total para o cliente moderno.",
+            "A empresa promove inovação contínua para o cliente moderno.",
+            "A empresa assegura suporte dedicado para o cliente moderno.",
+        ]))
+        r = score.calcular(ia, SECAO10)
+        self.assertLess(r["score"]["total"], score.ALVO)
+
+    def test_pesos_ainda_somam_100(self):
+        self.assertAlmostEqual(sum(score.PESOS.values()), 100.0, places=6)

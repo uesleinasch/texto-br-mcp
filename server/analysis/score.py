@@ -23,21 +23,22 @@ import lexico
 import variancia
 from texto_util import clamp
 
-ALVO = 80
+# Pesos e ALVO calibrados na Etapa 3 (calibrar.py --fit sobre references/Corpus).
+# ALVO = p75 dos scores humanos (política p75_humano; decisão de produto sobre
+# o ponto de Youden). Ver pesos-calibrados.json.
+ALVO = 74.4
 
-# Pesos por componente (soma 100). Valores iniciais = os escolhidos a olho;
-# a Etapa 3 os substitui pelos calibrados (Task 6). Fonte única do score.
 PESOS = {
-    "burstiness": 25.0,
-    "sem_sequencias_uniformes": 5.0,
-    "sem_inicios_repetidos": 5.0,
-    "ordem_nao_canonica": 5.0,
-    "sem_pivots": 25.0,
-    "diversidade_lexical": 10.0,
-    "sem_trigramas_repetidos": 5.0,
-    "paragrafos_variados": 8.0,
-    "sentenca_de_impacto": 6.0,
-    "sem_corrente_de_conectivos": 6.0,
+    "burstiness": 21.3,
+    "sem_sequencias_uniformes": 2.0,
+    "sem_inicios_repetidos": 10.2,
+    "ordem_nao_canonica": 6.4,
+    "sem_pivots": 23.0,
+    "diversidade_lexical": 2.5,
+    "sem_trigramas_repetidos": 2.0,
+    "paragrafos_variados": 10.6,
+    "sentenca_de_impacto": 13.7,
+    "sem_corrente_de_conectivos": 8.3,
 }
 
 
