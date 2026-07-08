@@ -35,3 +35,35 @@ def yule_k(palavras):
     vm = Counter(freq.values())
     s2 = sum(m * m * v for m, v in vm.items())
     return 1e4 * (s2 - n) / (n * n)
+
+
+def burstiness_goh_barabasi(comprimentos):
+    """Burstiness de Goh–Barabási: B = (sigma - mu)/(sigma + mu) sobre os
+    comprimentos de sentença, limitado em [-1, 1). Complementa o sigma/mu de
+    variancia.py: B é limitado e comparável entre textos de escalas diferentes.
+    None se < 3 sentenças."""
+    if len(comprimentos) < 3:
+        return None
+    mu = sum(comprimentos) / len(comprimentos)
+    var = sum((c - mu) ** 2 for c in comprimentos) / len(comprimentos)
+    sigma = math.sqrt(var)
+    if sigma + mu == 0:
+        return None
+    return (sigma - mu) / (sigma + mu)
+
+
+def autocorrelacao_lag1(comprimentos):
+    """Autocorrelação de lag 1 dos comprimentos de sentença: escrita humana
+    tende a alternar longa/curta (anticorrelação); texto uniforme ou em rampa
+    monótona não. None se < 4 sentenças ou variância zero."""
+    n = len(comprimentos)
+    if n < 4:
+        return None
+    mu = sum(comprimentos) / n
+    den = sum((c - mu) ** 2 for c in comprimentos)
+    if den == 0:
+        return None
+    num = sum(
+        (comprimentos[i] - mu) * (comprimentos[i + 1] - mu) for i in range(n - 1)
+    )
+    return num / den

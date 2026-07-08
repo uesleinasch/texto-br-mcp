@@ -43,3 +43,40 @@ class TestYuleK(unittest.TestCase):
     def test_todas_unicas_da_zero(self):
         palavras = [f"palavra{i}" for i in range(100)]
         self.assertAlmostEqual(metricas.yule_k(palavras), 0.0, places=6)
+
+
+class TestBurstinessGB(unittest.TestCase):
+    def test_uniforme_da_menos_um(self):
+        # sigma = 0 => B = (0 - mu)/(0 + mu) = -1
+        self.assertAlmostEqual(
+            metricas.burstiness_goh_barabasi([10, 10, 10, 10]), -1.0, places=6)
+
+    def test_bursty_maior_que_uniforme(self):
+        bursty = metricas.burstiness_goh_barabasi([2, 35, 4, 28, 3, 40, 5])
+        quase_uniforme = metricas.burstiness_goh_barabasi([10, 11, 10, 9, 10, 11, 10])
+        self.assertGreater(bursty, quase_uniforme)
+
+    def test_faixa(self):
+        b = metricas.burstiness_goh_barabasi([2, 35, 4, 28, 3])
+        self.assertGreaterEqual(b, -1.0)
+        self.assertLess(b, 1.0)
+
+    def test_poucas_sentencas_inaplicavel(self):
+        self.assertIsNone(metricas.burstiness_goh_barabasi([5, 20]))
+
+
+class TestAutocorrelacaoLag1(unittest.TestCase):
+    def test_alternancia_e_negativa(self):
+        # longa-curta-longa-curta: vizinhos anticorrelacionados
+        r = metricas.autocorrelacao_lag1([30, 5, 28, 4, 31, 6, 29, 5])
+        self.assertLess(r, 0.0)
+
+    def test_tendencia_e_positiva(self):
+        r = metricas.autocorrelacao_lag1([5, 8, 11, 14, 17, 20, 23, 26])
+        self.assertGreater(r, 0.0)
+
+    def test_constante_inaplicavel(self):
+        self.assertIsNone(metricas.autocorrelacao_lag1([10, 10, 10, 10, 10]))
+
+    def test_poucas_sentencas_inaplicavel(self):
+        self.assertIsNone(metricas.autocorrelacao_lag1([5, 20, 8]))
