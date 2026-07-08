@@ -199,16 +199,45 @@ def _ler_texto(caminho):
         return f.read()
 
 
+def _carregar_proveniencia(dir_corpus):
+    """Lê o sidecar opcional proveniencia.json: mapa arquivo_relativo ->
+    {fonte, data_verificada, data_coleta}. Esses campos, quando presentes,
+    sobrepõem os defaults mecânicos ("local"/"gerado") calculados na hora e
+    sobrevivem a re-runs do prep (fonte de verdade para proveniência real)."""
+    caminho = os.path.join(dir_corpus, "proveniencia.json")
+    if not os.path.isfile(caminho):
+        return {}
+    with open(caminho, encoding="utf-8") as f:
+        return json.load(f)
+
+
 def construir_manifesto(dir_corpus, data_coleta="2026-07-08"):
-    """Percorre Human/ e IA/, extrai PDFs para .txt, e monta o manifesto."""
+    """Percorre Human/ e IA/, extrai PDFs para .txt, e monta o manifesto.
+
+    Um .txt só é pulado quando é companheiro de um .pdf de mesmo nome-base no
+    mesmo diretório (nesse caso já é tratado ao processar o .pdf, que gera a
+    entrada apontando para o .txt extraído). Um .txt standalone — sem .pdf
+    irmão, como os web-*.txt e gerado-*.txt do corpus — é ingerido como
+    arquivo-fonte normal, classificado pela pasta (Human/IA) que o contém."""
+    proveniencia = _carregar_proveniencia(dir_corpus)
     entradas = []
     for classe, sub in (("humano", "Human"), ("ia", "IA")):
         d = os.path.join(dir_corpus, sub)
         if not os.path.isdir(d):
             continue
-        for nome in sorted(os.listdir(d)):
-            if nome.startswith(".") or nome.endswith(".txt"):
+        nomes = sorted(os.listdir(d))
+        pdf_bases = {
+            os.path.splitext(n)[0].lower() for n in nomes if n.lower().endswith(".pdf")
+        }
+        for nome in nomes:
+            if nome.startswith("."):
                 continue
+            eh_companheiro_de_pdf = (
+                nome.lower().endswith(".txt")
+                and os.path.splitext(nome)[0].lower() in pdf_bases
+            )
+            if eh_companheiro_de_pdf:
+                continue  # já será gerado ao processar o .pdf de mesmo nome-base
             caminho = os.path.join(d, nome)
             if not os.path.isfile(caminho):
                 continue
@@ -219,12 +248,15 @@ def construir_manifesto(dir_corpus, data_coleta="2026-07-08"):
                 with open(txt_path, "w", encoding="utf-8") as f:
                     f.write(texto)
                 arquivo_rel = f"{sub}/{os.path.basename(txt_path)}"
-            fonte = "gerado" if classe == "ia" else "local"
+            fonte_default = "gerado" if classe == "ia" else "local"
+            dados_prov = proveniencia.get(arquivo_rel, {})
             entradas.append(entrada_manifesto(
                 arquivo=arquivo_rel, classe=classe,
                 genero=detectar_genero(texto), tipo="desconhecido",
-                palavras=len(_palavras(texto)), fonte=fonte,
-                data_verificada=None, data_coleta=data_coleta,
+                palavras=len(_palavras(texto)),
+                fonte=dados_prov.get("fonte", fonte_default),
+                data_verificada=dados_prov.get("data_verificada"),
+                data_coleta=dados_prov.get("data_coleta", data_coleta),
             ))
     manifesto_path = os.path.join(dir_corpus, "manifest.json")
     with open(manifesto_path, "w", encoding="utf-8") as f:

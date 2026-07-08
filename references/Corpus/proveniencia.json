@@ -1,0 +1,74 @@
+{
+  "Human/web-001.txt": {
+    "fonte": "https://carlosschults.net/pt/escrevendo-codigo-bom/",
+    "data_verificada": "2019-07-21 (Wayback 20190721172824)"
+  },
+  "Human/web-002.txt": {
+    "fonte": "https://terrasdecabral.com.br/contardo-calligaris-fala-sobre-todos-os-sonhos-do-mundo-em-sua-coluna-na-folha-de-s-paulo/",
+    "data_verificada": "2019-12-11 (Wayback 20191211174544)"
+  },
+  "Human/web-003.txt": {
+    "fonte": "https://www.nexojornal.com.br/ensaio/2019/Estamos-normalizando-o-extremismo-de-direita",
+    "data_verificada": "2020-11-07 (Wayback 20201107235836)"
+  },
+  "Human/web-004.txt": {
+    "fonte": "https://revistapesquisa.fapesp.br/vulnerabilidade-historica/",
+    "data_verificada": "2021-01-20 (Wayback 20210120175958)"
+  },
+  "Human/web-005.txt": {
+    "fonte": "https://cienciahoje.org.br/coluna/divulgacao-cientifica-para-quem-e-por-quem/",
+    "data_verificada": "2019-03-16 (Wayback 20190316065930)"
+  },
+  "Human/web-006.txt": {
+    "fonte": "https://agencia.fiocruz.br/o-novo-coronavirus-e-divulgacao-cientifica",
+    "data_verificada": "2020-10-31 (Wayback 20201031103347)"
+  },
+  "Human/web-007.txt": {
+    "fonte": "https://papodecinema.com.br/filmes/rogai-por-nos/",
+    "data_verificada": "2021-05-28 (Wayback 20210528164705)"
+  },
+  "Human/web-008.txt": {
+    "fonte": "https://pt.wikipedia.org/w/index.php?title=Machado_de_Assis&oldid=55135871",
+    "data_verificada": "2019-05-14 (revisão oldid 55135871)"
+  },
+  "IA/gerado-001.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-002.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-003.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-004.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-005.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-006.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-007.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-008.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-009.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  },
+  "IA/gerado-010.txt": {
+    "fonte": "gerado",
+    "data_coleta": "2026-07-08"
+  }
+}

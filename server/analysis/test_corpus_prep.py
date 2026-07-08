@@ -1,4 +1,9 @@
+import json
+import os
+import tempfile
 import unittest
+from unittest import mock
+
 import corpus_prep as cp
 
 
@@ -134,6 +139,68 @@ class TestManifesto(unittest.TestCase):
             data_coleta="2026-07-08",
         )
         self.assertFalse(entrada["incluir_calibracao"])
+
+
+class TestConstruirManifesto(unittest.TestCase):
+    def _escrever(self, caminho, conteudo):
+        with open(caminho, "w", encoding="utf-8") as f:
+            f.write(conteudo)
+
+    def test_txt_standalone_e_ingerido(self):
+        """Um .txt sem .pdf irmão (ex.: web-*.txt, gerado-*.txt) deve ser
+        ingerido como arquivo-fonte, classificado pela pasta que o contém."""
+        with tempfile.TemporaryDirectory() as tmp:
+            human = os.path.join(tmp, "Human")
+            os.makedirs(human)
+            self._escrever(
+                os.path.join(human, "web-999.txt"),
+                "Prosa standalone de teste com bastante conteúdo textual aqui mesmo.",
+            )
+            entradas = cp.construir_manifesto(tmp)
+            arquivos = {e["arquivo"] for e in entradas}
+            self.assertIn("Human/web-999.txt", arquivos)
+            entrada = next(e for e in entradas if e["arquivo"] == "Human/web-999.txt")
+            self.assertEqual(entrada["classe"], "humano")
+
+    def test_txt_companheiro_de_pdf_nao_e_contado_em_dobro(self):
+        """Um .txt que é companheiro de um .pdf de mesmo nome-base (gerado pelo
+        próprio script a partir do PDF) não deve gerar entrada duplicada."""
+        with tempfile.TemporaryDirectory() as tmp:
+            human = os.path.join(tmp, "Human")
+            os.makedirs(human)
+            self._escrever(os.path.join(human, "texto-999.pdf"), "conteudo binario fake")
+            self._escrever(os.path.join(human, "texto-999.txt"), "texto extraído anteriormente")
+            with mock.patch.object(
+                cp, "extrair_pdf",
+                return_value="Texto extraído do PDF de teste com prosa suficiente.",
+            ):
+                entradas = cp.construir_manifesto(tmp)
+            relacionados = [e for e in entradas if e["arquivo"] == "Human/texto-999.txt"]
+            self.assertEqual(len(relacionados), 1)
+
+    def test_proveniencia_sidecar_mescla_fonte_e_data(self):
+        """Se proveniencia.json mapeia um arquivo, fonte/data_verificada da
+        entrada vêm do sidecar, sobrepondo os defaults mecânicos."""
+        with tempfile.TemporaryDirectory() as tmp:
+            human = os.path.join(tmp, "Human")
+            os.makedirs(human)
+            self._escrever(
+                os.path.join(human, "web-998.txt"),
+                "Prosa standalone de teste com conteúdo suficiente para o teste.",
+            )
+            with open(os.path.join(tmp, "proveniencia.json"), "w", encoding="utf-8") as f:
+                json.dump({
+                    "Human/web-998.txt": {
+                        "fonte": "https://exemplo.com/artigo",
+                        "data_verificada": "2020-01-01 (Wayback 20200101000000)",
+                    }
+                }, f)
+            entradas = cp.construir_manifesto(tmp)
+            entrada = next(e for e in entradas if e["arquivo"] == "Human/web-998.txt")
+            self.assertEqual(entrada["fonte"], "https://exemplo.com/artigo")
+            self.assertEqual(
+                entrada["data_verificada"], "2020-01-01 (Wayback 20200101000000)"
+            )
 
 
 if __name__ == "__main__":
