@@ -6,6 +6,17 @@ from unittest import mock
 
 import corpus_prep as cp
 
+_MANIFEST = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..",
+    "references", "Corpus", "manifest.json",
+)
+
+TIPOS_VALIDOS = {
+    "blog", "tecnico", "corporativo", "email", "capitulo", "podcast",
+    "video", "explicativo", "geral", "comentario-blog", "comentario-jira",
+    "chat", "desconhecido",
+}
+
 
 class TestGenero(unittest.TestCase):
     def test_poema_detectado_por_linhas_curtas_e_quebras(self):
@@ -139,6 +150,23 @@ class TestManifesto(unittest.TestCase):
             data_coleta="2026-07-08",
         )
         self.assertFalse(entrada["incluir_calibracao"])
+
+
+@unittest.skipUnless(os.path.exists(_MANIFEST), "corpus não preprocessado")
+class TestTiposManifesto(unittest.TestCase):
+    def test_tipos_sao_ids_validos(self):
+        with open(_MANIFEST, encoding="utf-8") as f:
+            manifesto = json.load(f)
+        for e in manifesto:
+            self.assertIn(e["tipo"], TIPOS_VALIDOS, msg=e["arquivo"])
+
+    def test_maioria_classificada(self):
+        # best-effort: a curadoria da Etapa 4 classificou ao menos 80% dos textos
+        with open(_MANIFEST, encoding="utf-8") as f:
+            manifesto = json.load(f)
+        desconhecidos = sum(1 for e in manifesto if e["tipo"] == "desconhecido")
+        self.assertLessEqual(desconhecidos, len(manifesto) // 5,
+                             msg=f"{desconhecidos}/{len(manifesto)} sem tipo")
 
 
 class TestConstruirManifesto(unittest.TestCase):
