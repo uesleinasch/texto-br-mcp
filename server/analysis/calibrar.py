@@ -33,7 +33,7 @@ def auc(scores, labels):
 
 
 def score_ponderado(x, pesos, chaves):
-    return sum(x[i] * pesos[k] for i, k in enumerate(chaves))
+    return sum(x[i] * pesos.get(k, 0.0) for i, k in enumerate(chaves))
 
 
 def _secao10_real(dir_corpus):
@@ -57,7 +57,7 @@ def _secao10_real(dir_corpus):
     )
 
 
-CHAVES = list(score.PESOS.keys())
+CHAVES = list(score.CHAVES_SINAIS)
 
 
 def matriz_features(dir_corpus, secao10=None):
@@ -75,7 +75,7 @@ def matriz_features(dir_corpus, secao10=None):
         lex = lexico.analisar(texto, secao10)
         if "erro" in ritmo or "erro" in lex:
             continue  # inaplicável apesar do manifesto; pula com segurança
-        s = score.sinais(ritmo, lex)
+        s = score.sinais(ritmo, lex, texto)
         X.append([s[k] for k in CHAVES])
         y.append(1 if e["classe"] == "humano" else 0)
         nomes.append(e["arquivo"])
@@ -192,7 +192,8 @@ def separacao_loocv(dir_corpus):
     X, y, nomes, chaves = matriz_features(dir_corpus)
     # prior fixo (pesos manuais, não os calibrados) — cada fold não pode ver
     # informação derivada do corpus inteiro, senão vaza held-out para o prior.
-    prior = [score.PESOS_MANUAIS[k] / 10.0 for k in chaves]
+    # .get(k, 0.0): sinais novos (Bloco A/B) não têm peso manual — prior 0.
+    prior = [score.PESOS_MANUAIS.get(k, 0.0) / 10.0 for k in chaves]
     preditos = []
     for i in range(len(X)):
         Xtr = [X[j] for j in range(len(X)) if j != i]
@@ -238,7 +239,8 @@ def _emitir_fit(dir_corpus):
     Xs, medias, desvios = padronizar(X)
     # prior fixo (pesos manuais) — reproduz os pesos congelados em score.PESOS
     # independente de recalibrações futuras. Escala do prior no espaço padronizado.
-    prior = [score.PESOS_MANUAIS[k] / 10.0 for k in chaves]
+    # .get(k, 0.0): sinais novos (Bloco A/B) não têm peso manual — prior 0.
+    prior = [score.PESOS_MANUAIS.get(k, 0.0) / 10.0 for k in chaves]
     w, b = treinar_logistica(Xs, y, prior=prior, l2=1.0, lr=0.3, iteracoes=3000)
     pesos = coef_para_pesos(w, chaves, piso=2.0)
     scores = [score_ponderado(x, pesos, chaves) for x in X]

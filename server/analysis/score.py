@@ -17,8 +17,9 @@ import json
 import sys
 
 import lexico
+import metricas
 import variancia
-from texto_util import clamp
+from texto_util import clamp, limpar_markdown, listar_palavras
 
 # Pesos manuais originais (pré-Etapa-3), escolhidos a olho. Referência FIXA
 # usada como prior/baseline da calibração em calibrar.py — não mexer, mesmo
@@ -55,11 +56,40 @@ PESOS = {
 }
 
 
-def sinais(ritmo, lex):
-    """Os 10 sinais normalizados 0-1 (1 = mais humano) que compõem o score.
+# Normalização dos sinais novos (Etapa 4): (lo, hi, invertido).
+# lo/hi = percentis 5/95 da métrica no corpus (classes agrupadas),
+# arredondados e congelados — ver Step 5 desta task no plano da Etapa 4.
+# invertido=True quando valor MENOR indica humano. AUC é invariante a
+# transformação monótona: a escolha de lo/hi não vaza informação de rótulo.
+NORMALIZACAO_NOVOS = {
+    "razao_compressao": (0.36, 0.52, True),
+    "yule_k": (74.01, 143.25, True),
+    "burstiness_gb": (-0.53, -0.12, False),
+    "autocorrelacao_lag1": (-0.40, 0.30, False),
+}
+
+# Ordem congelada dos sinais — costura única entre runtime e calibração.
+CHAVES_SINAIS = list(PESOS_MANUAIS.keys()) + list(NORMALIZACAO_NOVOS.keys())
+
+
+def _norm(nome, valor):
+    """Mapeia a métrica bruta para [0,1] com 1 = mais humano; None (métrica
+    inaplicável em texto curto) vira 0.5, neutro."""
+    if valor is None:
+        return 0.5
+    lo, hi, invertido = NORMALIZACAO_NOVOS[nome]
+    v = clamp((valor - lo) / (hi - lo))
+    return 1.0 - v if invertido else v
+
+
+def sinais(ritmo, lex, texto):
+    """Os sinais normalizados 0-1 (1 = mais humano) que compõem o score.
     Costura única entre o runtime e a calibração (calibrar.py)."""
     mr, ml = ritmo["metricas"], lex["metricas"]
-    return {
+    texto_limpo, _ = limpar_markdown(texto)
+    palavras = listar_palavras(texto_limpo)
+    comprimentos = mr["comprimentos"]
+    s = {
         "burstiness": clamp(mr["burstiness"] / 0.9),
         "sem_sequencias_uniformes": 0.0 if ritmo["sequencias_uniformes"] else 1.0,
         "sem_inicios_repetidos": 0.0 if ritmo["inicios_repetidos"] else 1.0,
@@ -71,6 +101,11 @@ def sinais(ritmo, lex):
         "sentenca_de_impacto": 1.0 if mr["muito_curtas"] >= 1 else 0.0,
         "sem_corrente_de_conectivos": 1.0 if mr["conectivos_consecutivos"] < 3 else 0.0,
     }
+    s["razao_compressao"] = _norm("razao_compressao", metricas.razao_compressao(texto_limpo))
+    s["yule_k"] = _norm("yule_k", metricas.yule_k(palavras))
+    s["burstiness_gb"] = _norm("burstiness_gb", metricas.burstiness_goh_barabasi(comprimentos))
+    s["autocorrelacao_lag1"] = _norm("autocorrelacao_lag1", metricas.autocorrelacao_lag1(comprimentos))
+    return s
 
 
 def calcular(texto, secao10):
@@ -87,7 +122,7 @@ def calcular(texto, secao10):
             resultado["inaplicavel"] = True
         return resultado
 
-    s = sinais(ritmo, lex)
+    s = sinais(ritmo, lex, texto)
     componentes = {k: round(s[k] * PESOS[k], 1) for k in PESOS}
     total = round(sum(componentes.values()), 1)
     atingiu = total >= ALVO

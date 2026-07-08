@@ -21,15 +21,20 @@ SECAO10 = (
 
 
 class TestSinais(unittest.TestCase):
-    def test_sinais_tem_as_10_chaves_normalizadas(self):
+    def test_sinais_tem_todas_as_chaves_normalizadas(self):
         import variancia, lexico
         ritmo = variancia.analisar(TEXTO_BOM)
         lex = lexico.analisar(TEXTO_BOM, SECAO10)
-        s = score.sinais(ritmo, lex)
-        self.assertEqual(set(s.keys()), set(score.PESOS.keys()))
+        s = score.sinais(ritmo, lex, TEXTO_BOM)
+        self.assertEqual(set(s.keys()), set(score.CHAVES_SINAIS))
+        self.assertEqual(len(score.CHAVES_SINAIS), 14)  # 10 antigos + Bloco A
         for k, v in s.items():
             self.assertGreaterEqual(v, 0.0, k)
             self.assertLessEqual(v, 1.0, k)
+
+    def test_chaves_antigas_preservadas(self):
+        for k in score.PESOS:
+            self.assertIn(k, score.CHAVES_SINAIS)
 
     def test_pesos_somam_100(self):
         self.assertAlmostEqual(sum(score.PESOS.values()), 100.0, places=6)

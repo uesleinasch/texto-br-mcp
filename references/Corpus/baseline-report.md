@@ -8,9 +8,13 @@
 
 | Componente | AUC |
 | --- | --- |
+| burstiness_gb | 0.833 |
 | burstiness | 0.832 |
 | sentenca_de_impacto | 0.762 |
+| razao_compressao | 0.658 |
+| yule_k | 0.649 |
 | sem_pivots | 0.584 |
+| autocorrelacao_lag1 | 0.581 |
 | ordem_nao_canonica | 0.542 |
 | paragrafos_variados | 0.519 |
 | sem_inicios_repetidos | 0.503 |
