@@ -558,3 +558,146 @@ test('e2e: persist() limpa o state file assim que o pipeline chega à Fase 6', a
     fs.rmSync(stateFile, { force: true });
   }
 });
+
+test('e2e: restore descarta state file com "rascunhos" como array (shape inválido)', async () => {
+  // {"rascunhos": []} tem typeof 'object' e não é null, então passava na
+  // validação antiga de restore() como se fosse um dicionário fase -> texto
+  // válido. currentPhase aqui é válido de propósito, para isolar que é a
+  // forma de "rascunhos" (array em vez de objeto) que precisa invalidar o
+  // shape inteiro.
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-rascunhos-array-${process.pid}.json`);
+  try {
+    fs.writeFileSync(stateFile, JSON.stringify({ currentPhase: 2, tipo: 'blog', rascunhos: [] }));
+    const client = await conectar(stateFile, 'teste-rascunhos-array');
+    try {
+      const st = await client.callTool({ name: 'texto_br_status', arguments: {} });
+      assert.match(st.content[0].text, /[Nn]enhuma escrita em andamento/);
+    } finally {
+      await client.close();
+    }
+  } finally {
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
+test('e2e: reposicionar (goTo) salva o rascunho sob a fase de destino, não a de origem', async () => {
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-goto-destino-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-goto-destino', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'hábitos', tipo: 'blog', variancia: false },
+    });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: 'R1' } }); // 1 -> 2
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: 'R2' } }); // 2 -> 3 (rascunhos[2] = 'R2')
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: 'R3' } }); // 3 -> 4
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: 'R4' } }); // 4 -> 5 (rascunhos[4] = 'R4', rascunhos[5] nunca escrito)
+
+    // reposiciona da Fase 5 (origem) para a Fase 2 (destino) passando um novo
+    // rascunho: precisa ser salvo sob a fase de DESTINO, sobrescrevendo 'R2'.
+    const rGoTo = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { fase: 2, rascunho: 'RASCUNHO_REPOSICIONADO' },
+    });
+    assert.ok(rGoTo.content[0].text.includes('# Fase 2'));
+
+    const rascunhoFase2 = await client.callTool({ name: 'texto_br_rascunho', arguments: { fase: 2 } });
+    assert.equal(rascunhoFase2.content[0].text, 'RASCUNHO_REPOSICIONADO');
+
+    // a fase de origem (5) não pode ganhar esse rascunho por engano
+    const rascunhoFase5 = await client.callTool({ name: 'texto_br_rascunho', arguments: { fase: 5 } });
+    assert.notEqual(rascunhoFase5.content[0].text, 'RASCUNHO_REPOSICIONADO');
+  } finally {
+    await client.close();
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
+test('e2e: reposicionamento inválido para a frente não suja o slot de destino (Minor E2-T6)', async () => {
+  // goTo só aceita ir para trás; pedir uma fase à frente da atual lança. O
+  // rascunho passado nessa tentativa não pode ser gravado em rascunhos[fase]
+  // antes de goTo validar — senão o slot da fase de destino fica sujo mesmo
+  // com a chamada terminando em erro (fail-closed, mas não deveria escrever).
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-goto-invalido-${process.pid}.json`);
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile },
+  });
+  const client = new Client({ name: 'teste-goto-invalido', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    await client.callTool({
+      name: 'texto_br_start',
+      arguments: { briefing: 'hábitos', tipo: 'blog', variancia: false },
+    });
+    await client.callTool({ name: 'texto_br_proxima_fase', arguments: { rascunho: 'R1' } }); // 1 -> 2
+
+    // da Fase 2, tenta reposicionar para a Fase 4 (à frente): inválido.
+    const rInvalido = await client.callTool({
+      name: 'texto_br_proxima_fase',
+      arguments: { fase: 4, rascunho: 'TEXTO_ISCA' },
+    });
+    assert.equal(rInvalido.isError, true);
+    assert.match(rInvalido.content[0].text, /apenas para trás/);
+
+    // o slot de destino (4) não pode ter sido gravado pela tentativa inválida
+    const rascunhoFase4 = await client.callTool({ name: 'texto_br_rascunho', arguments: { fase: 4 } });
+    assert.equal(rascunhoFase4.isError, true);
+    assert.doesNotMatch(rascunhoFase4.content[0].text, /TEXTO_ISCA/);
+  } finally {
+    await client.close();
+    fs.rmSync(stateFile, { force: true });
+  }
+});
+
+test('e2e: texto_br_lexico retorna isError quando a análise dá erro real (não inaplicável)', async () => {
+  // Stub de "python3" que ignora o texto de entrada e sempre devolve um erro
+  // real (sem "inaplicavel"), simulando a seção 10 não carregada/parseável.
+  // Exercita a camada do TOOL (isError), não só o script Python (já coberto
+  // em analysis.test.js).
+  const stateFile = path.join(os.tmpdir(), `texto-br-test-lexico-erro-${process.pid}.json`);
+  const stubDir = fs.mkdtempSync(path.join(os.tmpdir(), 'texto-br-lexico-stub-'));
+  const stubPath = path.join(stubDir, 'python-stub.js');
+  fs.writeFileSync(
+    stubPath,
+    [
+      '#!/usr/bin/env node',
+      'process.stdin.resume();',
+      "process.stdin.on('end', () => {",
+      "  process.stdout.write(JSON.stringify({ erro: 'Tabelas de vocabulário pivot indisponíveis (stub de teste).' }));",
+      '});',
+      '',
+    ].join('\n'),
+    { mode: 0o755 }
+  );
+
+  const transport = new StdioClientTransport({
+    command: 'node',
+    args: [new URL('../index.js', import.meta.url).pathname],
+    env: { PATH: process.env.PATH, TEXTO_BR_STATE_FILE: stateFile, TEXTO_BR_PYTHON: stubPath },
+  });
+  const client = new Client({ name: 'teste-lexico-erro', version: '1.0.0' });
+  await client.connect(transport);
+
+  try {
+    const r = await client.callTool({
+      name: 'texto_br_lexico',
+      arguments: { texto: TEXTO_BOM },
+    });
+    assert.equal(r.isError, true);
+    assert.match(r.content[0].text, /Tabelas de vocabulário pivot/);
+  } finally {
+    await client.close();
+    fs.rmSync(stateFile, { force: true });
+    fs.rmSync(stubDir, { recursive: true, force: true });
+  }
+});

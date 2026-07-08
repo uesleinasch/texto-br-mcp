@@ -93,5 +93,31 @@ class TestParsearBlocos(unittest.TestCase):
         self.assertEqual(blocos[0]["tipo"], "paragrafo")
 
 
+class TestHelpersCompartilhados(unittest.TestCase):
+    def test_clamp(self):
+        from texto_util import clamp
+        self.assertEqual(clamp(1.5), 1.0)
+        self.assertEqual(clamp(-0.5), 0.0)
+        self.assertEqual(clamp(0.3), 0.3)
+        self.assertEqual(clamp(5, 0, 10), 5)
+
+    def test_primeiro_termo(self):
+        from texto_util import primeiro_termo
+        self.assertEqual(primeiro_termo('"Quando" ele saiu'), "quando")
+        self.assertEqual(primeiro_termo("(Ontem) choveu"), "ontem")
+        self.assertEqual(primeiro_termo(""), "")
+
+    def test_conectivos_uniao_superconjunto(self):
+        from texto_util import CONECTIVOS_INICIAIS
+        # a união preserva os itens que hoje vivem em cada módulo
+        for item in ["além disso", "no entanto", "adicionalmente", "vale ressaltar", "é importante", "assim sendo"]:
+            self.assertIn(item, CONECTIVOS_INICIAIS)
+
+    def test_stopwords_contem_basicas(self):
+        from texto_util import STOPWORDS
+        for p in ["de", "que", "a", "o", "não", "porque"]:
+            self.assertIn(p, STOPWORDS)
+
+
 if __name__ == "__main__":
     unittest.main()

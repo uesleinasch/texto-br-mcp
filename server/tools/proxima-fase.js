@@ -45,7 +45,11 @@ export function register(server, session) {
         session.variancia = variancia;
         session.persist();
       }
-      if (rascunho && session.currentPhase !== null) {
+      // Sem reposicionamento (fase === undefined): o rascunho é o da fase
+      // atual que está concluindo, salvo já aqui. O gate logo abaixo usa o
+      // parâmetro `rascunho` diretamente (não depende deste save) — ver
+      // comentário do achado C3 mais abaixo.
+      if (fase === undefined && rascunho && session.currentPhase !== null) {
         session.salvarRascunho(session.currentPhase, rascunho);
       }
 
@@ -53,6 +57,17 @@ export function register(server, session) {
       try {
         if (fase !== undefined) {
           phase = session.goTo(fase);
+          // Só salva DEPOIS que goTo validar `fase` e reposicionar a sessão
+          // (Minor E2-T6): goTo lança para um reposicionamento à frente da
+          // fase atual, então um pedido inválido não chega a sujar nenhum
+          // slot de rascunho. Aqui session.currentPhase já é `fase`; o texto
+          // passado é o do destino (para onde a sessão foi), não o da
+          // origem — é isso que faz o fallback de hashGate (comentário
+          // abaixo) encontrar o rascunho certo num avanço FUTURO a partir
+          // desta fase.
+          if (rascunho) {
+            session.salvarRascunho(session.currentPhase, rascunho);
+          }
         } else {
           // Veredictos só contam se o hash do texto medido bater com o do
           // rascunho que a sessão conhece nesta fase (achado C3): medir um

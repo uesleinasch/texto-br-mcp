@@ -1,10 +1,11 @@
 import { getFile, knownFiles } from './loader.js';
-import { parseNumberedSections, extractH1Block } from './parser.js';
+import { parseNumberedSections, extractH1Block, extractH2Block } from './parser.js';
 import {
   PHASE_SECTIONS,
   PHASE_SECTIONS_CONVERSACIONAL,
   TIPOS_CONVERSACIONAIS,
   TIPOS_VALIDOS,
+  CHECKLISTS,
 } from '../knowledge/phases.js';
 
 // Conhecimento estrutural sobre as references: seções numeradas por arquivo,
@@ -23,6 +24,16 @@ export function buildIndexes() {
   }
 }
 
+// Valida que os checklists (CHECKLISTS de knowledge/phases.js) apontam para
+// seções existentes. Exportada para teste com mapa injetado.
+export function validaChecklists(mapa = CHECKLISTS, warn = (m) => console.error(`[texto-br] aviso: ${m}`)) {
+  for (const [fase, ref] of Object.entries(mapa)) {
+    if (!parsed.get(ref.file)?.has(ref.section)) {
+      warn(`checklist da fase ${fase}: seção ${ref.section} não encontrada em ${ref.file}.md`);
+    }
+  }
+}
+
 // Valida que tudo o que o workflow espera existe nos .md. Avisa em stderr e
 // segue em frente — degradação graciosa, nunca crash por conteúdo ausente.
 export function validateAll() {
@@ -31,7 +42,12 @@ export function validateAll() {
   for (const mapa of [PHASE_SECTIONS, PHASE_SECTIONS_CONVERSACIONAL]) {
     for (const phase of Object.values(mapa)) {
       for (const ref of phase) {
-        if (ref.section.startsWith('type:') || ref.section.startsWith('h1:')) continue;
+        if (
+          ref.section.startsWith('type:') ||
+          ref.section.startsWith('h1:') ||
+          ref.section.startsWith('h2:')
+        )
+          continue;
         if (!parsed.get(ref.file)?.has(ref.section)) {
           warn(`seção ${ref.section} não encontrada em ${ref.file}.md`);
         }
@@ -43,8 +59,30 @@ export function validateAll() {
     if (!slugIndex.has(slug)) warn(`tipo "${slug}" sem seção em tipos-de-texto.md`);
   }
 
-  if (!extractH1Block(getFile('tipos-de-texto'), 'Apêndice: Decisão rápida de tipo')) {
-    warn('apêndice "Decisão rápida de tipo" não encontrado em tipos-de-texto.md');
+  validaChecklists(CHECKLISTS, warn);
+
+  for (const mapa of [PHASE_SECTIONS, PHASE_SECTIONS_CONVERSACIONAL]) {
+    for (const phase of Object.values(mapa)) {
+      for (const ref of phase) {
+        if (!ref.section.startsWith('h1:')) continue;
+        const heading = ref.section.slice(3);
+        if (!extractH1Block(getFile(ref.file), heading)) {
+          warn(`bloco h1 "${heading}" não encontrado em ${ref.file}.md`);
+        }
+      }
+    }
+  }
+
+  for (const mapa of [PHASE_SECTIONS, PHASE_SECTIONS_CONVERSACIONAL]) {
+    for (const phase of Object.values(mapa)) {
+      for (const ref of phase) {
+        if (!ref.section.startsWith('h2:')) continue;
+        const heading = ref.section.slice(3);
+        if (!extractH2Block(getFile(ref.file), heading)) {
+          warn(`bloco h2 "${heading}" não encontrado em ${ref.file}.md`);
+        }
+      }
+    }
   }
 }
 
@@ -66,13 +104,18 @@ export function getH1Block(file, headingText) {
   return extractH1Block(getFile(file), headingText);
 }
 
+export function getH2Block(file, headingText) {
+  return extractH2Block(getFile(file), headingText);
+}
+
 export function listSections(file) {
   return [...(parsed.get(file)?.keys() ?? [])];
 }
 
 // Resolve as entradas de PHASE_SECTIONS de uma fase em texto concatenado,
-// interpolando "type:{slug}" com o tipo ativo e "h1:..." com blocos nível 1.
-// Tipos conversacionais usam o mapa enxuto quando a fase tem override.
+// interpolando "type:{slug}" com o tipo ativo, "h1:..." com blocos nível 1
+// e "h2:..." com blocos nível 2. Tipos conversacionais usam o mapa enxuto
+// quando a fase tem override.
 export function composePhaseSections(phase, slug) {
   const conversacional = slug && TIPOS_CONVERSACIONAIS.includes(slug);
   const refs =
@@ -87,6 +130,9 @@ export function composePhaseSections(phase, slug) {
       parts.push(spec ?? `> Aviso: especificação do tipo "${slug}" não encontrada.`);
     } else if (ref.section.startsWith('h1:')) {
       const block = getH1Block(ref.file, ref.section.slice(3));
+      if (block) parts.push(block);
+    } else if (ref.section.startsWith('h2:')) {
+      const block = getH2Block(ref.file, ref.section.slice(3));
       if (block) parts.push(block);
     } else {
       parts.push(getSection(ref.file, ref.section));

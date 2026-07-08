@@ -99,6 +99,36 @@ def excerto(sentenca, limite=70):
     return sentenca if len(sentenca) <= limite else sentenca[: limite - 1] + "…"
 
 
+def clamp(x, lo=0.0, hi=1.0):
+    return max(lo, min(hi, x))
+
+
+def primeiro_termo(s):
+    m = re.match(r"^[\"'«(]*([\wÀ-ÿ]+)", s.strip())
+    return m.group(1).lower() if m else ""
+
+
+# Conectivos lógicos de abertura de frase/parágrafo (pivots de coesão de LLM).
+# Fonte única: variancia.py e estrutura.py importam daqui.
+CONECTIVOS_INICIAIS = sorted({
+    "além disso", "no entanto", "por outro lado", "adicionalmente",
+    "portanto", "contudo", "entretanto", "dessa forma", "desse modo",
+    "por fim", "em suma", "em conclusão", "assim sendo", "ou seja",
+    "nesse sentido", "vale ressaltar", "é importante",
+})
+
+STOPWORDS = set("""
+a à às ao aos as com como da das de dele dela deles delas depois do dos e ela
+elas ele eles em entre era eram essa essas esse esses esta estas este estes
+estou está estão eu foi for foram há isso isto já lhe lhes mais mas me mesmo
+meu meus minha minhas muito na nas nem no nos nós não o os ou para pela pelas
+pelo pelos por qual quando que quem se sem ser seu seus sou sua suas são só
+também te tem têm ter teu tinha tua tudo um uma umas uns você vocês vai vão
+ainda até bem cada coisa coisas dia onde pode podem porque qualquer quanto
+sobre todo toda todos todas outro outra outros outras
+""".split())
+
+
 def parsear_blocos(texto):
     """Lista ordenada de blocos do markdown: heading, paragrafo, lista, codigo,
     citacao. Reusa a lógica de cerca de limpar_markdown (a cerca fecha só com o

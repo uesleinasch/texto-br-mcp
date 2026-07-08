@@ -17,19 +17,14 @@ import statistics
 import sys
 
 from texto_util import (
+    CONECTIVOS_INICIAIS,
     contar_palavras,
     dividir_paragrafos,
     dividir_sentencas,
     excerto,
     limpar_markdown,
+    primeiro_termo,
 )
-
-CONECTIVOS_INICIAIS = [
-    "além disso", "no entanto", "por outro lado", "adicionalmente",
-    "portanto", "contudo", "entretanto", "dessa forma", "desse modo",
-    "por fim", "em suma", "em conclusão", "assim sendo", "ou seja",
-    "nesse sentido", "vale ressaltar", "é importante",
-]
 
 # Aberturas que sinalizam ordem não-canônica (subordinada anteposta, gerúndio
 # ou adjunto fronteado), em vez do padrão sujeito-verbo-objeto direto.
@@ -50,15 +45,9 @@ INICIOS_NEUTROS = {
 }
 
 # Falsos gerúndios frequentes: palavras terminadas em "ndo" que não são
-# gerúndio quando abrem sentença.
-FALSOS_GERUNDIOS = {"mundo", "segundo", "quando", "lindo", "fundo", "bando"}
-
-
-
-def primeiro_termo(sentenca):
-    m = re.match(r"^[\"'«(]*([\wÀ-ÿ]+)", sentenca)
-    return m.group(1).lower() if m else ""
-
+# gerúndio quando abrem sentença. Não inclua "quando" aqui: SUBORDINADORES_INICIAIS
+# já o intercepta antes, no loop acima, tornando uma entrada aqui inalcançável.
+FALSOS_GERUNDIOS = {"mundo", "segundo", "lindo", "fundo", "bando"}
 
 
 def analisar(texto):

@@ -43,9 +43,10 @@ export function register(server, session) {
             ? `Atenção: o pipeline anterior (Fase ${session.currentPhase}, tipo ${session.tipo ?? 'indefinido'}, briefing "${session.briefing}") foi abandonado ao iniciar esta nova escrita.`
             : null;
 
+        let text;
         if (!tipo) {
           const fase0 = PHASE_GUIDANCE[0];
-          const text = [
+          text = [
             anterior,
             `# Fase 0 — ${fase0.name}`,
             fase0.instruction,
@@ -53,31 +54,29 @@ export function register(server, session) {
           ]
             .filter(Boolean)
             .join('\n\n');
-          // Só muta a sessão depois que a composição deu certo: se
-          // composePhaseSections lançasse antes disso, a sessão anterior
-          // (se houver) permanece intacta em vez de ser sobrescrita por uma
-          // chamada que terminou em erro.
-          session.start(briefing, tipo, tamanho, variancia);
-          return { content: [{ type: 'text', text }] };
+        } else {
+          const fase1 = PHASE_GUIDANCE[1];
+          const varianciaAtiva = variancia !== false;
+          const avisoVariancia = `Loop quantitativo da Fase 2 (variância sintática + perturbação lexical): ${
+            varianciaAtiva ? 'ATIVADO (default)' : 'desativado a pedido do usuário'
+          }.`;
+          text = [
+            anterior,
+            `# Fase 1 — ${fase1.name}`,
+            `Briefing: ${briefing}`,
+            `Tipo: ${tipo} | Tamanho: ${tamanho ? `${tamanho} (${TAMANHOS[tamanho]})` : 'medio (default)'}`,
+            avisoVariancia,
+            fase1.instruction,
+            REGRAS_ABSOLUTAS,
+            composePhaseSections(1, tipo),
+          ]
+            .filter(Boolean)
+            .join('\n\n');
         }
-
-        const fase1 = PHASE_GUIDANCE[1];
-        const varianciaAtiva = variancia !== false;
-        const avisoVariancia = `Loop quantitativo da Fase 2 (variância sintática + perturbação lexical): ${
-          varianciaAtiva ? 'ATIVADO (default)' : 'desativado a pedido do usuário'
-        }.`;
-        const text = [
-          anterior,
-          `# Fase 1 — ${fase1.name}`,
-          `Briefing: ${briefing}`,
-          `Tipo: ${tipo} | Tamanho: ${tamanho ? `${tamanho} (${TAMANHOS[tamanho]})` : 'medio (default)'}`,
-          avisoVariancia,
-          fase1.instruction,
-          REGRAS_ABSOLUTAS,
-          composePhaseSections(1, tipo),
-        ]
-          .filter(Boolean)
-          .join('\n\n');
+        // Só muta a sessão depois que a composição deu certo (em ambas as
+        // branches): se composePhaseSections lançasse antes disso, a sessão
+        // anterior (se houver) permanece intacta em vez de ser sobrescrita
+        // por uma chamada que terminou em erro.
         session.start(briefing, tipo, tamanho, variancia);
         return { content: [{ type: 'text', text }] };
       } catch (err) {

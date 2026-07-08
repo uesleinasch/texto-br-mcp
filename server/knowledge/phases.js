@@ -134,11 +134,13 @@ Se o usuário pedir explicitamente, mostre também o rascunho da Fase 1 para com
 export const TIPOS_CONVERSACIONAIS = ['email', 'comentario-blog', 'comentario-jira', 'chat'];
 
 // Mapa declarativo: quais seções de quais references cada fase recebe.
-// Notações especiais: "type:{slug}" (seção do tipo ativo, resolvida em runtime)
-// e "h1:Texto" (bloco de heading nível 1 com texto exato).
+// Notações especiais: "type:{slug}" (seção do tipo ativo, resolvida em runtime),
+// "h1:Texto" (bloco de heading nível 1 com texto exato) e "h2:Texto" (idem,
+// nível 2, até o próximo heading de nível <= 2).
 export const PHASE_SECTIONS = {
   0: [{ file: 'tipos-de-texto', section: 'h1:Apêndice: Decisão rápida de tipo' }],
   1: [
+    { file: 'tipos-de-texto', section: 'h2:Princípios gerais aplicáveis a todos os tipos' },
     { file: 'tipos-de-texto', section: 'type:{slug}' },
     { file: 'gramatica-pt-br', section: '2' }, // acentuação
     { file: 'gramatica-pt-br', section: '3' }, // hifenização
@@ -193,6 +195,7 @@ export const PHASE_SECTIONS = {
 // Seções podadas continuam acessíveis sob demanda via texto_br_gramatica etc.
 export const PHASE_SECTIONS_CONVERSACIONAL = {
   1: [
+    { file: 'tipos-de-texto', section: 'h2:Princípios gerais aplicáveis a todos os tipos' },
     { file: 'tipos-de-texto', section: 'type:{slug}' },
     { file: 'gramatica-pt-br', section: '4' }, // ortografia (porquês, mau/mal, a/há...)
     { file: 'gramatica-pt-br', section: '5' }, // pontuação (regra dos travessões)
@@ -230,6 +233,11 @@ export const CHECKLISTS = {
 // Tipos longos onde a Fase 5 (macroestrutura) bloqueia a entrega até o alvo.
 // Fonte de verdade replicada em analysis/estrutura.py (TIPOS_GATE).
 export const TIPOS_ESTRUTURA_GATE = ['blog', 'capitulo', 'tecnico', 'explicativo', 'podcast', 'video'];
+
+// Alvo do score de naturalidade estrutural da Fase 5 (0-100). Fonte única:
+// estrutura.js injeta este valor no payload do script Python, que só cai no
+// próprio ALVO_PADRAO (analysis/estrutura.py) em uso standalone (sem payload).
+export const ALVO_ESTRUTURA = 70;
 
 // Loop quantitativo da Fase 2 (variância sintática + perturbação lexical).
 // Ativo por default; desligado apenas com variancia: false a pedido do usuário.
