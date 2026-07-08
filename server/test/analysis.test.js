@@ -55,16 +55,22 @@ test('lexico: texto limpo atinge o alvo', async () => {
   assert.equal(r.atingiu_alvo, true, JSON.stringify(r.ocorrencias));
 });
 
-test('score: separa texto humano (>= 80) de texto LLM (< 80)', async () => {
+test('score: separa texto humano (>= alvo calibrado) de texto LLM (< alvo)', async () => {
   const secao10 = getSection('humanizacao-algoritmos', 10);
   const bom = await runPython('score.py', JSON.stringify({ texto: TEXTO_VARIADO, secao10 }));
-  assert.ok(bom.score.total >= 80, `texto bom pontuou ${bom.score.total}`);
+  assert.ok(bom.score.total >= bom.score.alvo, `texto bom pontuou ${bom.score.total} (alvo ${bom.score.alvo})`);
   assert.equal(bom.atingiu_alvo, true);
 
   const ruim = await runPython('score.py', JSON.stringify({ texto: TEXTO_PIVOT, secao10 }));
-  assert.ok(ruim.score.total < 80, `texto pivot pontuou ${ruim.score.total}`);
+  assert.ok(ruim.score.total < ruim.score.alvo, `texto pivot pontuou ${ruim.score.total} (alvo ${ruim.score.alvo})`);
   assert.equal(ruim.atingiu_alvo, false);
   assert.ok(ruim.relatorio.includes('| Componente | Pontos |'));
+
+  // separação relativa: o texto bom deve pontuar bem acima do texto ruim,
+  // independente de onde o ALVO calibrado esteja hoje (evita magic number
+  // que descasa do score.ALVO real após recalibrações futuras, cf. Etapa 3)
+  assert.ok(bom.score.total > ruim.score.total + 20,
+    `separação insuficiente: bom ${bom.score.total} vs ruim ${ruim.score.total}`);
 });
 
 test('analisadores ignoram código e headings de markdown', async () => {

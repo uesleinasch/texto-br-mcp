@@ -13,7 +13,8 @@ Fase 2. Componentes:
   Estrutura (20): parágrafos não-uniformes 8 | sentença curta de impacto 6 |
                   sem corrente de conectivos 6
 
-Alvo: score >= 80.
+Alvo: score >= ALVO calibrado na Etapa 3 (ver PESOS/ALVO abaixo e
+pesos-calibrados.json, p75 dos scores humanos do corpus rotulado).
 """
 
 import json
