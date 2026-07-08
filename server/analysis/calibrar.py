@@ -97,7 +97,9 @@ def matriz_com_referencia(corpus, referencia):
 def folds_com_referencia(corpus):
     """Por fold i do LOO: a referência construída SEM o texto held-out (se ele
     for humano). Sem vazamento: nenhuma estatística do held-out entra no
-    treino do fold. Referências são cacheadas por conjunto de humanos."""
+    treino do fold. A referência completa é construída uma vez e reusada em
+    todos os folds de IA; cada fold de humano constrói a sua própria (sem
+    memoização adicional — são <= n_humanos + 1 construções no total)."""
     humanos = [e["texto"] for e in corpus if e["y"] == 1]
     ref_completa = metricas.construir_referencia(humanos)
     folds = []
@@ -222,12 +224,20 @@ def coef_para_pesos(coef, chaves, piso=2.0):
 
 
 def separacao_loocv(dir_corpus):
-    """AUC honesto: para cada amostra, treina nos N-1 restantes e prevê a que
-    ficou de fora. Reflete generalização, não ajuste in-sample."""
+    """AUC LOO da rota aditiva: para cada amostra, treina nos N-1 restantes e
+    prevê a que ficou de fora. Aproxima generalização, mas com uma
+    contaminação residual otimista: a matriz vem de matriz_features (referência
+    COMPLETA, score.REFERENCIA), então os 2 sinais do Bloco B (burrows_delta,
+    cross_entropy_trigramas) de um held-out humano são computados contra uma
+    referência que inclui o próprio texto (~1/29). O número honesto por fold —
+    referência recomputada sem o held-out via folds_com_referencia — é o da
+    loocv_logistica (Task 11)."""
     X, y, nomes, chaves = matriz_features(dir_corpus)
     # prior fixo (pesos manuais, não os calibrados) — cada fold não pode ver
     # informação derivada do corpus inteiro, senão vaza held-out para o prior.
     # .get(k, 0.0): sinais novos (Bloco A/B) não têm peso manual — prior 0.
+    # (Vazamento residual restante: os sinais com referência na matriz, ver
+    # docstring acima.)
     prior = [score.PESOS_MANUAIS.get(k, 0.0) / 10.0 for k in chaves]
     preditos = []
     for i in range(len(X)):
