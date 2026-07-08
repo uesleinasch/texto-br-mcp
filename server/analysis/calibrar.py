@@ -83,8 +83,11 @@ def matriz_features(dir_corpus, secao10=None):
 
 
 def relatorio_baseline(dir_corpus, secao10=None):
+    """Baseline com os pesos MANUAIS (fixos, pré-calibração) — reproduzível do
+    repo independente do estado atual de score.PESOS (que Task 6 congelou nos
+    valores calibrados)."""
     X, y, nomes, chaves = matriz_features(dir_corpus, secao10)
-    scores = [score_ponderado(x, score.PESOS, chaves) for x in X]
+    scores = [score_ponderado(x, score.PESOS_MANUAIS, chaves) for x in X]
     a = auc(scores, y)
     hum = [s for s, l in zip(scores, y) if l == 1]
     ia = [s for s, l in zip(scores, y) if l == 0]
@@ -176,7 +179,9 @@ def separacao_loocv(dir_corpus):
     """AUC honesto: para cada amostra, treina nos N-1 restantes e prevê a que
     ficou de fora. Reflete generalização, não ajuste in-sample."""
     X, y, nomes, chaves = matriz_features(dir_corpus)
-    prior = [score.PESOS[k] / 10.0 for k in chaves]
+    # prior fixo (pesos manuais, não os calibrados) — cada fold não pode ver
+    # informação derivada do corpus inteiro, senão vaza held-out para o prior.
+    prior = [score.PESOS_MANUAIS[k] / 10.0 for k in chaves]
     preditos = []
     for i in range(len(X)):
         Xtr = [X[j] for j in range(len(X)) if j != i]
@@ -220,7 +225,9 @@ def p75_humano(scores, labels):
 def _emitir_fit(dir_corpus):
     X, y, nomes, chaves = matriz_features(dir_corpus)
     Xs, medias, desvios = padronizar(X)
-    prior = [score.PESOS[k] / 10.0 for k in chaves]  # escala do prior no espaço padronizado
+    # prior fixo (pesos manuais) — reproduz os pesos congelados em score.PESOS
+    # independente de recalibrações futuras. Escala do prior no espaço padronizado.
+    prior = [score.PESOS_MANUAIS[k] / 10.0 for k in chaves]
     w, b = treinar_logistica(Xs, y, prior=prior, l2=1.0, lr=0.3, iteracoes=3000)
     pesos = coef_para_pesos(w, chaves, piso=2.0)
     scores = [score_ponderado(x, pesos, chaves) for x in X]

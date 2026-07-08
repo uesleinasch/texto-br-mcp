@@ -2,7 +2,7 @@
 
 - Amostras: 30 humano / 27 IA
 - AUC total: **0.854**
-- Média do score: humano 65.1 vs IA 53.3 (alvo 80)
+- Média do score: humano 65.1 vs IA 53.3 (alvo 74.4)
 
 ## Poder discriminativo por componente (AUC univariado)
 
