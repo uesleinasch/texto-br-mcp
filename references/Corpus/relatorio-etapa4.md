@@ -27,5 +27,7 @@ Aditivo E3 no corpus corrigido (rota com contaminação residual documentada): 0
 | 10-antigas | 1.0 | 0.84 |
 
 Chaves do vencedor: burstiness_gb, burstiness, zipf, sentenca_de_impacto, razao_compressao, burrows_delta, yule_k, cross_entropy_trigramas, sem_pivots
-In-sample: 0.963 | alvo p75 humano (prob): 0.9
+In-sample: 0.963 | alvo p75 humano (prob): 0.9 (preciso, 4 casas: 0.9357)
 Medianas in-sample (prob): humano 0.881 vs IA 0.088
+
+Leitura honesta: o AUC LOO de cada célula é honesto para AQUELA configuração, mas o vencedor é o máximo sobre 18 pontos da grade e o ranking de candidatos foi feito in-sample — juntos, tornam o número do vencedor uma estimativa otimista da generalização do PROCEDIMENTO de auto-seleção (um CV aninhado daria menos). Com n=56, é o preço aceito nesta etapa; o gate deve ler o 0.9x como teto, não como piso.

@@ -370,6 +370,11 @@ def _emitir_fit_logistico(dir_corpus):
         "auc_loocv": vencedor["auc_loocv"],
         "auc_in_sample": round(auc(probs, y), 3),
         "alvo_p75_humano_prob": p75_humano(probs, y),
+        # p75 a 4 casas para o congelamento (Task 13): p75_humano() arredonda a
+        # 1 casa (escala 0-100 da rota aditiva) — grosseiro demais em
+        # probabilidade, onde os humanos clusterizam ~0.85-0.95.
+        "alvo_p75_humano_prob_precisa": round(
+            statistics.quantiles(hum, n=4, method="inclusive")[2], 4),
         "alvo_politica": "p75_humano",
         "probs_in_sample": {"humano": {"mediana": round(med(hum), 3)},
                              "ia": {"mediana": round(med(ia), 3)}},
@@ -400,9 +405,16 @@ def _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida):
         linhas.append(f"| {r['k']} | {r['l2']} | {r['auc_loocv']}{marca} |")
     linhas += [
         "", f"Chaves do vencedor: {', '.join(vencedor['chaves'])}",
-        f"In-sample: {saida['auc_in_sample']} | alvo p75 humano (prob): {saida['alvo_p75_humano_prob']}",
+        f"In-sample: {saida['auc_in_sample']} | alvo p75 humano (prob): {saida['alvo_p75_humano_prob']} "
+        f"(preciso, 4 casas: {saida['alvo_p75_humano_prob_precisa']})",
         f"Medianas in-sample (prob): humano {saida['probs_in_sample']['humano']['mediana']} "
         f"vs IA {saida['probs_in_sample']['ia']['mediana']}",
+        "",
+        "Leitura honesta: o AUC LOO de cada célula é honesto para AQUELA configuração, mas o "
+        "vencedor é o máximo sobre 18 pontos da grade e o ranking de candidatos foi feito "
+        "in-sample — juntos, tornam o número do vencedor uma estimativa otimista da "
+        "generalização do PROCEDIMENTO de auto-seleção (um CV aninhado daria menos). "
+        "Com n=56, é o preço aceito nesta etapa; o gate deve ler o 0.9x como teto, não como piso.",
     ]
     with open(os.path.join(dir_corpus, "relatorio-etapa4.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(linhas) + "\n")

@@ -48,6 +48,7 @@
   "auc_loocv": 0.902,
   "auc_in_sample": 0.963,
   "alvo_p75_humano_prob": 0.9,
+  "alvo_p75_humano_prob_precisa": 0.9357,
   "alvo_politica": "p75_humano",
   "probs_in_sample": {
     "humano": {
