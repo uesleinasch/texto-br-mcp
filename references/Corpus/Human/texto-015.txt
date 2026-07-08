@@ -1,0 +1,198 @@
+08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
+
+     O que é cloud?
+     5 min read · Nov 5, 2019
+
+             Gabriel Faraday      Follow
+
+            Share
+
+     Um tópico muito discutido hoje em dia, que já é PRESENTE e não mais FUTURO
+     como há alguns anos atrás, é a cloud (ou a nuvem em português).
+
+     São inúmeras as vagas onde se pedem experiência em cloud. São diversas palestras
+     apresentadas mensalmente retratando aspectos e serviços de cloud. Temos eventos
+     focados apenas em cloud.
+
+https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            1/12
+08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
+
+     Cloud, cloud, cloud…
+
+     Mas afinal, o que é cloud?
+     Cloud, ou computação em nuvem, nada mais é que a distribuição de serviços de
+     computação pela Internet usando um modelo de preço pago conforme o uso.
+
+     Em vez de manter as CPUs e o armazenamento em seu data center local (prática
+     chamada de on-premises), você os aluga durante o tempo necessário.
+
+     A empresa que fornece e mantem a infraestrutura de cloud, é chamada de provedor
+     de nuvem.
+
+     Atualmente os principais provedores de cloud são:
+
+          Microsoft (Azure)
+
+          Amazon (AWS)
+
+          Google (GCP)
+
+     Porém, muitas outras empresas têm se enveredado pelo caminho de prover serviços
+     de nuvem, como por exemplo: Oracle, IBM, Apple, Citrix, e até o Alibaba (sim,
+     aquele Alibaba, de compras on-line).
+
+     Em resumo, empresas que possuem um enorme poder de processamento,
+     armazenamento e de forma geral grande poder de inovação e tecnologia, têm usado
+     de sua infraestrutura para alugar a terceiros e garantir um melhor aproveitamento
+     de seus recursos físicos.
+
+     Por que devo mudar para a nuvem?
+     De forma simples e direta, a cloud nos oferece rapidez e inovação de maneiras que
+     antes eram quase impossíveis.
+
+     Dentre outras coisas, uma cloud nos fornece:
+
+          Componentes brutos de rede, armazenamento e computação.
+https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            2/12
+08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
+
+          Reconhecimento de fala e outros serviços cognitivos.
+
+          Serviços de análise que permitem que você compreenda os dados telemétricos
+          recebidos do software e dos dispositivos.
+
+     Quais os benefícios da computação em nuvem?
+     Uma cloud tem diversos aspectos que tornam sua adoção algo bem interessante:
+
+          Econômica: pago conforme o uso ou baseado em consumo.
+
+          Escalonável: aumentar ou diminuir os recursos e serviços usados com base na
+          demanda ou na carga de trabalho em um determinado momento. Pode ser feito
+          manualmente ou automaticamente com base em gatilhos específicos (Elástica).
+
+        Escalonamento vertical (aumento de memória por exemplo) e escalonamento horizontal (aumento de
+                                            máquinas por exemplo)
+
+          Ágil: você pode se concentrar no que é importante: na criação e implantação de
+          aplicações.
+
+          Confiável: serviços de backup de dados, recuperação de desastre e replicação de
+          dados para garantir que seus dados estejam sempre seguros.
+
+          Global: datacenters totalmente redundantes localizados em várias regiões no
+          mundo todo, melhorando questões de latência.
+
+          Segura: amplo conjunto de políticas, tecnologias, controles e habilidades
+          técnicas especializadas que podem fornecer mais segurança do que a maioria
+          das organizações poderiam atingir sem eles.
+
+https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            3/12
+08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
+
+                             São diversos os níveis de segurança que uma cloud nos garante
+
+     E como funcionam os serviços de cloud?
+     Existe 3 principais categorias de serviços em uma cloud:
+
+                                  Get Gabriel Faraday’s stories in your inbox
+                                   Join Medium for free to get updates from this writer.
+
+                                         Enter your email
+
+                                                         Subscribe
+
+                                                Remember me for faster sign in
+
+     IaaS (infrastructure as a service):
+     Infraestrutura como serviço é a categoria mais flexível dos serviços de nuvem. Ela
+     tem como objetivo oferecer controle total sobre o hardware que executa uma
+     aplicação, incluindo:
+
+          Servidores de infraestrutura de TI
+
+          VMs
+
+          Armazenamento
+
+          Redes
+
+https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            4/12
+08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
+
+          Sistemas operacionais
+
+     Com a IaaS, você aluga hardware em vez de comprá-lo.
+
+     PaaS (plataform as a service):
+     Plataforma como serviço fornece um ambiente para criação, teste e implantação de
+     aplicações de software.
+
+     A meta é ajudar na criação das aplicações sem a necessidade de se preocupar sobre
+     como gerenciar a infraestrutura. Por exemplo, você desenvolve e “sobe” o teu site ou
+     API para a cloud e ele está disponível! Literalmente com alguns cliques (ou
+     comandos).
+
+     SaaS (software as a service):
+     É um software que é hospedado e gerenciado de forma centralizada para o cliente
+     final.
+
+     Geralmente, ele se baseia em uma arquitetura em que uma versão do aplicativo é
+     usada para todos os clientes e licenciada por meio de uma assinatura mensal ou
+     anual.
+
+     Exemplos: Office 365, Skype e Dynamics CRM Online.
+
+     A imagem a seguir mostra em resumo o que fica a cargo de você gerenciar e o que o
+     provedor de cloud se responsabiliza em gerenciar em cada uma das categorias,
+     desde Local (on-premises) até SaaS:
+
+https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            5/12
+08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
+
+     A próxima imagem é bem parecida com a anterior, porém mostra alguns aspectos
+     diferentes:
+
+https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            6/12
+08/07/2026, 08:01                 O que é cloud?. Um tópico muito discutido hoje em dia… | by Gabriel Faraday | Medium
+
+     E qual cloud devo contratar?
+     Bom, tudo isso que foi explicado acima, não é fornecido gratuitamente, é claro.
+
+     Os preços e forma de cobrança variam de acordo com cada serviço contratado.
+     Alguns possuem o preço fixo mensal, outros cobram apenas pelo tempo e volume
+     de processamento. Ainda há serviços que mesclam as duas formas.
+
+     O importante é fazer uma análise prévia do que se pretende usar e fazer a famosa
+     cotação! Após isso, escolha a que se encaixar melhor a seu bolso e suas
+     necessidades!
+
+     Nós como meros mortais podemos contratar um provedor de cloud com um cartão
+     de crédito comum, porém dessa forma obteremos os preços padrões do dado
+     provedor. Já uma empresa que vai usar um volume maior de coisas, consegue
+     negociar os valores, geralmente fazendo um contrato personalizado através de um
+     parceiro do provedor.
+
+     Portanto, se for contratar um provedor de cloud para sua empresa, faça uma análise
+     prévia e negocie!
+
+     Fique atento também no fato de que alguns serviços são do tipo Cloud Lock-in: isso
+     quer dizer que eles “te prendem” ao dado provedor de cloud, você não consegue
+     reaproveitar as soluções em outras clouds. Então avalie bem ao planejar uma
+     solução e dê preferência por serviços que te darão liberdade de migrar de cloud
+     futuramente, seja por preços melhores ou por disponibilidade mais próxima de seus
+     clientes, etc. Aliás a prática de migração de cloud é bem comum hoje em dia.
+
+     Conclusão
+     Cloud é o presente da computação! Ainda é bem comum ter um servidor nas
+     empresas hospedando um site ou serviço, porém isso deve ser cada vez menos
+     interessante.
+
+     Obviamente não vamos sair jogando fora o servidor on-premises e contratando
+     serviços em cloud. Tudo deve ser bem avaliado.
+
+     Porém, se for começar algo novo ou se pretende inovar de fato, sugiro olhar com
+     carinho para cloud. Aliás, os beneficios são grandes.
+
+     E para você profissional que lê este texto, sugestão: comece a olhar para cloud e
+     para os serviços oferecidos (a maioria dos serviços tem um correspondente em
+https://gabriel-faraday.medium.com/o-que-é-cloud-991109e708c6                                                            7/12

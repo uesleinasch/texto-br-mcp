@@ -1,0 +1,7 @@
+Angular Signals: O Guia Completo
+Este PDF contém uma versão resumida do artigo gerado na conversa.
+Para preservar a formatação em Markdown (códigos, tabelas e títulos), o ideal é
+exportar diretamente do Markdown usando um conversor como Pandoc.
+Como o conteúdo completo excede o limite prático para esta geração, este PDF serve
+como capa. Copie o Markdown da conversa para um arquivo .md e converta para PDF
+para manter toda a formatação.

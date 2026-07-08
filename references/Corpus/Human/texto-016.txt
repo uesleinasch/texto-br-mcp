@@ -1,0 +1,229 @@
+08/07/2026, 09:33                SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
+
+     SAP TDM: uma visão além do desenvolvimento
+     de software
+     9 min read · Nov 8, 2021
+
+             Bosch Tech Brasil       Follow
+
+            Share
+
+     por: Beatriz Mazieri, David Rosin e David Tsutsui
+
+     O Technical Development Manager (TDM) é um profissional que possui um alto
+     nível de conhecimento sobre os processos de negócios, desenvolvimento e
+     qualidade de software.
+
+https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                        1/17
+08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
+
+     Esse profissional garante que os desenvolvedores tenham a melhor base para
+     desenvolver softwares de última geração que atenda aos altos padrões de qualidade
+     operacional, fornecendo consultoria e orientação especializada, além da
+     governança e uma estrutura de desenvolvimento necessárias para uma implantação
+     consistente.
+
+     Neste artigo do Bosch Tech, nós, que somos TDM em desenvolvimento SAP ABAP,
+     vamos falar sobre o que é essa função, nossas responsabilidades e algumas dicas
+     para se tornar um TDM.
+
+              O TDM garante que os desenvolvedores tenham a melhor base para desenvolver softwares.
+
+     Technical
+     Open in app Development Manager com foco em SAP na Bosch Sign up                                             Sign in
+
+https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                          2/17
+08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
+
+     O Technical Development Manager com foco em SAP (SAP TDM) na Bosch é uma
+                          Search
+
+     especialidade que tem como principal objetivo assegurar que desenvolvimentos de
+     aplicações em ABAP geridas pelo negócio tenham alta qualidade operacional.
+
+     E qual seria a melhor forma de garantir isso?
+
+     Para responder a esta pergunta, além de se apoiar em ferramentas e processos, o
+     SAP TDM precisa alcançar seus parceiros diretos de negócios, desenvolvedores
+     ABAP e analistas SAP. Sendo assim, temos quatro principais atividades:
+
+          Treinamento e coaching de desenvolvedores
+
+          Consultoria técnica
+
+          Guidelines
+
+          Legislação e conformidade (Compliance)
+
+     Treinamentos e coaching
+
+     Uma das principais atividades desenvolvidas por um SAP TDM é orientar
+     tecnicamente desenvolvedores e analistas. A orientação, além da troca de
+     experiências e conhecimentos, é fundamentada em diretrizes de qualidade de
+     software pré-estabelecidas na Bosch.
+
+     Dentro do escopo de treinamentos e coaching fornecidos por um SAP TDM, a ideia é
+     contribuir com o aprimoramento do conhecimento técnico do desenvolvedor e
+     analista, discutindo melhores práticas e novas técnicas de desenvolvimento. O
+     nosso objetivo não é “ensinar” SAP ABAP.
+
+     Consultoria Técnica
+
+     Outra atividade importante desempenhada pelo SAP TDM é a consultoria técnica
+     com relação a princípios e landscapes de desenvolvimento.
+
+     Parte da responsabilidade é garantir que, além da aplicação correta das diretrizes de
+     qualidade de software pelos desenvolvedores e analistas, o ambiente de
+     desenvolvimento esteja em conformidade com os regulamentos da Bosch.
+
+     A consultoria técnica, como uma atividade sob demanda, pode ser solicitada não
+     somente por desenvolvedores e analistas, mas também por gerentes de projetos e
+
+https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      3/17
+08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
+
+     outros papéis que necessitam de suporte.
+
+     Guidelines
+
+     Como uma ferramenta de suporte e orientação a desenvolvedores e analistas, cada
+     SAP TDM responsável por um landscape de desenvolvimento mantém um guia
+     orientador, que é conhecido internamente como Developer’s Handbook.
+
+     Este guia inclui diretrizes e regras, boas práticas de desenvolvimento, convenções
+     de nomes, detalhes de ferramentas de suporte, entre outros — sempre com foco em
+     uma linguagem de programação alvo. Para desenvolvimentos nos sistemas SAP, o
+     Developer’s Handbook existente é chamado de ABAP Handbook.
+
+     Uma outra função importante do guideline é a orientação do processo de
+     desenvolvimento. Neste caso, entre principais tópicos abordados estão:
+
+          Organização;
+
+          Processo e planejamento;
+
+          Regulamentos;
+
+          Qualidade de software de acordo com as características abordadas na norma
+          técnica ISO/IEC 25010 (adequação funcional, eficiência de desempenho,
+          compatibilidade, usabilidade, confiabilidade, segurança, manutenibilidade,
+          portabilidade)
+
+          regras de liberação e entrega.
+
+     Legislação e conformidade (Compliance)
+
+     Como qualquer outra atividade, o desenvolvimento de software na Bosch é regido
+     por regras definidas central e/ou localmente. A função do SAP TDM é assegurar que
+     tais regras estejam claras e sejam seguidas por todos os envolvidos no processo de
+     desenvolvimento.
+
+     SAP TDM como organização na Bosch
+
+     O SAP TDM é um papel que existe localmente (no Brasil), mas também é parte
+     integrante de uma organização internacional dentro da Bosch com um número
+
+https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      4/17
+08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
+
+     considerável de profissionais que dão suporte ao desenvolvimento de produtos nas
+     soluções SAP ECC, S/4HANA, dentre outras.
+
+     Essa organização conta com profissionais espalhados pela Europa, Ásia, América do
+     Norte e América Latina. E isso forma uma rede de conexões multicultural e
+     multidisciplinar que permite a troca de experiências, práticas e aprendizados.
+
+     Junto a isso, também tem a criação de uma gestão de conhecimento relacionados a
+     diferentes produtos, resultando em um ecossistema padronizado de ferramentas de
+     desenvolvimento de software.
+
+     Os principais benefícios entregues por esta organização são:
+
+          Harmonização: padronizar processos de desenvolvimento de software e
+          ferramentas com as melhores práticas através das diversas linhas de
+          desenvolvimento.
+
+          Otimização: alinhar atividades padrões e fornecê-las como serviços.
+
+          Simplificação: prover um ponto único de contato para projetos e outras
+          atividades que demandem suporte ao processo de desenvolvimento.
+
+          Multiplicação: economizar recursos, se beneficiando da sinergia e gestão do
+          conhecimento colaborativa.
+
+                              Um dos principais benefícios da organização é a otimização.
+https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      5/17
+08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
+
+     Conhecimentos necessários para ser um TDM
+     A formação de um Technical Development Manager demanda conhecimento e
+     experiência. Apesar de não existir uma lista pré-definida de cursos que nos oriente
+     na formação, há alguns conhecimentos técnicos necessários para desempenhar
+     esse papel.
+
+     Para um SAP TDM, é preciso conhecer profundamente o ABAP (linguagem de
+     programação utilizada para desenvolver soluções nos produtos SAP) e suas
+     ferramentas de desenvolvimento.
+
+     Conhecer quais são os produtos SAP utilizados na organização também é essencial.
+     A SAP possui um portfólio diversificado de produtos disponibilizados para
+     diferentes finalidades do negócio. Entre eles, Enterprise Resource Planning (ERP),
+     Human Capital Management (HCM), Supply Chain Management (SCM), Customer
+     Relationship Management (CRM).
+
+     Hard skills
+
+     Hard skills são os conhecimentos técnicos adquiridos pela experiência e
+     aprendizado em cursos de formação específica.
+
+     Como já falamos anteriormente, não existe uma lista pronta de cursos para se
+     tornar um TDM. Porém, considerando que esse profissional será procurado para
+     suportar desenvolvedores e analistas (dentre outros papéis), é importante ter muito
+     conhecimento da tecnologia a qual suporta, bem como processos e procedimentos
+     da empresa onde trabalha.
+
+     Geralmente, um TDM se forma organicamente. É esperado que, ao longo do
+     desenvolvimento de sua carreira, essa pessoa passou por algumas funções que lhe
+     deram a base de conhecimento necessário — estágio, analista funcional,
+     desenvolvimento de software etc. — para alcançar esta posição.
+
+     No entanto, a atualização do conhecimento e o interesse em conhecer novas
+     técnicas, práticas, ferramentas para suprir necessidades do dia a dia é de grande
+     importância e se faz necessário. Existem vários meios que podem ser explorados
+     para obter conhecimento:
+
+          Plataformas de cursos online
+
+          Treinamentos
+https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      6/17
+08/07/2026, 09:33              SAP TDM: uma visão além do desenvolvimento de software | by Bosch Tech Brasil | Medium
+
+          Livros
+
+          Podcasts e vídeos online
+
+          Suporte de amigos/colegas
+
+          Blogs
+
+     Contudo, além de todo conhecimento técnico sobre a tecnologia alvo, o TDM
+     precisa buscar por fontes de conhecimento sobre os procedimentos e processos que
+     regulamentam as atividades que compõem a cadeia de desenvolvimento de software
+     dentro da organização onde trabalha.
+
+     Geralmente, empresas de médio e grande porte (principalmente as multinacionais),
+     definem um idioma padrão para comunicação entre todos os seus colaboradores —
+     em especial aqueles que participam e interagem em grupos multiculturais — para
+     desempenhar atividades colaborativas. Caso o idioma definido não seja o nativo do
+     colaborador, a sua proficiência também deverá compor a formação do TDM.
+
+     Junto a tudo isso, conhecimentos de gestão também devem fazer parte do escopo de
+     hard skills adicionais no seu portfólio de formação. Alguns exemplos são:
+
+          Gestão de projetos
+
+          Gestão de pessoas
+
+          Gerenciamento de conflitos
+
+https://medium.com/@boschtechbr/sap-tdm-uma-visão-além-do-desenvolvimento-de-software-61f542722bf7                      7/17

@@ -1,0 +1,307 @@
+08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+     Python para quem não sabe nada de
+     programação
+     5 min read · Apr 26, 2018
+
+             Victor Osório    Follow
+
+            Share
+
+                     Você acha que Python é uma cobra? Não seria por causa do Monty Python?
+
+     Porque estou escrevendo isso?
+     Estou apenas fazendo um tutorial fácil para quem precisa entender Python. Não sou
+     especialista em Python, trabalho com Java, mas essa linguagem tem sido bastante
+     usada em meios acadêmicos por ser uma linguagem interpretada, de fácil
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                              1/12
+08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+     entendimento e ter bastante bibliotecas de apoio. Se você é um biólogo, ou
+     estatístico, ou apenas precisa fazer coisas simples…. continue
+
+     A quem se destina?
+     Estou escrevendo com um público em mente, pessoas que tem que escrever
+     programas pequenos para rápido processamentos. Por exemplo, um biólogo que
+     precisa processar alguns dados. Vou construir ao longo desse post um exemplo de
+     alguém que precisa ler um arquivo, processar valores desse arquivo e escrever outro
+     arquivo de saída.
+
+      1    A1          A4
+      2    B2          B2
+      3    C -4        C -2
+      4    C 2.     -> G 8
+      5    G8
+      6    A3
+      7    A5
+      processamento.txt hosted with ❤ by GitHub                                                          view raw
+
+      A esquerda seria a entrada, a direita a saída. Soma-se os valores da segunda coluna, baseada na primeira.
+
+     O que é um programa de computador?
+     Antes de começar a escrever o código, você precisa se perguntar: o que eu estou
+     fazendo?
+
+     Bom a resposta é simples. Um computador é apenas uma máquina que executa uma
+     instrução e vai para próxima! Então um programa, ele inicia em um ponto e vai
+     executando linha a linha, até que alguma coisa mude o fluxo da execução.
+
+     Os primeiros programas de computador não eram desenvolvidos com linguagem,
+     eram instruções de máquina, que são bem mais complexas e ao mesmo tempo mais
+     simples. Hoje você tem linguagem com estruturas bem mais legíveis. Tente ler um
+     programa para ver se você entende:
+
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  2/12
+08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+       1     # This program adds two numbers
+       3     num1 = 1.5
+       4     num2 = 6.3
+       6     # Add two numbers
+       7     sum = float(num1) + float(num2)
+       9     # Display the sum
+      10     print('The sum of {0} and {1} is {2}'.format(num1, num2, sum))
+      add.py hosted with ❤ by GitHub                                                                     view raw
+
+                     Tente ler o programa cima. Ele apenas pega dois números, soma e os imprime.
+
+     Ah, uma coisa importante. Você tem inteligência para descobrir o que é um dado.
+     Mas o computador não! Ocomputador é burro! Logo você tem que dizer tudo pra ele.
+     Então o tipo de dado tem que ser bem especificado, por isso acima, você vê se
+     usando o float e o format . Um especifica que eu quero que a soma seja feita em
+     ponto flutuante e o outro eu quero criar uma cadeia de caracteres (vulgo string) com
+     esse ponto flutuante resultante.
+
+     Guarde esses conceitos:
+
+           String
+
+           Inteiro
+
+           Ponto Flutuante
+
+     Python não liga muito pra isso, mas será importante!
+
+     Meu primeiro programa Python
+     Para escrever um programa Python, você precisa ter instalado
+
+           Python
+
+           IDE
+
+     IDE é um editor de texto com algumas funcionalidades especificas para
+     desenvolvimento de Software. Pra falar a verdade, você não precisa de um, mas eu
+     recomendaria fortemente usar: VSCode, Atom ou se você deseja parecer um mago
+     de filmes hacker VIM. Todos esse lhe darão uma grande ajuda que é o syntax
+     highlight.
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  3/12
+08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+     Abra sua IDE e crie o arquivo abaixo:
+
+      1    def main():
+      2      print('Hello world!')
+      4    if __name__ == "__main__":
+      5       # execute only if run as a script
+      6       main()
+      hello-world.py hosted with ❤ by GitHub                                                             view raw
+
+     Esse arquivo muito simples tem duas estruturas que você vai entender mais adiante.
+     A primeira é uma função chamada main , que eu mesmo defini. A segunda é um
+     condicional, que somente diz que caso esteja executando o arquivo, execute a
+     função main .
+
+     Uma coisa a se observar nesse arquivo é a maneira como Python separa os blocos de
+     execução. A linguagem usa uma identação bem definida, caso você insira um
+     espaço a mais irá gerar um erro.
+
+     Para executar ele, escreva da linha de comando: python hello-world.py .
+
+     Diferentemente de muitas linguagens, o Python é uma linguagem interpretada.
+     Linguagens interpretadas são executadas em interpretadores e não precisa ser
+     compiladas. Isso significa que você não terá um executável do seu programa (o
+     famoso .exe do windows), basta submeter o seu arquivo .py ao python que ele
+     entenderá.
+
+     Pronto, seu primeiro programa está criado! Vamos agora explicar mais algumas
+     coisas para você ter mais habilidades.
+
+     Entendendo as estruturas
+     Todas as linguagens de programação tem estruturas parecidas. Se você aprender a
+     usar elas em uma linguagem, vai conseguir entender e usar elas em outra
+     linguagem.
+
+     No nosso programa acima você viu duas, uma para definir uma função e outra para
+     fazer um condicional. Vamos explora-lás melhor
+
+     Para você entender melhor, um programa é composto de vários statements que em
+     bom português significa declarações. Então ele nada mais faz do que executa um
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  4/12
+08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+     statement e vai para o próximo. Um statement pode conter statements. O primeiro
+     statement que veremos é a atribuição.
+
+     Atribuição
+     Programas tem variáveis que são locais para armazenamento de valores. Você pode
+     atribuir valores a variáveis e manipulá-las como bem entender
+
+                                  Get Victor Osório’s stories in your inbox
+                                 Join Medium for free to get updates from this writer.
+
+                                       Enter your email
+
+                                                       Subscribe
+
+                                              Remember me for faster sign in
+
+     Para poder brincar melhor com elas, em uma linha de comando, execute: python .
+     Agora você tem acesso ao REPL (Read–Eval–Print Loop) do Python, onde você pode
+     executar comandos a vontade.
+
+      1    x = 10.06 # Isso é uma variável, ela tem um valor que é ponto flutuante
+      2    y = 10 # Isso é outra variável, ela tem um valor que é inteiro
+      3    z = 'Variável' # Isso é outra variável, ela tem um valor que é uma string
+      4    x = 20.45 # Opa sobrescrevi o valor de x. Aquele valor antigo não exite mais
+      5    w = x + y # Agora defini uma nova variável que é igual a 30.45
+      6    x = 0.34 # Mudei o valor de x, mas o valor de w continua igual, pois em w eu guardei o
+
+      assign.py hosted with ❤ by GitHub                                                                  view raw
+
+                            Brinque com as atribuições acima. Crie expressões. Divirta-se!
+
+     Dá pra ver acima que com simples atribuições dá pra fazer contas bem complexas.
+     Procure os operadores de Python e você verá o que dá pra fazer.
+     Importar
+     Primeiro vamos importar algumas bibliotecas, pois é isso que faz o Python uma
+     linguagem relevante.
+
+     Para importar uma biblioteca, basta executar: from library import module . Ou
+     simplesmente import library .
+
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  5/12
+08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+      1     from datetime import datetime
+      3     # Opa não precisa do main!!!! Mas continue colocando, fica mais organizado
+      4     print(datetime.now()) # se não tivesse usado o from, teria que referenciar como datetime
+
+      import-statement.py hosted with ❤ by GitHub                                                        view raw
+
+                                    Só dar o import e começar a usar a biblioteca!
+
+     Quer entender as bibliotecas do Python, procure ler sobre elas:
+
+           Python Standard Library
+
+           Pandas
+
+     Condicional
+     O statement condicional, mais conhecido como if , é o primeiro que controla o fluxo
+     do programa. Controlar o fluxo significa quando ele for executado o que será
+     executado depende de um statement. Podemos explicar ele como:
+
+          if <teste>:
+              <bloco verdadeiro>
+          else:
+              <block falso>
+
+     Em palavras, o Python irá executar a expressão lógica, se retornar True irá executar
+     o block verdadeiro , caso contrário o block falso . Simples não? Então procura
+     entender o código abaixo:
+
+      1     from datetime import datetime
+      3     if datetime.now().hour < 12:
+      4       print('Good Morning!')
+      5     elif datetime.now().hour > 12:
+      6       print('Good afternoon!')
+      7     else:
+      8       print('Let's have lunch?')
+      good-morning.py hosted with ❤ by GitHub                                                            view raw
+
+     Loop
+     Temos dois statements de loop no Python: for e while .
+
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  6/12
+08/07/2026, 09:40                     Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+     For-Loop
+     O primeiro irá executar o mesmo bloco de código para todos os elementos de uma
+     lista.
+
+          for varName in listName:
+              <bloco execução>
+
+     Tente entender o que acontece no código abaixo:
+
+      1       myObjects = ['desk', 'chair', 'book', 'pencil', 'calculator']
+      2       for obj in myObjects:
+      3        print('I have a {}!'.format(obj))
+      for-loop.py hosted with ❤ by GitHub                                                                  view raw
+
+                               Aqui tem um truque, o objeto string aceita o metodo format!
+
+     O for do Python é bem mais simples que de outras linguagens, por ser um for in ,
+     normalmente o for de outras linguagens envolvem varios parâmetros, o que os deixa
+     um pouco mais complicados.
+
+     While-Loop
+     O While é simples também, o bloco de execução será executado enquanto uma
+     condição for verdadeira.
+
+          while <teste>:
+              <bloco execução>
+
+     Um exemplo legal do while está abaixo:
+
+      1       from random import random
+      3       x = random()
+      4       while not (x > 0.3 and x < 0.6):
+      5        print('You are not luck! You got {}, I like the middle!'.format(x))
+      6        x= random() # Ok! I call random() twice! Python doesn't have do {} while()
+      7       print('Now you are luck! You got {}!'.format(x))
+      while-loop.py hosted with ❤ by GitHub                                                                view raw
+
+     Quem tem sorte pega números fora do intervalo [0.3, 0.6]. Entende? É preciso de um pouco de matemática!
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                    7/12
+08/07/2026, 09:40                   Python para quem não sabe nada de programação | by Victor Osório | Medium
+
+     Observe que not (x > 0.3 and x < 0.6) é uma expressão lógica. Enquanto ela for
+     verdadeira, continuará executando o loop. E random gera um número pseudo-
+     aleatório no intervalo [0.0,1.0) Ou seja, dará qualquer número entre 0.0 e 1.0 ,
+     menos o 1.0 , pode dar o.999999999…
+
+     Difícil?
+
+     Definição de Função
+     Tá, mas agora uma pergunta: como eu faço para não ficar copiando e colando o
+     mesmo trecho de código?
+
+     Escrevo uma função!!
+
+        def fn():
+            <bloco execução>
+        def fnComHumArgumento(arg1):
+            <bloco execução>
+        def fnComDoisArgumento(arg1, arg2):
+            <bloco execução>
+
+     Aqui eu defini três funções. Argumento são valores que você passa para execução da
+     função. Você já tem usado bastante com print , format , e random . Agora é hora de
+     escrever uma função!
+
+       1     from random import random
+       3     def getRandomHour():
+       4      return int(24 * random())
+       6     def isTimeToWork(hour):
+       7      return hour <= 22
+       9     hour = getRandomHour()
+      10     while isTimeToWork(hour):
+      11      print('It is {} o\'clock! Let\'s do something!'.format(hour))
+      12      hour = getRandomHour()
+      14     print('It is {} o\'clock! It is time to sleep...'.format(hour))
+      function.py hosted with ❤ by GitHub                                                                view raw
+
+                                          Esse exemplo é mais do mesmo… :(
+
+https://vepo.medium.com/python-para-quem-não-sabe-nada-de-programação-609f72e754ae                                  8/12
