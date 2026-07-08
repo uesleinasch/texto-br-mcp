@@ -1,0 +1,60 @@
+{
+  "chaves": [
+    "burstiness_gb",
+    "burstiness",
+    "zipf",
+    "sentenca_de_impacto",
+    "razao_compressao",
+    "burrows_delta",
+    "yule_k",
+    "cross_entropy_trigramas",
+    "sem_pivots"
+  ],
+  "coeficientes": {
+    "burstiness_gb": 0.603605,
+    "burstiness": 0.289515,
+    "zipf": 0.638093,
+    "sentenca_de_impacto": 0.834445,
+    "razao_compressao": -0.369619,
+    "burrows_delta": 0.729567,
+    "yule_k": 0.51813,
+    "cross_entropy_trigramas": 1.257221,
+    "sem_pivots": 1.338965
+  },
+  "intercepto": 0.019577,
+  "medias": {
+    "burstiness_gb": 0.544985,
+    "burstiness": 0.601766,
+    "zipf": 0.430624,
+    "sentenca_de_impacto": 0.678571,
+    "razao_compressao": 0.497146,
+    "burrows_delta": 0.606136,
+    "yule_k": 0.647133,
+    "cross_entropy_trigramas": 0.515391,
+    "sem_pivots": 0.267857
+  },
+  "desvios": {
+    "burstiness_gb": 0.309631,
+    "burstiness": 0.17922,
+    "zipf": 0.285577,
+    "sentenca_de_impacto": 0.467025,
+    "razao_compressao": 0.294521,
+    "burrows_delta": 0.310421,
+    "yule_k": 0.274024,
+    "cross_entropy_trigramas": 0.272366,
+    "sem_pivots": 0.343359
+  },
+  "l2": 1.0,
+  "auc_loocv": 0.902,
+  "auc_in_sample": 0.963,
+  "alvo_p75_humano_prob": 0.9,
+  "alvo_politica": "p75_humano",
+  "probs_in_sample": {
+    "humano": {
+      "mediana": 0.881
+    },
+    "ia": {
+      "mediana": 0.088
+    }
+  }
+}

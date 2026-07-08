@@ -2,8 +2,10 @@
 """Calibração empírica do score sobre o corpus rotulado (offline, stdlib puro).
 
 Modos:
-  --baseline  mede a separação humano/IA com os PESOS atuais e emite relatório.
-  --fit       ajusta a regressão logística e emite pesos-calibrados.json (Task 5).
+  --baseline      mede a separação humano/IA com os PESOS atuais e emite relatório.
+  --fit           ajusta a regressão logística e emite pesos-calibrados.json (Task 5).
+  --fit-logistico busca (k, λ) por LOO-CV honesto e emite modelo-calibrado.json
+                  + relatorio-etapa4.md, para o gate do usuário (Task 11).
 
 Não importa numpy. Determinístico."""
 
@@ -279,6 +281,133 @@ def p75_humano(scores, labels):
     return round(statistics.quantiles(hum, n=4, method="inclusive")[2], 1)
 
 
+def _sinais_do_fold(corpus, folds):
+    """Matriz 17-colunas por fold (sinais sob a referência do fold), cacheada
+    no próprio objeto corpus para as buscas de configuração não recomputarem."""
+    if "_cache_folds" not in corpus[0]:
+        for i, e in enumerate(corpus):
+            ref = folds[i]["referencia"]
+            linhas = []
+            for e2 in corpus:
+                s = score.sinais(e2["ritmo"], e2["lex"], e2["texto"], referencia=ref)
+                linhas.append([s[k] for k in CHAVES])
+            e["_cache_folds"] = linhas
+    return [e["_cache_folds"] for e in corpus]
+
+
+def loocv_logistica(corpus, folds, chaves_ativas, l2):
+    """AUC LOO honesto do modelo logístico restrito a chaves_ativas:
+    referência, padronização e fit recomputados por fold; o held-out nunca
+    contribui com estatística alguma para o treino do seu fold."""
+    idx = [CHAVES.index(k) for k in chaves_ativas]
+    matrizes = _sinais_do_fold(corpus, folds)
+    y = [e["y"] for e in corpus]
+    preditos = []
+    for i in range(len(corpus)):
+        Xf = [[linha[j] for j in idx] for linha in matrizes[i]]
+        Xtr = [Xf[m] for m in range(len(Xf)) if m != i]
+        ytr = [y[m] for m in range(len(y)) if m != i]
+        Xs, medias, desvios = padronizar(Xtr)
+        w, b = treinar_logistica(Xs, ytr, prior=[0.0] * len(idx), l2=l2,
+                                 lr=0.3, iteracoes=1500)
+        xi = [(Xf[i][j] - medias[j]) / desvios[j] for j in range(len(idx))]
+        z = b + sum(w[j] * xi[j] for j in range(len(idx)))
+        preditos.append(1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z)))))
+    return round(auc(preditos, y), 3)
+
+
+GRADE_K = [5, 7, 9, 11, 13, 17]
+GRADE_L2 = [0.1, 0.3, 1.0]
+
+
+def _ranquear_por_auc_univariado(X, y):
+    scores = {}
+    for i, k in enumerate(CHAVES):
+        col = [x[i] for x in X]
+        scores[k] = abs(auc(col, y) - 0.5)
+    return sorted(CHAVES, key=lambda k: (-scores[k], k))
+
+
+def _emitir_fit_logistico(dir_corpus):
+    corpus = carregar_corpus(dir_corpus)
+    folds = folds_com_referencia(corpus)
+    X, y = matriz_com_referencia(corpus, score.REFERENCIA)
+    ranking = _ranquear_por_auc_univariado(X, y)
+    resultados = []
+    for k in GRADE_K:
+        chaves_k = ranking[:k]
+        for l2 in GRADE_L2:
+            a = loocv_logistica(corpus, folds, chaves_k, l2)
+            resultados.append({"k": k, "l2": l2, "chaves": chaves_k, "auc_loocv": a})
+            print(f"k={k} l2={l2} loocv={a}")
+    antigas = [k for k in CHAVES if k in score.PESOS_MANUAIS]
+    a_antigas = loocv_logistica(corpus, folds, antigas, 1.0)
+    resultados.append({"k": "10-antigas", "l2": 1.0, "chaves": antigas, "auc_loocv": a_antigas})
+    vencedor = max(
+        (r for r in resultados if isinstance(r["k"], int)),
+        key=lambda r: (r["auc_loocv"], -r["k"], r["l2"]),
+    )
+    # Fit final congelável: corpus completo, referência congelada, 3000 iterações
+    idx = [CHAVES.index(k) for k in vencedor["chaves"]]
+    Xv = [[x[j] for j in idx] for x in X]
+    Xs, medias, desvios = padronizar(Xv)
+    w, b = treinar_logistica(Xs, y, prior=[0.0] * len(idx), l2=vencedor["l2"],
+                             lr=0.3, iteracoes=3000)
+    probs = []
+    for linha in Xs:
+        z = b + sum(w[j] * linha[j] for j in range(len(idx)))
+        probs.append(1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z)))))
+    hum = sorted(p for p, l in zip(probs, y) if l == 1)
+    ia = sorted(p for p, l in zip(probs, y) if l == 0)
+    med = lambda xs: xs[len(xs) // 2]
+    saida = {
+        "chaves": vencedor["chaves"],
+        "coeficientes": {k: round(w[j], 6) for j, k in enumerate(vencedor["chaves"])},
+        "intercepto": round(b, 6),
+        "medias": {k: round(medias[j], 6) for j, k in enumerate(vencedor["chaves"])},
+        "desvios": {k: round(desvios[j], 6) for j, k in enumerate(vencedor["chaves"])},
+        "l2": vencedor["l2"],
+        "auc_loocv": vencedor["auc_loocv"],
+        "auc_in_sample": round(auc(probs, y), 3),
+        "alvo_p75_humano_prob": p75_humano(probs, y),
+        "alvo_politica": "p75_humano",
+        "probs_in_sample": {"humano": {"mediana": round(med(hum), 3)},
+                             "ia": {"mediana": round(med(ia), 3)}},
+    }
+    with open(os.path.join(dir_corpus, "modelo-calibrado.json"), "w", encoding="utf-8") as f:
+        json.dump(saida, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida)
+    print(f"vencedor: k={vencedor['k']} l2={vencedor['l2']} loocv={vencedor['auc_loocv']} "
+          f"in-sample {saida['auc_in_sample']} alvo(prob) {saida['alvo_p75_humano_prob']}")
+
+
+def _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida):
+    baseline_path = os.path.join(dir_corpus, "baseline-report.json")
+    with open(baseline_path, encoding="utf-8") as f:
+        auc_manual = json.load(f)["auc_total"]
+    auc_aditivo_corpus_corrigido = separacao_loocv(dir_corpus)
+    linhas = [
+        "# Etapa 4 — configurações do modelo logístico (LOO-CV honesto)", "",
+        f"Baselines: pesos manuais {auc_manual} (baseline-report.json, corpus corrigido) | "
+        "aditivo E3 (LOO, corpus antigo 30H): 0.858 — histórico", "",
+        f"Aditivo E3 no corpus corrigido (rota com contaminação residual documentada): "
+        f"{auc_aditivo_corpus_corrigido} (calibrar.separacao_loocv)", "",
+        "| k | λ | AUC LOO-CV |", "| --- | --- | --- |",
+    ]
+    for r in resultados:
+        marca = " ← vencedor" if r is vencedor else ""
+        linhas.append(f"| {r['k']} | {r['l2']} | {r['auc_loocv']}{marca} |")
+    linhas += [
+        "", f"Chaves do vencedor: {', '.join(vencedor['chaves'])}",
+        f"In-sample: {saida['auc_in_sample']} | alvo p75 humano (prob): {saida['alvo_p75_humano_prob']}",
+        f"Medianas in-sample (prob): humano {saida['probs_in_sample']['humano']['mediana']} "
+        f"vs IA {saida['probs_in_sample']['ia']['mediana']}",
+    ]
+    with open(os.path.join(dir_corpus, "relatorio-etapa4.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(linhas) + "\n")
+
+
 def _emitir_fit(dir_corpus):
     X, y, nomes, chaves = matriz_features(dir_corpus)
     Xs, medias, desvios = padronizar(X)
@@ -314,8 +443,10 @@ def main():
         _emitir_baseline(dir_corpus)
     elif "--fit" in sys.argv:
         _emitir_fit(dir_corpus)  # definido na Task 5
+    elif "--fit-logistico" in sys.argv:
+        _emitir_fit_logistico(dir_corpus)
     else:
-        print("uso: calibrar.py [--baseline|--fit] [--dir <corpus>]")
+        print("uso: calibrar.py [--baseline|--fit|--fit-logistico] [--dir <corpus>]")
 
 
 if __name__ == "__main__":

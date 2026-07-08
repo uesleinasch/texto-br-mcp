@@ -115,5 +115,18 @@ class TestReferenciaPorFold(unittest.TestCase):
             self.assertEqual(fold["referencia"]["n_textos"], esperado)
 
 
+@unittest.skipUnless(os.path.exists(_MANIFEST), "corpus não preprocessado")
+class TestLoocvLogistica(unittest.TestCase):
+    def test_loocv_logistica_e_determinista_e_valida(self):
+        corpus = calibrar.carregar_corpus(DIR_CORPUS)
+        folds = calibrar.folds_com_referencia(corpus)
+        chaves = list(calibrar.CHAVES[:5])
+        a1 = calibrar.loocv_logistica(corpus, folds, chaves, l2=1.0)
+        a2 = calibrar.loocv_logistica(corpus, folds, chaves, l2=1.0)
+        self.assertEqual(a1, a2)
+        self.assertGreaterEqual(a1, 0.0)
+        self.assertLessEqual(a1, 1.0)
+
+
 if __name__ == "__main__":
     unittest.main()
