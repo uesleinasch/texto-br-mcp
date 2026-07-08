@@ -16,7 +16,8 @@
     "genero": "prosa",
     "tipo": "tecnico",
     "palavras": 1636,
-    "incluir_calibracao": true,
+    "incluir_calibracao": false,
+    "nota": "prosa em inglês — fora do domínio pt-BR; excluída da calibração na Etapa 4",
     "fonte": "local",
     "data_verificada": null,
     "data_coleta": "2026-07-08"
