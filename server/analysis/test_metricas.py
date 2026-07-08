@@ -135,3 +135,34 @@ class TestConstruirReferencia(unittest.TestCase):
         self.assertAlmostEqual(freq["e"], 1 / 5, places=6)
         self.assertAlmostEqual(freq["de"], 0.0, places=6)
         self.assertIsNone(metricas.frequencias_funcionais([], ["o"]))
+
+
+class TestBurrowsDelta(unittest.TestCase):
+    def _ref(self):
+        return metricas.construir_referencia(TestConstruirReferencia.TEXTOS * 3, top_n=2000)
+
+    def test_texto_da_propria_distribuicao_tem_delta_menor(self):
+        ref = self._ref()
+        parecido = (" ".join(TestConstruirReferencia.TEXTOS) + " ") * 3
+        divergente = ("Sim senhor! Comprar! Vender! Lucro máximo garantido "
+                      "hoje mesmo! Imperdível! Últimas unidades! Corra! ") * 8
+        d1 = metricas.burrows_delta(parecido.lower().split(), ref)
+        d2 = metricas.burrows_delta(divergente.lower().split(), ref)
+        self.assertLess(d1, d2)
+
+    def test_poucas_palavras_inaplicavel(self):
+        self.assertIsNone(metricas.burrows_delta(["o"] * 99, self._ref()))
+
+
+class TestCrossEntropyTrigramas(unittest.TestCase):
+    def test_texto_da_propria_distribuicao_tem_entropia_menor(self):
+        ref = metricas.construir_referencia(TestConstruirReferencia.TEXTOS, top_n=5000)
+        proprio = TestConstruirReferencia.TEXTOS[0] * 3
+        alheio = "wkz xqj vgh bnm zzz kkk qqq www xxx yyy jjj fff " * 20
+        h1 = metricas.cross_entropy_trigramas(proprio, ref)
+        h2 = metricas.cross_entropy_trigramas(alheio, ref)
+        self.assertLess(h1, h2)
+
+    def test_texto_curto_inaplicavel(self):
+        ref = metricas.construir_referencia(TestConstruirReferencia.TEXTOS, top_n=100)
+        self.assertIsNone(metricas.cross_entropy_trigramas("Curto.", ref))

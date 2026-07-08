@@ -167,3 +167,32 @@ def construir_referencia(textos, top_n=5000):
         "n_textos": len(textos),
         "top_n": top_n,
     }
+
+
+def burrows_delta(palavras, referencia):
+    """Burrows' Delta: média de |z| das frequências relativas das palavras
+    funcionais do texto contra a referência ({palavra: {media, desvio}}).
+    Menor = perfil funcional mais próximo do humano de referência.
+    None se < 100 palavras."""
+    if len(palavras) < 100:
+        return None
+    ref = referencia["funcionais"]
+    freq = frequencias_funcionais(palavras, list(ref.keys()))
+    zs = [
+        abs((freq[w] - st["media"]) / (st["desvio"] or 1e-6))
+        for w, st in ref.items()
+    ]
+    return sum(zs) / len(zs)
+
+
+def cross_entropy_trigramas(texto, referencia):
+    """Cross-entropy média (nats/trigrama) dos char-trigramas do texto sob o
+    modelo de referência ({logprobs, logp_oov}). Menor = mais previsível sob
+    o modelo humano de referência. None se < 200 trigramas."""
+    tris = _trigramas_char(texto)
+    if len(tris) < 200:
+        return None
+    logprobs = referencia["logprobs"]
+    logp_oov = referencia["logp_oov"]
+    total = sum(logprobs.get(t, logp_oov) for t in tris)
+    return -total / len(tris)
