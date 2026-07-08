@@ -121,8 +121,90 @@ def _emitir_baseline(dir_corpus):
     print(f"baseline: AUC {rel['auc_total']} | humano {rel['media_humano']} vs IA {rel['media_ia']}")
 
 
+def padronizar(X):
+    d = len(X[0])
+    medias = [sum(row[j] for row in X) / len(X) for j in range(d)]
+    desvios = []
+    for j in range(d):
+        var = sum((row[j] - medias[j]) ** 2 for row in X) / len(X)
+        desvios.append(math.sqrt(var) or 1.0)  # evita divisão por zero
+    Xs = [[(row[j] - medias[j]) / desvios[j] for j in range(d)] for row in X]
+    return Xs, medias, desvios
+
+
+def treinar_logistica(Xs, y, prior, l2=1.0, lr=0.3, iteracoes=3000):
+    """Regressão logística por gradiente descendente, determinística (init em
+    `prior`). L2 puxa os coeficientes para `prior` (conservador), não para 0."""
+    n, d = len(Xs), len(Xs[0])
+    w = list(prior)
+    b = 0.0
+    for _ in range(iteracoes):
+        gw = [0.0] * d
+        gb = 0.0
+        for i in range(n):
+            z = b + sum(w[j] * Xs[i][j] for j in range(d))
+            p = 1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z))))
+            err = p - y[i]
+            for j in range(d):
+                gw[j] += err * Xs[i][j]
+            gb += err
+        for j in range(d):
+            w[j] -= lr * (gw[j] / n + l2 * (w[j] - prior[j]) / n)
+        b -= lr * (gb / n)
+    return w, b
+
+
+def coef_para_pesos(coef, chaves, piso=2.0):
+    """Mapeia a contribuição discriminativa (coef positivo = sinal indica humano)
+    para 100 pontos, com piso por componente (preserva o breakdown) e soma 100.
+    Coeficiente <= 0 (sinal que não indica humano no corpus) fica só no piso —
+    não se recompensa um sinal anticorrelacionado."""
+    contrib = [max(0.0, c) for c in coef]
+    total = sum(contrib) or 1.0
+    livre = 100.0 - piso * len(chaves)
+    brutos = {k: piso + livre * (contrib[i] / total) for i, k in enumerate(chaves)}
+    # arredonda para 1 casa e corrige o resíduo no maior peso
+    pesos = {k: round(v, 1) for k, v in brutos.items()}
+    resto = round(100.0 - sum(pesos.values()), 1)
+    kmax = max(pesos, key=pesos.get)
+    pesos[kmax] = round(pesos[kmax] + resto, 1)
+    return pesos
+
+
+def melhor_alvo(scores, labels):
+    """Threshold que maximiza o índice J de Youden (TPR - FPR)."""
+    candidatos = sorted(set(scores))
+    pos = sum(labels)
+    neg = len(labels) - pos
+    melhor, melhor_j = candidatos[0], -1.0
+    for t in candidatos:
+        tp = sum(1 for s, l in zip(scores, labels) if l == 1 and s >= t)
+        fp = sum(1 for s, l in zip(scores, labels) if l == 0 and s >= t)
+        tpr = tp / pos if pos else 0.0
+        fpr = fp / neg if neg else 0.0
+        j = tpr - fpr
+        if j > melhor_j:
+            melhor_j, melhor = j, t
+    return round(melhor, 1)
+
+
 def _emitir_fit(dir_corpus):
-    raise NotImplementedError("Task 5")
+    X, y, nomes, chaves = matriz_features(dir_corpus)
+    Xs, medias, desvios = padronizar(X)
+    prior = [score.PESOS[k] / 10.0 for k in chaves]  # escala do prior no espaço padronizado
+    w, b = treinar_logistica(Xs, y, prior=prior, l2=1.0, lr=0.3, iteracoes=3000)
+    pesos = coef_para_pesos(w, chaves, piso=2.0)
+    scores = [score_ponderado(x, pesos, chaves) for x in X]
+    alvo = melhor_alvo(scores, y)
+    saida = {
+        "pesos": pesos, "alvo": alvo, "chaves": chaves,
+        "auc_calibrado_in_sample": round(auc(scores, y), 3),
+        "coeficientes_padronizados": {k: round(w[i], 4) for i, k in enumerate(chaves)},
+    }
+    with open(os.path.join(dir_corpus, "pesos-calibrados.json"), "w", encoding="utf-8") as f:
+        json.dump(saida, f, ensure_ascii=False, indent=2)
+    print(f"fit: AUC in-sample {saida['auc_calibrado_in_sample']} | alvo {alvo}")
+    print("pesos:", json.dumps(pesos, ensure_ascii=False))
 
 
 def main():

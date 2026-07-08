@@ -1,0 +1,40 @@
+{
+  "pesos": {
+    "burstiness": 21.3,
+    "sem_sequencias_uniformes": 2.0,
+    "sem_inicios_repetidos": 10.2,
+    "ordem_nao_canonica": 6.4,
+    "sem_pivots": 23.0,
+    "diversidade_lexical": 2.5,
+    "sem_trigramas_repetidos": 2.0,
+    "paragrafos_variados": 10.6,
+    "sentenca_de_impacto": 13.7,
+    "sem_corrente_de_conectivos": 8.3
+  },
+  "alvo": 63.3,
+  "chaves": [
+    "burstiness",
+    "sem_sequencias_uniformes",
+    "sem_inicios_repetidos",
+    "ordem_nao_canonica",
+    "sem_pivots",
+    "diversidade_lexical",
+    "sem_trigramas_repetidos",
+    "paragrafos_variados",
+    "sentenca_de_impacto",
+    "sem_corrente_de_conectivos"
+  ],
+  "auc_calibrado_in_sample": 0.902,
+  "coeficientes_padronizados": {
+    "burstiness": 1.8266,
+    "sem_sequencias_uniformes": -0.2509,
+    "sem_inicios_repetidos": 0.7811,
+    "ordem_nao_canonica": 0.4204,
+    "sem_pivots": 1.9853,
+    "diversidade_lexical": 0.0505,
+    "sem_trigramas_repetidos": -0.0548,
+    "paragrafos_variados": 0.817,
+    "sentenca_de_impacto": 1.11,
+    "sem_corrente_de_conectivos": 0.6
+  }
+}
