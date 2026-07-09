@@ -30,7 +30,7 @@ Verificação: `claude mcp list` deve mostrar `texto-br ... ✔ Connected`.
 |---|---|
 | `texto_br_start(briefing, tipo?, tamanho?, variancia?)` | Inicia o pipeline; com tipo definido retorna o material das Fases 0-1 |
 | `texto_br_proxima_fase(rascunho?, fase?, forcar?, variancia?)` | Avança (ou reposiciona via `fase`); salva `rascunho`; gate quantitativo na saída da Fase 2 e gate macroestrutural na saída da Fase 5 (tipos longos) |
-| `texto_br_score(texto)` | Score de humanidade 0-100 (ritmo + léxico + estrutura micro; alvo ≥ 80; satisfaz o gate da Fase 2) |
+| `texto_br_score(texto)` | Score de humanidade 0-100 = probabilidade de o texto ser humano × 100 (modelo logístico congelado, Etapa 4, sobre 9 dos 17 sinais de ritmo + léxico + estrutura micro; alvo = p75 humano ≈ 93.6; satisfaz o gate da Fase 2) |
 | `texto_br_estrutura(texto, tipo?)` | Score de naturalidade estrutural 0-100 (macro: simetria, subtópicos, kicker, bordões, progressão; alvo ≥ 70) + plano de perturbação (Fase 5) |
 | `texto_br_otimizar(texto)` | Otimiza contra o score via Claude API: subida de encosta com anti-degradação (requer credencial) |
 | `texto_br_variancia(texto)` | Mede ritmo sintático (burstiness σ/μ, alvo ≥ 0.7) |
@@ -49,9 +49,21 @@ server/
 ├── knowledge/phases.js   # guidance das fases + mapa fase→seções (toda evolução do workflow é aqui)
 ├── session/state.js      # estado da sessão, persistido em $TMPDIR/texto-br-session-<hash-do-cwd>.json
 ├── tools/                # uma tool por arquivo + run-python.js (spawn dos analisadores)
-├── analysis/             # variancia.py, lexico.py, score.py, estrutura.py, texto_util.py (Python stdlib)
+├── analysis/             # variancia.py, lexico.py, metricas.py, score.py, estrutura.py, texto_util.py,
+│                         #   calibrar.py, referencia_prep.py, referencia_humana.json, modelo-calibrado.json
 └── test/                 # node --test
 ```
+
+## Calibração do score (Etapa 4)
+
+`texto_br_score` usa um modelo logístico **congelado** (`analysis/modelo-calibrado.json`, espelhado byte-a-byte em `analysis/score.py:MODELO`): 9 dos 17 sinais quantitativos, calibrados por LOO-CV honesto sobre o corpus rotulado em `../references/Corpus/`. O score é `P(texto humano) × 100`; o ALVO é o percentil 75 das probabilidades humanas do corpus (≈ 93.6 — política "mira-alto": nem todo texto humano do corpus bate o alvo).
+
+- `analysis/metricas.py` — as 7 métricas novas da Etapa 4 (stdlib puro): razão de compressão, Yule's K, burstiness de Goh–Barabási, autocorrelação lag-1, ajuste da lei de Zipf, Burrows' Delta, cross-entropy de trigramas de caracteres.
+- `analysis/referencia_humana.json` — referência humana congelada (29 textos, 5000 trigramas de caracteres, 85 palavras funcionais), usada por `burrows_delta` e `cross_entropy_trigramas`; regenerável com `python3 analysis/referencia_prep.py`.
+- `analysis/calibrar.py --fit-logistico` — recalibra offline (determinístico, ~3-4 min): busca k×λ por LOO-CV sem vazamento e reemite `modelo-calibrado.json` + `relatorio-etapa4.md`. Recongelar o resultado em `score.py:MODELO` é uma decisão manual (gate do usuário), não automática.
+- `analysis/calibrar.py --baseline` — mede a separação com os pesos manuais históricos (`score.PESOS_MANUAIS`), como referência de piso.
+
+Leitura honesta (sempre LOO-CV, nunca in-sample): AUC 0.902 do modelo vencedor vs. 0.853 do baseline aditivo manual — grade completa e disclosure do viés de seleção do corpus em `../references/Corpus/relatorio-etapa4.md`.
 
 ## Variáveis de ambiente
 

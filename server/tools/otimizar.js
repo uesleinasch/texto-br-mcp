@@ -2,12 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { runPython } from './run-python.js';
 import { getSection } from '../content/registry.js';
+import { ALVO_SCORE } from '../knowledge/phases.js';
 
 const MODEL = process.env.TEXTO_BR_MODEL || 'claude-opus-4-8';
 const MAX_ITERACOES = 4;
 const MAX_SEM_MELHORA = 2;
 
-const SYSTEM = `Você é um editor de humanização de textos em português brasileiro. Receberá um texto e um diagnóstico quantitativo (score 0-100 com componentes de ritmo, léxico e estrutura; alvo >= 80). Reescreva o texto corrigindo APENAS o que o diagnóstico aponta:
+const SYSTEM = `Você é um editor de humanização de textos em português brasileiro. Receberá um texto e um diagnóstico quantitativo (score 0-100 = probabilidade de texto humano × 100, com contribuições por sinal de ritmo, léxico e estrutura; alvo >= ${ALVO_SCORE}). Reescreva o texto corrigindo APENAS o que o diagnóstico aponta:
 
 RITMO:
 - Quebre sentenças longas ou uniformes (candidatas apontadas) criando 1-2 sentenças muito curtas de impacto (1-5 palavras).
@@ -33,16 +34,16 @@ Regras invioláveis:
 Responda SOMENTE com o texto reescrito, sem comentários, sem preâmbulo, sem cercas de código.`;
 
 // Resumo do diagnóstico enviado ao modelo a cada iteração. Componentes
-// "fracos" são calculados por FRAÇÃO do máximo real de cada um (< 50%), não
-// por um corte absoluto: um componente binário de máximo baixo (ex.: 3/5,
-// 60%) não é fraco, mas um componente de máximo alto na mesma faixa absoluta
-// (ex.: 10/25, 40%) é.
+// "fracos" são os de contribuição NEGATIVA no logit do modelo calibrado:
+// são os sinais que puxam o score para "IA" (o valor 0-1 correspondente
+// aparece em score.sinais para contexto).
 export function resumoDiagnostico(resultado) {
   const s = resultado.score;
-  const maximos = s.maximos ?? {};
+  const sinais = s.sinais ?? {};
   const fracos = Object.entries(s.componentes)
-    .filter(([k, v]) => v < 0.5 * (maximos[k] ?? 10))
-    .map(([k, v]) => `${k}: ${v}/${maximos[k] ?? '?'}`)
+    .filter(([, v]) => v < 0)
+    .sort(([, a], [, b]) => a - b)
+    .map(([k, v]) => `${k}: ${v} (sinal ${sinais[k] ?? '?'})`)
     .join(', ');
   const partes = [
     `score atual: ${s.total}/100 (alvo >= ${s.alvo}) | componentes fracos: ${fracos || 'nenhum'}`,
@@ -185,7 +186,7 @@ export function register(server, session) {
         'Otimiza um rascunho automaticamente contra o score de humanidade (texto_br_score): ' +
         'subida de encosta garantida por código que mede, reescreve via Claude API (ritmo, ' +
         'léxico e estrutura) e remede, REJEITANDO iterações que piorem o score ' +
-        '(anti-degradação). Para em alvo atingido (>= 80), convergência ou 4 iterações. ' +
+        `(anti-degradação). Para em alvo atingido (>= ${ALVO_SCORE}), convergência ou 4 iterações. ` +
         'Requer ANTHROPIC_API_KEY no ambiente do servidor; sem credencial, use texto_br_score ' +
         'e reescreva manualmente.',
       inputSchema: {

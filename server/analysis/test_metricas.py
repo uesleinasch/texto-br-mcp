@@ -1,0 +1,168 @@
+"""Testes unitários das métricas stdlib da Etapa 4."""
+import unittest
+
+import metricas
+
+VARIADO = (
+    "O mercado abriu em queda acentuada naquela manhã fria de setembro. "
+    "Ninguém esperava. Os operadores, atônitos diante das telas vermelhas, "
+    "tentavam entender a origem do movimento brusco que derrubava os índices. "
+    "Uma trader saiu para fumar. Voltou dez minutos depois com outra teoria, "
+    "menos plausível que a primeira, sobre juros americanos e safra de grãos. "
+    "O silêncio da tarde contrastava com o caos das primeiras horas do pregão."
+)
+REPETITIVO = ("A empresa oferece soluções completas para o cliente moderno. " * 12)
+
+
+class TestRazaoCompressao(unittest.TestCase):
+    def test_repetitivo_comprime_mais_que_variado(self):
+        rv = metricas.razao_compressao(VARIADO)
+        rr = metricas.razao_compressao(REPETITIVO)
+        self.assertLess(rr, rv)
+
+    def test_faixa_e_determinismo(self):
+        r1 = metricas.razao_compressao(VARIADO)
+        r2 = metricas.razao_compressao(VARIADO)
+        self.assertEqual(r1, r2)
+        self.assertGreater(r1, 0.0)
+        self.assertLess(r1, 1.0)
+
+    def test_texto_curto_inaplicavel(self):
+        self.assertIsNone(metricas.razao_compressao("Curto demais."))
+
+
+class TestYuleK(unittest.TestCase):
+    def test_vocabulario_pobre_tem_k_maior(self):
+        rico = VARIADO.lower().split()
+        pobre = ("a empresa oferece valor para o cliente " * 10).split()
+        self.assertGreater(metricas.yule_k(pobre), metricas.yule_k(rico))
+
+    def test_poucas_palavras_inaplicavel(self):
+        self.assertIsNone(metricas.yule_k(["palavra"] * 49))
+
+    def test_todas_unicas_da_zero(self):
+        palavras = [f"palavra{i}" for i in range(100)]
+        self.assertAlmostEqual(metricas.yule_k(palavras), 0.0, places=6)
+
+
+class TestBurstinessGB(unittest.TestCase):
+    def test_uniforme_da_menos_um(self):
+        # sigma = 0 => B = (0 - mu)/(0 + mu) = -1
+        self.assertAlmostEqual(
+            metricas.burstiness_goh_barabasi([10, 10, 10, 10]), -1.0, places=6)
+
+    def test_bursty_maior_que_uniforme(self):
+        bursty = metricas.burstiness_goh_barabasi([2, 35, 4, 28, 3, 40, 5])
+        quase_uniforme = metricas.burstiness_goh_barabasi([10, 11, 10, 9, 10, 11, 10])
+        self.assertGreater(bursty, quase_uniforme)
+
+    def test_faixa(self):
+        b = metricas.burstiness_goh_barabasi([2, 35, 4, 28, 3])
+        self.assertGreaterEqual(b, -1.0)
+        self.assertLess(b, 1.0)
+
+    def test_poucas_sentencas_inaplicavel(self):
+        self.assertIsNone(metricas.burstiness_goh_barabasi([5, 20]))
+
+
+class TestAutocorrelacaoLag1(unittest.TestCase):
+    def test_alternancia_e_negativa(self):
+        # longa-curta-longa-curta: vizinhos anticorrelacionados
+        r = metricas.autocorrelacao_lag1([30, 5, 28, 4, 31, 6, 29, 5])
+        self.assertLess(r, 0.0)
+
+    def test_tendencia_e_positiva(self):
+        r = metricas.autocorrelacao_lag1([5, 8, 11, 14, 17, 20, 23, 26])
+        self.assertGreater(r, 0.0)
+
+    def test_constante_inaplicavel(self):
+        self.assertIsNone(metricas.autocorrelacao_lag1([10, 10, 10, 10, 10]))
+
+    def test_poucas_sentencas_inaplicavel(self):
+        self.assertIsNone(metricas.autocorrelacao_lag1([5, 20, 8]))
+
+
+class TestZipfAjuste(unittest.TestCase):
+    def _zipfiano(self):
+        # frequências ~ 1/rank: palavra0 x60, palavra1 x30, palavra2 x20...
+        palavras = []
+        for r in range(1, 21):
+            palavras += [f"palavra{r}"] * max(1, 60 // r)
+        return palavras
+
+    def test_slope_negativo_e_r2_alto_em_distribuicao_zipfiana(self):
+        resultado = metricas.zipf_ajuste(self._zipfiano())
+        self.assertIsNotNone(resultado)
+        inclinacao, r2 = resultado
+        self.assertLess(inclinacao, -0.5)
+        self.assertGreater(r2, 0.9)
+
+    def test_uniforme_tem_r2_menor(self):
+        uniforme = [f"palavra{i % 25}" for i in range(200)]
+        _, r2_uni = metricas.zipf_ajuste(uniforme)
+        _, r2_zipf = metricas.zipf_ajuste(self._zipfiano())
+        self.assertLess(r2_uni, r2_zipf)
+
+    def test_poucas_palavras_inaplicavel(self):
+        self.assertIsNone(metricas.zipf_ajuste(["a"] * 49))
+        self.assertIsNone(metricas.zipf_ajuste(["a", "b"] * 30))  # < 10 types
+
+
+class TestConstruirReferencia(unittest.TestCase):
+    TEXTOS = [
+        "O gato subiu no telhado da casa amarela. A vizinha, sem entender nada, "
+        "chamou os bombeiros que nunca chegaram naquela tarde quente de verão.",
+        "A reunião terminou sem acordo entre as partes. O diretor saiu batendo "
+        "a porta e os analistas ficaram olhando uns para os outros em silêncio.",
+    ]
+
+    def test_shape_e_determinismo(self):
+        r1 = metricas.construir_referencia(self.TEXTOS, top_n=100)
+        r2 = metricas.construir_referencia(self.TEXTOS, top_n=100)
+        self.assertEqual(r1, r2)
+        self.assertLessEqual(len(r1["logprobs"]), 100)
+        self.assertLess(r1["logp_oov"], min(r1["logprobs"].values()) + 1e-9)
+        self.assertEqual(r1["n_textos"], 2)
+        for w, st in r1["funcionais"].items():
+            self.assertIn(w, metricas.PALAVRAS_FUNCIONAIS)
+            self.assertGreaterEqual(st["media"], 0.0)
+            self.assertGreaterEqual(st["desvio"], 0.0)
+
+    def test_frequencias_funcionais(self):
+        freq = metricas.frequencias_funcionais(
+            ["o", "gato", "e", "o", "rato"], ["o", "e", "de"])
+        self.assertAlmostEqual(freq["o"], 2 / 5, places=6)
+        self.assertAlmostEqual(freq["e"], 1 / 5, places=6)
+        self.assertAlmostEqual(freq["de"], 0.0, places=6)
+        self.assertIsNone(metricas.frequencias_funcionais([], ["o"]))
+
+
+class TestBurrowsDelta(unittest.TestCase):
+    def _ref(self):
+        return metricas.construir_referencia(TestConstruirReferencia.TEXTOS * 3, top_n=2000)
+
+    def test_texto_da_propria_distribuicao_tem_delta_menor(self):
+        ref = self._ref()
+        parecido = (" ".join(TestConstruirReferencia.TEXTOS) + " ") * 3
+        divergente = ("Sim senhor! Comprar! Vender! Lucro máximo garantido "
+                      "hoje mesmo! Imperdível! Últimas unidades! Corra! ") * 8
+        d1 = metricas.burrows_delta(parecido.lower().split(), ref)
+        d2 = metricas.burrows_delta(divergente.lower().split(), ref)
+        self.assertLess(d1, d2)
+
+    def test_poucas_palavras_inaplicavel(self):
+        self.assertIsNone(metricas.burrows_delta(["o"] * 99, self._ref()))
+
+
+class TestCrossEntropyTrigramas(unittest.TestCase):
+    def test_texto_da_propria_distribuicao_tem_entropia_menor(self):
+        ref = metricas.construir_referencia(TestConstruirReferencia.TEXTOS, top_n=5000)
+        proprio = TestConstruirReferencia.TEXTOS[0] * 3
+        alheio = "wkz xqj vgh bnm zzz kkk qqq www xxx yyy jjj fff " * 20
+        h1 = metricas.cross_entropy_trigramas(proprio, ref)
+        h2 = metricas.cross_entropy_trigramas(alheio, ref)
+        self.assertLess(h1, h2)
+
+    def test_texto_curto_inaplicavel(self):
+        ref = metricas.construir_referencia(TestConstruirReferencia.TEXTOS, top_n=100)
+        self.assertIsNone(metricas.cross_entropy_trigramas("Curto.", ref))

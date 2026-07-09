@@ -4,7 +4,12 @@ import { otimizarTexto, resumoDiagnostico } from '../tools/otimizar.js';
 
 const analiseBase = (total, extras = {}) => ({
   atingiu_alvo: total >= 80,
-  score: { total, alvo: 80, componentes: { burstiness: 10, sem_pivots: 12 }, maximos: { burstiness: 25, sem_pivots: 25 } },
+  score: {
+    total,
+    alvo: 80,
+    componentes: { burstiness: 1.5, sem_pivots: 2.1 },
+    sinais: { burstiness: 0.6, sem_pivots: 0.85 },
+  },
   ritmo: { atingiu_alvo: false, diagnostico: [], candidatas_quebra_fusao: [] },
   lexico: { atingiu_alvo: false, diagnostico: [], ocorrencias: [] },
   relatorio: 'relatório',
@@ -82,19 +87,23 @@ test('falha de API no meio do loop devolve a melhor versão, não erro', async (
   assert.match(r.aviso ?? '', /falha|erro/i);
 });
 
-test('componentes fracos usam fração do máximo, não corte absoluto', async () => {
-  // burstiness 10/25 (40%) é fraco; um binário 3/5 (60%) não é
+test('componentes fracos são os de contribuição negativa, ordenados da mais negativa, com o sinal 0-1 junto', async () => {
+  // burstiness (-2.5) e zipf (-0.3) puxam para "IA" (fracos); sem_pivots (0.8),
+  // com contribuição positiva, não é fraco e não deve aparecer no resumo.
   const resumo = resumoDiagnostico(
     analiseBase(60, {
       score: {
         total: 60, alvo: 80,
-        componentes: { burstiness: 10, alt_binaria: 3 },
-        maximos: { burstiness: 25, alt_binaria: 5 },
+        componentes: { burstiness: -2.5, sem_pivots: 0.8, zipf: -0.3 },
+        sinais: { burstiness: 0.2, sem_pivots: 0.9, zipf: 0.5 },
       },
     })
   );
-  assert.match(resumo, /burstiness/);
-  assert.doesNotMatch(resumo, /alt_binaria/);
+  assert.match(resumo, /burstiness: -2\.5 \(sinal 0\.2\)/);
+  assert.match(resumo, /zipf: -0\.3 \(sinal 0\.5\)/);
+  assert.doesNotMatch(resumo, /sem_pivots/);
+  // ordenado da contribuição mais negativa primeiro
+  assert.ok(resumo.indexOf('burstiness') < resumo.indexOf('zipf'));
 });
 
 test('grava veredito na sessão com o texto da melhor versão (wiring da Task 5)', async () => {

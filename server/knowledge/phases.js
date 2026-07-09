@@ -24,6 +24,16 @@ export const TAMANHOS = {
   conversacional: 'dimensão natural de chat/comentário',
 };
 
+// Alvo do score de naturalidade estrutural da Fase 5 (0-100). Fonte única:
+// estrutura.js injeta este valor no payload do script Python, que só cai no
+// próprio ALVO_PADRAO (analysis/estrutura.py) em uso standalone (sem payload).
+export const ALVO_ESTRUTURA = 70;
+
+// Alvo do score de humanidade da Fase 2 (0-100). Fonte única do lado JS,
+// espelho de score.ALVO (Python, congelado pela calibração) — o teste de
+// paridade em test/alvo-paridade.test.js trava a igualdade.
+export const ALVO_SCORE = 93.6;
+
 export const REGRAS_ABSOLUTAS = `## Regras absolutas (valem em todas as fases)
 
 1. Português brasileiro, sem regionalismos lusitanos.
@@ -112,7 +122,7 @@ Critério de saída: checklist retornado por texto_br_checklist(4) verificado co
 
 1. Chame texto_br_estrutura com o rascunho atual (ele usa o tipo da sessão para calibrar e medir).
 2. Aplique o plano de perturbação que ele devolver, corrigindo os detectores mais fracos primeiro. NUNCA degrade a clareza: a assimetria serve ao texto, não o contrário.
-3. Meça de novo. Repita até "ALVO ATINGIDO" (score >= 70) ou, no máximo, 3 iterações.
+3. Meça de novo. Repita até "ALVO ATINGIDO" (score >= ${ALVO_ESTRUTURA}) ou, no máximo, 3 iterações.
 
 Critério de saída: checklist de texto_br_checklist(5) verificado. Em tipos longos (blog, capitulo, tecnico, explicativo, podcast, video) o gate exige o alvo atingido para avançar; nos demais é advisory. Depois chame texto_br_proxima_fase passando a versão atual em "rascunho".`,
   },
@@ -234,16 +244,11 @@ export const CHECKLISTS = {
 // Fonte de verdade replicada em analysis/estrutura.py (TIPOS_GATE).
 export const TIPOS_ESTRUTURA_GATE = ['blog', 'capitulo', 'tecnico', 'explicativo', 'podcast', 'video'];
 
-// Alvo do score de naturalidade estrutural da Fase 5 (0-100). Fonte única:
-// estrutura.js injeta este valor no payload do script Python, que só cai no
-// próprio ALVO_PADRAO (analysis/estrutura.py) em uso standalone (sem payload).
-export const ALVO_ESTRUTURA = 70;
-
 // Loop quantitativo da Fase 2 (variância sintática + perturbação lexical).
 // Ativo por default; desligado apenas com variancia: false a pedido do usuário.
 export const LOOP_QUANTITATIVO_GUIDANCE = `## Loop quantitativo (ATIVADO)
 
-Depois de aplicar as cinco técnicas de superfície acima, otimize contra o score de humanidade (0-100, alvo >= 80):
+Depois de aplicar as cinco técnicas de superfície acima, otimize contra o score de humanidade (probabilidade de texto humano × 100; alvo >= ${ALVO_SCORE}):
 
 1. **Via automática (preferencial se disponível)**: chame texto_br_otimizar com o rascunho completo. Ela roda a subida de encosta inteira (medir → reescrever → medir, rejeitando iterações que piorem o score) e devolve o texto otimizado com a trajetória. Se retornar erro de credencial, siga a via manual.
 2. **Via manual**: chame texto_br_score com o rascunho e corrija os componentes fracos apontados:

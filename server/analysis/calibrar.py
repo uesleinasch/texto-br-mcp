@@ -2,8 +2,11 @@
 """Calibração empírica do score sobre o corpus rotulado (offline, stdlib puro).
 
 Modos:
-  --baseline  mede a separação humano/IA com os PESOS atuais e emite relatório.
-  --fit       ajusta a regressão logística e emite pesos-calibrados.json (Task 5).
+  --baseline      mede a separação humano/IA com os PESOS_MANUAIS (baseline histórico
+                  fixo, pré-calibração) e emite relatório.
+  --fit           ajusta a regressão logística e emite pesos-calibrados.json (Task 5).
+  --fit-logistico busca (k, λ) por LOO-CV honesto e emite modelo-calibrado.json
+                  + relatorio-etapa4.md, para o gate do usuário (Task 11).
 
 Não importa numpy. Determinístico."""
 
@@ -15,6 +18,7 @@ import statistics
 import sys
 
 import lexico
+import metricas
 import score
 import variancia
 
@@ -33,7 +37,7 @@ def auc(scores, labels):
 
 
 def score_ponderado(x, pesos, chaves):
-    return sum(x[i] * pesos[k] for i, k in enumerate(chaves))
+    return sum(x[i] * pesos.get(k, 0.0) for i, k in enumerate(chaves))
 
 
 def _secao10_real(dir_corpus):
@@ -57,35 +61,71 @@ def _secao10_real(dir_corpus):
     )
 
 
-CHAVES = list(score.PESOS.keys())
+CHAVES = list(score.CHAVES_SINAIS)
 
 
-def matriz_features(dir_corpus, secao10=None):
+def carregar_corpus(dir_corpus, secao10=None):
+    """Textos elegíveis com ritmo/lex pré-computados (independem de
+    referência) — evita reanalisar a cada fold do LOO-CV."""
     secao10 = secao10 if secao10 is not None else _secao10_real(dir_corpus)
     with open(os.path.join(dir_corpus, "manifest.json"), encoding="utf-8") as f:
         manifesto = json.load(f)
-    X, y, nomes = [], [], []
+    corpus = []
     for e in manifesto:
         if not e["incluir_calibracao"]:
             continue
-        caminho = os.path.join(dir_corpus, e["arquivo"])
-        with open(caminho, encoding="utf-8") as f:
+        with open(os.path.join(dir_corpus, e["arquivo"]), encoding="utf-8") as f:
             texto = f.read()
         ritmo = variancia.analisar(texto)
         lex = lexico.analisar(texto, secao10)
         if "erro" in ritmo or "erro" in lex:
             continue  # inaplicável apesar do manifesto; pula com segurança
-        s = score.sinais(ritmo, lex)
+        corpus.append({
+            "arquivo": e["arquivo"], "texto": texto,
+            "y": 1 if e["classe"] == "humano" else 0,
+            "ritmo": ritmo, "lex": lex,
+        })
+    return corpus
+
+
+def matriz_com_referencia(corpus, referencia):
+    X, y = [], []
+    for e in corpus:
+        s = score.sinais(e["ritmo"], e["lex"], e["texto"], referencia=referencia)
         X.append([s[k] for k in CHAVES])
-        y.append(1 if e["classe"] == "humano" else 0)
-        nomes.append(e["arquivo"])
+        y.append(e["y"])
+    return X, y
+
+
+def folds_com_referencia(corpus):
+    """Por fold i do LOO: a referência construída SEM o texto held-out (se ele
+    for humano). Sem vazamento: nenhuma estatística do held-out entra no
+    treino do fold. A referência completa é construída uma vez e reusada em
+    todos os folds de IA; cada fold de humano constrói a sua própria (sem
+    memoização adicional — são <= n_humanos + 1 construções no total)."""
+    humanos = [e["texto"] for e in corpus if e["y"] == 1]
+    ref_completa = metricas.construir_referencia(humanos)
+    folds = []
+    for e in corpus:
+        if e["y"] == 1:
+            treino = [t for t in humanos if t is not e["texto"]]
+            folds.append({"referencia": metricas.construir_referencia(treino)})
+        else:
+            folds.append({"referencia": ref_completa})
+    return folds
+
+
+def matriz_features(dir_corpus, secao10=None):
+    corpus = carregar_corpus(dir_corpus, secao10)
+    X, y = matriz_com_referencia(corpus, score.REFERENCIA)
+    nomes = [e["arquivo"] for e in corpus]
     return X, y, nomes, CHAVES
 
 
 def relatorio_baseline(dir_corpus, secao10=None):
     """Baseline com os pesos MANUAIS (fixos, pré-calibração) — reproduzível do
-    repo independente do estado atual de score.PESOS (que Task 6 congelou nos
-    valores calibrados)."""
+    repo independente do modelo de runtime congelado em score.MODELO (Task 13),
+    que não expõe mais pesos aditivos (PESOS foi removido; ver PESOS_MANUAIS)."""
     X, y, nomes, chaves = matriz_features(dir_corpus, secao10)
     scores = [score_ponderado(x, score.PESOS_MANUAIS, chaves) for x in X]
     a = auc(scores, y)
@@ -162,9 +202,20 @@ def coef_para_pesos(coef, chaves, piso=2.0):
     """Mapeia a contribuição discriminativa (coef positivo = sinal indica humano)
     para 100 pontos, com piso por componente (preserva o breakdown) e soma 100.
     Coeficiente <= 0 (sinal que não indica humano no corpus) fica só no piso —
-    não se recompensa um sinal anticorrelacionado."""
+    não se recompensa um sinal anticorrelacionado. Caso degenerado (nenhum
+    coeficiente positivo): distribui os 100 pontos uniformemente entre as chaves."""
     contrib = [max(0.0, c) for c in coef]
-    total = sum(contrib) or 1.0
+    if not any(contrib):
+        # Caso degenerado: nenhum sinal com evidência positiva no corpus.
+        # Sem base para diferenciar, distribui uniformemente (não despeja o
+        # resíduo num único componente arbitrário).
+        uniforme = round(100.0 / len(chaves), 1)
+        pesos = {k: uniforme for k in chaves}
+        resto = round(100.0 - sum(pesos.values()), 1)
+        kfirst = chaves[0]
+        pesos[kfirst] = round(pesos[kfirst] + resto, 1)
+        return pesos
+    total = sum(contrib)
     livre = 100.0 - piso * len(chaves)
     brutos = {k: piso + livre * (contrib[i] / total) for i, k in enumerate(chaves)}
     # arredonda para 1 casa e corrige o resíduo no maior peso
@@ -176,12 +227,21 @@ def coef_para_pesos(coef, chaves, piso=2.0):
 
 
 def separacao_loocv(dir_corpus):
-    """AUC honesto: para cada amostra, treina nos N-1 restantes e prevê a que
-    ficou de fora. Reflete generalização, não ajuste in-sample."""
+    """AUC LOO da rota aditiva: para cada amostra, treina nos N-1 restantes e
+    prevê a que ficou de fora. Aproxima generalização, mas com uma
+    contaminação residual otimista: a matriz vem de matriz_features (referência
+    COMPLETA, score.REFERENCIA), então os 2 sinais do Bloco B (burrows_delta,
+    cross_entropy_trigramas) de um held-out humano são computados contra uma
+    referência que inclui o próprio texto (~1/29). O número honesto por fold —
+    referência recomputada sem o held-out via folds_com_referencia — é o da
+    loocv_logistica (Task 11)."""
     X, y, nomes, chaves = matriz_features(dir_corpus)
     # prior fixo (pesos manuais, não os calibrados) — cada fold não pode ver
     # informação derivada do corpus inteiro, senão vaza held-out para o prior.
-    prior = [score.PESOS_MANUAIS[k] / 10.0 for k in chaves]
+    # .get(k, 0.0): sinais novos (Bloco A/B) não têm peso manual — prior 0.
+    # (Vazamento residual restante: os sinais com referência na matriz, ver
+    # docstring acima.)
+    prior = [score.PESOS_MANUAIS.get(k, 0.0) / 10.0 for k in chaves]
     preditos = []
     for i in range(len(X)):
         Xtr = [X[j] for j in range(len(X)) if j != i]
@@ -222,12 +282,189 @@ def p75_humano(scores, labels):
     return round(statistics.quantiles(hum, n=4, method="inclusive")[2], 1)
 
 
+def _sinais_do_fold(corpus, folds):
+    """Matriz 17-colunas por fold (sinais sob a referência do fold), cacheada
+    no próprio objeto corpus para as buscas de configuração não recomputarem.
+    Aviso: o cache é por objeto `corpus` (em `e['_cache_folds']`) e ignora
+    `folds` em chamadas subsequentes — não reuse o mesmo `corpus` com `folds`
+    diferentes; construa um `corpus` novo (carregar_corpus) se precisar."""
+    if "_cache_folds" not in corpus[0]:
+        for i, e in enumerate(corpus):
+            ref = folds[i]["referencia"]
+            linhas = []
+            for e2 in corpus:
+                s = score.sinais(e2["ritmo"], e2["lex"], e2["texto"], referencia=ref)
+                linhas.append([s[k] for k in CHAVES])
+            e["_cache_folds"] = linhas
+    return [e["_cache_folds"] for e in corpus]
+
+
+def loocv_logistica(corpus, folds, chaves_ativas, l2, retornar_predicoes=False):
+    """AUC LOO honesto do modelo logístico restrito a chaves_ativas:
+    referência, padronização e fit recomputados por fold; o held-out nunca
+    contribui com estatística alguma para o treino do seu fold.
+
+    `retornar_predicoes=True`: retorna `(auc, preditos)`, onde `preditos[i]`
+    é a probabilidade LOO (out-of-sample) da amostra `corpus[i]` — permite
+    calcular quantis honestos (ex.: p75 humano LOO) sem recontaminar com o
+    in-sample. Default False preserva a assinatura antiga (só o AUC)."""
+    idx = [CHAVES.index(k) for k in chaves_ativas]
+    matrizes = _sinais_do_fold(corpus, folds)
+    y = [e["y"] for e in corpus]
+    preditos = []
+    for i in range(len(corpus)):
+        Xf = [[linha[j] for j in idx] for linha in matrizes[i]]
+        Xtr = [Xf[m] for m in range(len(Xf)) if m != i]
+        ytr = [y[m] for m in range(len(y)) if m != i]
+        Xs, medias, desvios = padronizar(Xtr)
+        w, b = treinar_logistica(Xs, ytr, prior=[0.0] * len(idx), l2=l2,
+                                 lr=0.3, iteracoes=1500)
+        xi = [(Xf[i][j] - medias[j]) / desvios[j] for j in range(len(idx))]
+        z = b + sum(w[j] * xi[j] for j in range(len(idx)))
+        preditos.append(1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z)))))
+    a = round(auc(preditos, y), 3)
+    if retornar_predicoes:
+        return a, preditos
+    return a
+
+
+GRADE_K = [5, 7, 9, 11, 13, 17]
+GRADE_L2 = [0.1, 0.3, 1.0]
+
+
+def _ranquear_por_auc_univariado(X, y):
+    scores = {}
+    for i, k in enumerate(CHAVES):
+        col = [x[i] for x in X]
+        scores[k] = abs(auc(col, y) - 0.5)
+    return sorted(CHAVES, key=lambda k: (-scores[k], k))
+
+
+def _emitir_fit_logistico(dir_corpus):
+    corpus = carregar_corpus(dir_corpus)
+    folds = folds_com_referencia(corpus)
+    X, y = matriz_com_referencia(corpus, score.REFERENCIA)
+    ranking = _ranquear_por_auc_univariado(X, y)
+    resultados = []
+    for k in GRADE_K:
+        chaves_k = ranking[:k]
+        for l2 in GRADE_L2:
+            a = loocv_logistica(corpus, folds, chaves_k, l2)
+            resultados.append({"k": k, "l2": l2, "chaves": chaves_k, "auc_loocv": a})
+            print(f"k={k} l2={l2} loocv={a}")
+    antigas = [k for k in CHAVES if k in score.PESOS_MANUAIS]
+    a_antigas = loocv_logistica(corpus, folds, antigas, 1.0)
+    resultados.append({"k": "10-antigas", "l2": 1.0, "chaves": antigas, "auc_loocv": a_antigas})
+    vencedor = max(
+        (r for r in resultados if isinstance(r["k"], int)),
+        key=lambda r: (r["auc_loocv"], -r["k"], r["l2"]),
+    )
+    # p75 LOO honesto dos humanos (review pós-Etapa-4): recomputa as
+    # predições do vencedor com retornar_predicoes=True — cada probabilidade
+    # já é out-of-sample por construção do fold, ao contrário do p75 in-sample
+    # que informa o ALVO congelado. Não entra em modelo-calibrado.json (o
+    # congelamento fica intocado); só informa o relatório.
+    _, preditos_loo_vencedor = loocv_logistica(
+        corpus, folds, vencedor["chaves"], vencedor["l2"], retornar_predicoes=True)
+    n_humanos_total = sum(1 for l in y if l == 1)
+    # Fit final congelável: corpus completo, referência congelada, 3000 iterações
+    idx = [CHAVES.index(k) for k in vencedor["chaves"]]
+    Xv = [[x[j] for j in idx] for x in X]
+    Xs, medias, desvios = padronizar(Xv)
+    w, b = treinar_logistica(Xs, y, prior=[0.0] * len(idx), l2=vencedor["l2"],
+                             lr=0.3, iteracoes=3000)
+    probs = []
+    for linha in Xs:
+        z = b + sum(w[j] * linha[j] for j in range(len(idx)))
+        probs.append(1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z)))))
+    hum = sorted(p for p, l in zip(probs, y) if l == 1)
+    ia = sorted(p for p, l in zip(probs, y) if l == 0)
+    med = lambda xs: xs[len(xs) // 2]
+    saida = {
+        "chaves": vencedor["chaves"],
+        "coeficientes": {k: round(w[j], 6) for j, k in enumerate(vencedor["chaves"])},
+        "intercepto": round(b, 6),
+        "medias": {k: round(medias[j], 6) for j, k in enumerate(vencedor["chaves"])},
+        "desvios": {k: round(desvios[j], 6) for j, k in enumerate(vencedor["chaves"])},
+        "l2": vencedor["l2"],
+        "auc_loocv": vencedor["auc_loocv"],
+        "auc_in_sample": round(auc(probs, y), 3),
+        "alvo_p75_humano_prob": p75_humano(probs, y),
+        # p75 a 4 casas para o congelamento (Task 13): p75_humano() arredonda a
+        # 1 casa (escala 0-100 da rota aditiva) — grosseiro demais em
+        # probabilidade, onde os humanos clusterizam ~0.85-0.95.
+        "alvo_p75_humano_prob_precisa": round(
+            statistics.quantiles(hum, n=4, method="inclusive")[2], 4),
+        "alvo_politica": "p75_humano",
+        "probs_in_sample": {"humano": {"mediana": round(med(hum), 3)},
+                             "ia": {"mediana": round(med(ia), 3)}},
+    }
+    with open(os.path.join(dir_corpus, "modelo-calibrado.json"), "w", encoding="utf-8") as f:
+        json.dump(saida, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+    p75_loo_humano = round(statistics.quantiles(
+        sorted(p for p, l in zip(preditos_loo_vencedor, y) if l == 1),
+        n=4, method="inclusive")[2], 4)
+    n_loo_passam = sum(1 for p, l in zip(preditos_loo_vencedor, y)
+                       if l == 1 and p >= saida["alvo_p75_humano_prob_precisa"])
+    _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida,
+                             p75_loo_humano, n_loo_passam, n_humanos_total)
+    print(f"vencedor: k={vencedor['k']} l2={vencedor['l2']} loocv={vencedor['auc_loocv']} "
+          f"in-sample {saida['auc_in_sample']} alvo(prob) {saida['alvo_p75_humano_prob']} "
+          f"p75-loo(honesto) {p75_loo_humano}")
+
+
+def _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida,
+                             p75_loo_humano, n_loo_passam, n_humanos_total):
+    baseline_path = os.path.join(dir_corpus, "baseline-report.json")
+    with open(baseline_path, encoding="utf-8") as f:
+        auc_manual = json.load(f)["auc_total"]
+    auc_e3_estendida = separacao_loocv(dir_corpus)
+    linhas = [
+        "# Etapa 4 — configurações do modelo logístico (LOO-CV honesto)", "",
+        f"Baselines: pesos manuais {auc_manual} (baseline-report.json, corpus corrigido) | "
+        "aditivo E3 (LOO, corpus antigo 30H): 0.858 — histórico", "",
+        "Rota E3 estendida às 17 chaves (prior manual; sinais de referência computados "
+        "in-sample — contaminada, NÃO comparável 1:1 com o LOO honesto): "
+        f"{auc_e3_estendida} (calibrar.separacao_loocv)", "",
+        "| k | λ | AUC LOO-CV |", "| --- | --- | --- |",
+    ]
+    for r in resultados:
+        marca = " ← vencedor" if r is vencedor else ""
+        linhas.append(f"| {r['k']} | {r['l2']} | {r['auc_loocv']}{marca} |")
+    linhas += [
+        "", f"Chaves do vencedor: {', '.join(vencedor['chaves'])}",
+        f"In-sample: {saida['auc_in_sample']} | alvo p75 humano (prob): {saida['alvo_p75_humano_prob']} "
+        f"(preciso, 4 casas: {saida['alvo_p75_humano_prob_precisa']})",
+        f"Medianas in-sample (prob): humano {saida['probs_in_sample']['humano']['mediana']} "
+        f"vs IA {saida['probs_in_sample']['ia']['mediana']}",
+        "",
+        f"p75 humano nas probabilidades LOO (honesto): {p75_loo_humano} — sob o ALVO in-sample "
+        f"(p75 {saida['alvo_p75_humano_prob_precisa']}), ~{n_loo_passam}/{n_humanos_total} "
+        "humanos passam out-of-sample; leitura consistente com a política mira-alto, mas o "
+        "quantil LOO é o número a preferir em recalibrações futuras.",
+        "",
+        "Disclosure de normalização: os clamps p5/p95 de NORMALIZACAO_NOVOS (score.py) vêm do "
+        "corpus completo agrupando as duas classes (label-free); efeito de 2ª ordem no fit por "
+        "saturação em 0/1 nas bordas — não recomputados por fold do LOO-CV.",
+        "",
+        "Leitura honesta: o AUC LOO de cada célula é honesto para AQUELA configuração, mas o "
+        "vencedor é o máximo sobre 18 pontos da grade e o ranking de candidatos foi feito "
+        "in-sample — juntos, tornam o número do vencedor uma estimativa otimista da "
+        "generalização do PROCEDIMENTO de auto-seleção (um CV aninhado daria menos). "
+        "Com n=56, é o preço aceito nesta etapa; o gate deve ler o 0.9x como teto, não como piso.",
+    ]
+    with open(os.path.join(dir_corpus, "relatorio-etapa4.md"), "w", encoding="utf-8") as f:
+        f.write("\n".join(linhas) + "\n")
+
+
 def _emitir_fit(dir_corpus):
     X, y, nomes, chaves = matriz_features(dir_corpus)
     Xs, medias, desvios = padronizar(X)
-    # prior fixo (pesos manuais) — reproduz os pesos congelados em score.PESOS
+    # prior fixo (pesos manuais, score.PESOS_MANUAIS) — determinístico e
     # independente de recalibrações futuras. Escala do prior no espaço padronizado.
-    prior = [score.PESOS_MANUAIS[k] / 10.0 for k in chaves]
+    # .get(k, 0.0): sinais novos (Bloco A/B) não têm peso manual — prior 0.
+    prior = [score.PESOS_MANUAIS.get(k, 0.0) / 10.0 for k in chaves]
     w, b = treinar_logistica(Xs, y, prior=prior, l2=1.0, lr=0.3, iteracoes=3000)
     pesos = coef_para_pesos(w, chaves, piso=2.0)
     scores = [score_ponderado(x, pesos, chaves) for x in X]
@@ -256,8 +493,10 @@ def main():
         _emitir_baseline(dir_corpus)
     elif "--fit" in sys.argv:
         _emitir_fit(dir_corpus)  # definido na Task 5
+    elif "--fit-logistico" in sys.argv:
+        _emitir_fit_logistico(dir_corpus)
     else:
-        print("uso: calibrar.py [--baseline|--fit] [--dir <corpus>]")
+        print("uso: calibrar.py [--baseline|--fit|--fit-logistico] [--dir <corpus>]")
 
 
 if __name__ == "__main__":
