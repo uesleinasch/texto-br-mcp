@@ -284,7 +284,10 @@ def p75_humano(scores, labels):
 
 def _sinais_do_fold(corpus, folds):
     """Matriz 17-colunas por fold (sinais sob a referência do fold), cacheada
-    no próprio objeto corpus para as buscas de configuração não recomputarem."""
+    no próprio objeto corpus para as buscas de configuração não recomputarem.
+    Aviso: o cache é por objeto `corpus` (em `e['_cache_folds']`) e ignora
+    `folds` em chamadas subsequentes — não reuse o mesmo `corpus` com `folds`
+    diferentes; construa um `corpus` novo (carregar_corpus) se precisar."""
     if "_cache_folds" not in corpus[0]:
         for i, e in enumerate(corpus):
             ref = folds[i]["referencia"]
@@ -296,10 +299,15 @@ def _sinais_do_fold(corpus, folds):
     return [e["_cache_folds"] for e in corpus]
 
 
-def loocv_logistica(corpus, folds, chaves_ativas, l2):
+def loocv_logistica(corpus, folds, chaves_ativas, l2, retornar_predicoes=False):
     """AUC LOO honesto do modelo logístico restrito a chaves_ativas:
     referência, padronização e fit recomputados por fold; o held-out nunca
-    contribui com estatística alguma para o treino do seu fold."""
+    contribui com estatística alguma para o treino do seu fold.
+
+    `retornar_predicoes=True`: retorna `(auc, preditos)`, onde `preditos[i]`
+    é a probabilidade LOO (out-of-sample) da amostra `corpus[i]` — permite
+    calcular quantis honestos (ex.: p75 humano LOO) sem recontaminar com o
+    in-sample. Default False preserva a assinatura antiga (só o AUC)."""
     idx = [CHAVES.index(k) for k in chaves_ativas]
     matrizes = _sinais_do_fold(corpus, folds)
     y = [e["y"] for e in corpus]
@@ -314,7 +322,10 @@ def loocv_logistica(corpus, folds, chaves_ativas, l2):
         xi = [(Xf[i][j] - medias[j]) / desvios[j] for j in range(len(idx))]
         z = b + sum(w[j] * xi[j] for j in range(len(idx)))
         preditos.append(1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z)))))
-    return round(auc(preditos, y), 3)
+    a = round(auc(preditos, y), 3)
+    if retornar_predicoes:
+        return a, preditos
+    return a
 
 
 GRADE_K = [5, 7, 9, 11, 13, 17]
@@ -348,6 +359,14 @@ def _emitir_fit_logistico(dir_corpus):
         (r for r in resultados if isinstance(r["k"], int)),
         key=lambda r: (r["auc_loocv"], -r["k"], r["l2"]),
     )
+    # p75 LOO honesto dos humanos (review pós-Etapa-4): recomputa as
+    # predições do vencedor com retornar_predicoes=True — cada probabilidade
+    # já é out-of-sample por construção do fold, ao contrário do p75 in-sample
+    # que informa o ALVO congelado. Não entra em modelo-calibrado.json (o
+    # congelamento fica intocado); só informa o relatório.
+    _, preditos_loo_vencedor = loocv_logistica(
+        corpus, folds, vencedor["chaves"], vencedor["l2"], retornar_predicoes=True)
+    n_humanos_total = sum(1 for l in y if l == 1)
     # Fit final congelável: corpus completo, referência congelada, 3000 iterações
     idx = [CHAVES.index(k) for k in vencedor["chaves"]]
     Xv = [[x[j] for j in idx] for x in X]
@@ -383,22 +402,31 @@ def _emitir_fit_logistico(dir_corpus):
     with open(os.path.join(dir_corpus, "modelo-calibrado.json"), "w", encoding="utf-8") as f:
         json.dump(saida, f, ensure_ascii=False, indent=2)
         f.write("\n")
-    _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida)
+    p75_loo_humano = round(statistics.quantiles(
+        sorted(p for p, l in zip(preditos_loo_vencedor, y) if l == 1),
+        n=4, method="inclusive")[2], 4)
+    n_loo_passam = sum(1 for p, l in zip(preditos_loo_vencedor, y)
+                       if l == 1 and p >= saida["alvo_p75_humano_prob_precisa"])
+    _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida,
+                             p75_loo_humano, n_loo_passam, n_humanos_total)
     print(f"vencedor: k={vencedor['k']} l2={vencedor['l2']} loocv={vencedor['auc_loocv']} "
-          f"in-sample {saida['auc_in_sample']} alvo(prob) {saida['alvo_p75_humano_prob']}")
+          f"in-sample {saida['auc_in_sample']} alvo(prob) {saida['alvo_p75_humano_prob']} "
+          f"p75-loo(honesto) {p75_loo_humano}")
 
 
-def _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida):
+def _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida,
+                             p75_loo_humano, n_loo_passam, n_humanos_total):
     baseline_path = os.path.join(dir_corpus, "baseline-report.json")
     with open(baseline_path, encoding="utf-8") as f:
         auc_manual = json.load(f)["auc_total"]
-    auc_aditivo_corpus_corrigido = separacao_loocv(dir_corpus)
+    auc_e3_estendida = separacao_loocv(dir_corpus)
     linhas = [
         "# Etapa 4 — configurações do modelo logístico (LOO-CV honesto)", "",
         f"Baselines: pesos manuais {auc_manual} (baseline-report.json, corpus corrigido) | "
         "aditivo E3 (LOO, corpus antigo 30H): 0.858 — histórico", "",
-        f"Aditivo E3 no corpus corrigido (rota com contaminação residual documentada): "
-        f"{auc_aditivo_corpus_corrigido} (calibrar.separacao_loocv)", "",
+        "Rota E3 estendida às 17 chaves (prior manual; sinais de referência computados "
+        "in-sample — contaminada, NÃO comparável 1:1 com o LOO honesto): "
+        f"{auc_e3_estendida} (calibrar.separacao_loocv)", "",
         "| k | λ | AUC LOO-CV |", "| --- | --- | --- |",
     ]
     for r in resultados:
@@ -410,6 +438,15 @@ def _emitir_relatorio_etapa4(dir_corpus, resultados, vencedor, saida):
         f"(preciso, 4 casas: {saida['alvo_p75_humano_prob_precisa']})",
         f"Medianas in-sample (prob): humano {saida['probs_in_sample']['humano']['mediana']} "
         f"vs IA {saida['probs_in_sample']['ia']['mediana']}",
+        "",
+        f"p75 humano nas probabilidades LOO (honesto): {p75_loo_humano} — sob o ALVO in-sample "
+        f"(p75 {saida['alvo_p75_humano_prob_precisa']}), ~{n_loo_passam}/{n_humanos_total} "
+        "humanos passam out-of-sample; leitura consistente com a política mira-alto, mas o "
+        "quantil LOO é o número a preferir em recalibrações futuras.",
+        "",
+        "Disclosure de normalização: os clamps p5/p95 de NORMALIZACAO_NOVOS (score.py) vêm do "
+        "corpus completo agrupando as duas classes (label-free); efeito de 2ª ordem no fit por "
+        "saturação em 0/1 nas bordas — não recomputados por fold do LOO-CV.",
         "",
         "Leitura honesta: o AUC LOO de cada célula é honesto para AQUELA configuração, mas o "
         "vencedor é o máximo sobre 18 pontos da grade e o ranking de candidatos foi feito "

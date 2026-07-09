@@ -19,7 +19,7 @@ function conectar(stateFile, nomeCliente) {
 
 const TEXTO_BOM = `Comecei a meditar num sábado qualquer de 2019, mais por teimosia do que por convicção, e o tédio dos primeiros dias quase me venceu logo de cara. Desisti? Quase. Mas na terceira semana o sono melhorou primeiro, depois veio uma paciência esquisita nas reuniões, dessas que os colegas percebem antes de você mesmo notar qualquer mudança. Não virei outra pessoa. Só parei de correr atrás de um relógio que ninguém me cobrava.`;
 
-// Outro texto humano, também bom (score >= 80), usado para provar que medir um
+// Outro texto humano, também bom (atinge o ALVO calibrado), usado para provar que medir um
 // rascunho diferente não destrava o gate do rascunho real (hash amarrado ao texto).
 const OUTRO_TEXTO_BOM = `Aprendi a consertar minha bicicleta sozinho num domingo chuvoso de outubro, mais por falta de dinheiro do que por vontade de aprender coisa nova. A corrente saltou de novo na primeira tentativa. Um desastre só. Só na quarta vez que a marcha engatou sem travar, e aí, quando finalmente a roda girou lisa, entendi que tinha aprendido mais com aquele erro do que em qualquer vídeo que eu tinha visto antes. Não virei mecânico. Só parei de empurrar a bike até a loja toda vez que ela range.`;
 

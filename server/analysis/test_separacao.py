@@ -35,6 +35,16 @@ class TestSeparacao(unittest.TestCase):
         med = lambda xs: xs[len(xs) // 2]
         self.assertGreater(med(hum), med(ia))
 
+    def test_baseline_report_alvo_atual_bate_com_score_alvo(self):
+        # Esse drift já aconteceu uma vez (ALVO recalibrado para 93.6 e o
+        # baseline-report.json ficou fossilizado em 74.4). Trava a paridade.
+        with open(BASELINE, encoding="utf-8") as f:
+            alvo_atual = json.load(f)["alvo_atual"]
+        self.assertEqual(
+            alvo_atual, score.ALVO,
+            msg="baseline-report.json desatualizado: re-rode calibrar.py --baseline "
+                "após recalibrar o ALVO")
+
     def test_loocv_do_modelo_congelado(self):
         with open(MODELO_JSON, encoding="utf-8") as f:
             m = json.load(f)

@@ -480,6 +480,7 @@
     "tipo": "desconhecido",
     "palavras": 75,
     "incluir_calibracao": false,
+    "nota": "prosa truncada/quebrada no meio de uma frase (sentença sem sentido gramatical) — excluída da calibração",
     "fonte": "gerado",
     "data_verificada": null,
     "data_coleta": "2026-07-08"
@@ -502,6 +503,7 @@
     "tipo": "desconhecido",
     "palavras": 0,
     "incluir_calibracao": false,
+    "nota": "arquivo vazio (0 bytes, 0 palavras) — excluída da calibração",
     "fonte": "gerado",
     "data_verificada": null,
     "data_coleta": "2026-07-08"
@@ -535,6 +537,7 @@
     "tipo": "desconhecido",
     "palavras": 595,
     "incluir_calibracao": false,
+    "nota": "poema (poesia lírica); nenhum tipo do manifesto cobre poesia — excluída da calibração",
     "fonte": "gerado",
     "data_verificada": null,
     "data_coleta": "2026-07-08"

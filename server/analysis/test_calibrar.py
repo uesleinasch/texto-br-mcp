@@ -1,6 +1,7 @@
 import os
 import unittest
 import calibrar
+import metricas
 
 DIR_CORPUS = os.path.join(os.path.dirname(__file__), "..", "..", "references", "Corpus")
 _MANIFEST = os.path.join(DIR_CORPUS, "manifest.json")
@@ -113,6 +114,20 @@ class TestReferenciaPorFold(unittest.TestCase):
         for i, fold in enumerate(folds):
             esperado = n_humanos_total - (1 if corpus[i]["y"] == 1 else 0)
             self.assertEqual(fold["referencia"]["n_textos"], esperado)
+
+    def test_fold_do_primeiro_humano_bate_com_referencia_recalculada(self):
+        # Reforça o teste acima: aqui a comparação é por IGUALDADE PROFUNDA da
+        # referência do fold contra metricas.construir_referencia() aplicada
+        # aos textos humanos corretos (todos exceto ele) — não só a contagem.
+        # Um bug que excluísse o humano ERRADO (mas ainda -1 do total) passaria
+        # pelo teste de contagem e não por este.
+        corpus = calibrar.carregar_corpus(DIR_CORPUS)
+        folds = calibrar.folds_com_referencia(corpus)
+        i = next(idx for idx, e in enumerate(corpus) if e["y"] == 1)
+        outros_humanos = [e["texto"] for j, e in enumerate(corpus)
+                          if e["y"] == 1 and j != i]
+        esperado = metricas.construir_referencia(outros_humanos)
+        self.assertEqual(folds[i]["referencia"], esperado)
 
 
 @unittest.skipUnless(os.path.exists(_MANIFEST), "corpus não preprocessado")
