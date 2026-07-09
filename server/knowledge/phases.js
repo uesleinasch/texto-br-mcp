@@ -248,11 +248,11 @@ export const TIPOS_ESTRUTURA_GATE = ['blog', 'capitulo', 'tecnico', 'explicativo
 // Ativo por default; desligado apenas com variancia: false a pedido do usuário.
 export const LOOP_QUANTITATIVO_GUIDANCE = `## Loop quantitativo (ATIVADO)
 
-Depois de aplicar as cinco técnicas de superfície acima, otimize contra o score de humanidade (probabilidade de texto humano × 100; alvo >= ${ALVO_SCORE}):
+Depois de aplicar as cinco técnicas de superfície acima, otimize contra o score de humanidade (probabilidade de texto humano × 100; alvo >= ${ALVO_SCORE}). O loop é dirigido por você (o host); nenhuma tool reescreve o texto por você:
 
-1. **Via automática (preferencial se disponível)**: chame texto_br_otimizar com o rascunho completo. Ela roda a subida de encosta inteira (medir → reescrever → medir, rejeitando iterações que piorem o score) e devolve o texto otimizado com a trajetória. Se retornar erro de credencial, siga a via manual.
-2. **Via manual**: chame texto_br_score com o rascunho e corrija os componentes fracos apontados:
+1. Chame texto_br_otimizar com o rascunho completo: numa única chamada ele mede o texto e devolve o diagnóstico priorizado (componentes fracos + candidatas de quebra/fusão + pivots a trocar) e o roteiro de reescrita (ritmo, léxico e estrutura + regras invioláveis). Se o texto já atingiu o alvo, ele avisa e não há o que reescrever.
+2. Reescreva APENAS os pontos apontados, seguindo o roteiro:
    - **Ritmo (injeção de variância sintática)**: quebre candidatas em sentenças muito curtas (1-5 palavras), funda curtas consecutivas em longas (30+), insira 1-2 subordinadas não-canônicas (anteposta: "Quando X, Y"; intercalada: "O projeto, embora atrasado, saiu"; gerúndio inicial), varie inícios repetidos.
    - **Léxico (perturbação lexical controlada)**: troque cada pivot apontado pela alternativa que cabe no contexto (ou corte). As listas são o PISO: perturbe também palavras previsíveis demais no contexto deste texto (use repetições, diversidade e trigramas como sinal).
    - **Estrutura**: parágrafos uniformes e correntes de conectivos apontados.
-3. Reescreva APENAS os pontos apontados e meça de novo. Repita até "ALVO ATINGIDO", com no máximo 3 iterações manuais. Se o score CAIR após uma reescrita, descarte-a e volte à versão anterior: a otimização nunca degrada o texto.`;
+3. Meça de novo (texto_br_score, que satisfaz o gate numa chamada, ou texto_br_otimizar). Repita até "ALVO ATINGIDO", com no máximo 3 iterações. Se o score CAIR após uma reescrita, descarte-a e volte à versão anterior: a otimização nunca degrada o texto.`;

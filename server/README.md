@@ -6,7 +6,6 @@ Servidor MCP (stdio) que encapsula o workflow texto-br: escrita profissional em 
 
 - Node.js >= 18
 - Python 3 no PATH (`python3`) — usado pelos analisadores quantitativos
-- Opcional: `ANTHROPIC_API_KEY` no ambiente — habilita `texto_br_otimizar` (correção automática de ritmo via Claude API; sem a chave, a tool retorna erro amigável e o fluxo manual segue normal)
 
 ## Instalação e registro
 
@@ -32,7 +31,7 @@ Verificação: `claude mcp list` deve mostrar `texto-br ... ✔ Connected`.
 | `texto_br_proxima_fase(rascunho?, fase?, forcar?, variancia?)` | Avança (ou reposiciona via `fase`); salva `rascunho`; gate quantitativo na saída da Fase 2 e gate macroestrutural na saída da Fase 5 (tipos longos) |
 | `texto_br_score(texto)` | Score de humanidade 0-100 = probabilidade de o texto ser humano × 100 (modelo logístico congelado, Etapa 4, sobre 9 dos 17 sinais de ritmo + léxico + estrutura micro; alvo = p75 humano ≈ 93.6; satisfaz o gate da Fase 2) |
 | `texto_br_estrutura(texto, tipo?)` | Score de naturalidade estrutural 0-100 (macro: simetria, subtópicos, kicker, bordões, progressão; alvo ≥ 70) + plano de perturbação (Fase 5) |
-| `texto_br_otimizar(texto)` | Otimiza contra o score via Claude API: subida de encosta com anti-degradação (requer credencial) |
+| `texto_br_otimizar(texto)` | Empacota diagnóstico priorizado + roteiro de reescrita para o host reescrever (sem API) |
 | `texto_br_variancia(texto)` | Mede ritmo sintático (burstiness σ/μ, alvo ≥ 0.7) |
 | `texto_br_lexico(texto)` | Mede previsibilidade lexical (vocabulário pivot da seção 10, repetições, diversidade) |
 | `texto_br_tipo(id)` / `texto_br_gramatica(secao)` / `texto_br_checklist(fase)` | Consultas pontuais |
@@ -69,7 +68,6 @@ Leitura honesta (sempre LOO-CV, nunca in-sample): AUC 0.902 do modelo vencedor v
 
 | Variável | Efeito |
 |---|---|
-| `ANTHROPIC_API_KEY` | Habilita `texto_br_otimizar` |
 | `TEXTO_BR_PYTHON_TIMEOUT_MS` | Timeout dos analisadores Python (default 30000) |
 
 ## Desenvolvimento
