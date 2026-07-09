@@ -1,14 +1,11 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { runPython } from './run-python.js';
 import { getSection } from '../content/registry.js';
 import { ALVO_SCORE } from '../knowledge/phases.js';
 
-const MODEL = process.env.TEXTO_BR_MODEL || 'claude-opus-4-8';
-const MAX_ITERACOES = 4;
-const MAX_SEM_MELHORA = 2;
-
-const SYSTEM = `Você é um editor de humanização de textos em português brasileiro. Receberá um texto e um diagnóstico quantitativo (score 0-100 = probabilidade de texto humano × 100, com contribuições por sinal de ritmo, léxico e estrutura; alvo >= ${ALVO_SCORE}). Reescreva o texto corrigindo APENAS o que o diagnóstico aponta:
+// Roteiro de reescrita entregue ao HOST (antes era o system prompt de uma
+// chamada de API). O host aplica estas técnicas guiado pelo diagnóstico.
+export const ROTEIRO_REESCRITA = `Reescreva o texto corrigindo APENAS o que o diagnóstico aponta (score 0-100 = probabilidade de texto humano × 100; alvo >= ${ALVO_SCORE}):
 
 RITMO:
 - Quebre sentenças longas ou uniformes (candidatas apontadas) criando 1-2 sentenças muito curtas de impacto (1-5 palavras).
@@ -30,13 +27,11 @@ Regras invioláveis:
 - Não introduza conectores clichê ("Além disso", "No entanto", "Em conclusão") nem aberturas de IA.
 - Mantenha a divisão de parágrafos e o markdown existente.
 - Se uma alteração piorar a frase, escolha outra candidata: a otimização nunca degrada o texto.
+- Após reescrever, meça de novo com texto_br_score; se o score cair, descarte a reescrita e volte à versão anterior.`;
 
-Responda SOMENTE com o texto reescrito, sem comentários, sem preâmbulo, sem cercas de código.`;
-
-// Resumo do diagnóstico enviado ao modelo a cada iteração. Componentes
-// "fracos" são os de contribuição NEGATIVA no logit do modelo calibrado:
-// são os sinais que puxam o score para "IA" (o valor 0-1 correspondente
-// aparece em score.sinais para contexto).
+// Resumo do diagnóstico priorizado. Componentes "fracos" são os de contribuição
+// NEGATIVA no logit do modelo calibrado: os sinais que puxam o score para "IA"
+// (o valor 0-1 correspondente aparece em score.sinais para contexto).
 export function resumoDiagnostico(resultado) {
   const s = resultado.score;
   const sinais = s.sinais ?? {};
@@ -72,183 +67,91 @@ export function resumoDiagnostico(resultado) {
   return partes.join('\n');
 }
 
-// Loop puro de subida de encosta: mede, reescreve via `client` e remede via
-// `pontuar`, rejeitando iterações que piorem o score. Injetável e testável
-// (client/pontuar fakes); nenhuma dependência de credencial ou de servidor
-// MCP aqui dentro.
-export async function otimizarTexto({ texto, client, pontuar, session }) {
-  let melhor = { texto, analise: await pontuar(texto) };
-  if (melhor.analise.inaplicavel) {
-    // Texto curto demais para medir (mesmo contrato de texto_br_score): não
-    // há o que otimizar, mas também não há o que reprovar. Libera os dois
-    // flags do gate da Fase 2 para este texto (mesmo comportamento de
-    // texto_br_score), em vez de devolver um erro puro que deixaria o gate
-    // travado enquanto a outra tool o liberaria para o mesmo texto.
+// Mede o texto uma vez e monta o pacote acionável (diagnóstico + score) para o
+// HOST reescrever. Sem client, sem API, sem loop: o loop de subida de encosta é
+// dirigido pelo host (guidance da Fase 2). O gate espelha texto_br_score: mede o
+// texto de entrada e libera os flags conforme a medição. Injetável/testável
+// (pontuar/session fakes).
+export async function montarPacoteOtimizacao({ texto, pontuar, session }) {
+  const analise = await pontuar(texto);
+  if (analise.inaplicavel) {
+    // Texto curto demais para medir (mesmo contrato de texto_br_score): não há o
+    // que reescrever, mas também não trava o gate.
     if (session) {
       session.registrarVariancia(true, texto);
       session.registrarLexico(true, texto);
     }
-    return {
-      melhor,
-      aviso:
-        `${melhor.analise.erro} Nada a otimizar, mas o gate da Fase 2 foi ` +
-        'liberado para este texto.',
-    };
+    return { inaplicavel: true, relatorio: analise.relatorio };
   }
-  if (melhor.analise.erro) return { melhor, erroInicial: melhor.analise.erro };
-
-  let iteracoes = 0;
-  let semMelhora = 0;
-  let aviso = null;
-  const trajetoria = [melhor.analise.score.total];
-
-  while (
-    !melhor.analise.atingiu_alvo &&
-    iteracoes < MAX_ITERACOES &&
-    semMelhora < MAX_SEM_MELHORA
-  ) {
-    iteracoes += 1;
-    let resposta;
-    try {
-      resposta = await client.messages.create({
-        model: MODEL,
-        max_tokens: 16000,
-        thinking: { type: 'adaptive' },
-        system: SYSTEM,
-        messages: [
-          {
-            role: 'user',
-            content: `## Diagnóstico\n${resumoDiagnostico(melhor.analise)}\n\n## Texto\n${melhor.texto}`,
-          },
-        ],
-      });
-    } catch (err) {
-      // Falha de API no meio do loop: preserva a melhor versão já encontrada
-      // em vez de propagar o erro (achado R8) — não descarta o progresso.
-      aviso = `Loop interrompido na iteração ${iteracoes} (falha na API: ${err.message}); segue a melhor versão até aqui.`;
-      break;
-    }
-    // Anti-truncamento: candidato cortado em max_tokens perdeu conteúdo —
-    // descarta o candidato (conta como tentativa sem melhora), mas não aborta
-    // o loop: com thinking adaptive uma nova iteração pode não truncar, e
-    // MAX_SEM_MELHORA já é a rede contra retries improdutivos.
-    if (resposta.stop_reason === 'max_tokens') {
-      semMelhora += 1;
-      continue;
-    }
-    const bloco = resposta.content.find((b) => b.type === 'text');
-    if (!bloco?.text?.trim()) {
-      semMelhora += 1;
-      continue;
-    }
-    const candidato = bloco.text.trim();
-    // Sanity de comprimento: perda de mais de 20% do texto indica
-    // truncamento/omissão não sinalizado por stop_reason — mesmo tratamento
-    // (descarta o candidato, segue o loop).
-    if (candidato.length < melhor.texto.length * 0.8) {
-      semMelhora += 1;
-      continue;
-    }
-    const analise = await pontuar(candidato);
-    if (analise.erro) {
-      semMelhora += 1;
-      continue;
-    }
-    trajetoria.push(analise.score.total);
-    // Anti-degradação: só aceita a iteração se o score subir
-    if (analise.score.total > melhor.analise.score.total) {
-      melhor = { texto: candidato, analise };
-      semMelhora = 0;
-    } else {
-      semMelhora += 1;
-    }
-  }
+  if (analise.erro) return { erro: analise.erro };
 
   if (session) {
     session.registrarVariancia(
-      melhor.analise.ritmo.atingiu_alvo === true || melhor.analise.atingiu_alvo === true,
-      melhor.texto
+      analise.ritmo.atingiu_alvo === true || analise.atingiu_alvo === true,
+      texto
     );
     session.registrarLexico(
-      melhor.analise.lexico.atingiu_alvo === true || melhor.analise.atingiu_alvo === true,
-      melhor.texto
+      analise.lexico.atingiu_alvo === true || analise.atingiu_alvo === true,
+      texto
     );
   }
-  return { melhor, iteracoes, trajetoria, aviso };
+  return {
+    atingiu_alvo: analise.atingiu_alvo === true,
+    score: analise.score,
+    diagnostico: resumoDiagnostico(analise),
+    relatorio: analise.relatorio,
+  };
 }
 
 export function register(server, session) {
   server.registerTool(
     'texto_br_otimizar',
     {
-      title: 'Otimizar humanização (via Claude API)',
+      title: 'Pacote de otimização (diagnóstico + roteiro de reescrita)',
       description:
-        'Otimiza um rascunho automaticamente contra o score de humanidade (texto_br_score): ' +
-        'subida de encosta garantida por código que mede, reescreve via Claude API (ritmo, ' +
-        'léxico e estrutura) e remede, REJEITANDO iterações que piorem o score ' +
-        `(anti-degradação). Para em alvo atingido (>= ${ALVO_SCORE}), convergência ou 4 iterações. ` +
-        'Requer ANTHROPIC_API_KEY no ambiente do servidor; sem credencial, use texto_br_score ' +
-        'e reescreva manualmente.',
+        'Empacota numa única chamada o diagnóstico priorizado do score de humanidade ' +
+        '(texto_br_score) e o roteiro de reescrita (ritmo, léxico e estrutura + regras ' +
+        'invioláveis) para o HOST reescrever o texto. Não chama modelo nenhum nem requer ' +
+        `credencial. Mede o texto de entrada; se ainda abaixo do alvo (>= ${ALVO_SCORE}), ` +
+        'devolve os pontos a corrigir e como corrigi-los. Reescreva e remeça com ' +
+        'texto_br_score, repetindo até o alvo (descarte reescritas que baixem o score).',
       inputSchema: {
-        texto: z.string().min(1).describe('Rascunho completo a otimizar (markdown ou texto puro)'),
+        texto: z
+          .string()
+          .min(1)
+          .describe('Rascunho completo a diagnosticar (markdown ou texto puro)'),
       },
     },
     async ({ texto }) => {
-      const SEM_CREDENCIAL =
-        'Credencial da Anthropic ausente ou inválida no ambiente do servidor ' +
-        '(defina ANTHROPIC_API_KEY). Alternativa: use texto_br_score e faça a ' +
-        'reescrita manualmente seguindo o diagnóstico.';
-
-      let client;
-      try {
-        client = new Anthropic();
-      } catch {
-        return { isError: true, content: [{ type: 'text', text: SEM_CREDENCIAL }] };
-      }
-
       try {
         const secao10 = getSection('humanizacao-algoritmos', 10);
         const pontuar = (t) => runPython('score.py', JSON.stringify({ texto: t, secao10 }));
+        const pacote = await montarPacoteOtimizacao({ texto, pontuar, session });
 
-        const { melhor, iteracoes, trajetoria, aviso, erroInicial } = await otimizarTexto({
-          texto,
-          client,
-          pontuar,
-          session,
-        });
-
-        if (erroInicial) {
-          return { isError: true, content: [{ type: 'text', text: erroInicial }] };
+        if (pacote.erro) {
+          return { isError: true, content: [{ type: 'text', text: pacote.erro }] };
         }
-
-        if (melhor.analise.inaplicavel) {
-          // Não é erro: o gate da Fase 2 já foi liberado para este texto
-          // (mesmo contrato de texto_br_score); só não há o que otimizar.
-          return { content: [{ type: 'text', text: aviso }] };
+        if (pacote.inaplicavel) {
+          return { content: [{ type: 'text', text: pacote.relatorio }] };
         }
-
-        const cabecalho = melhor.analise.atingiu_alvo
-          ? `Otimização concluída em ${iteracoes} iteração(ões); alvo atingido.`
-          : `Otimização parou (${iteracoes} iteração(ões), convergência ou limite); segue a melhor versão encontrada (revise os pontos restantes manualmente).`;
-
+        if (pacote.atingiu_alvo) {
+          const text = [
+            `Score ${pacote.score.total}/100 — alvo (>= ${pacote.score.alvo}) já atingido. Nada a reescrever.`,
+            pacote.relatorio,
+          ].join('\n\n');
+          return { content: [{ type: 'text', text }] };
+        }
         const text = [
-          aviso,
-          cabecalho,
-          `Trajetória do score: ${trajetoria.join(' → ')}`,
-          '## Texto otimizado',
-          melhor.texto,
-          melhor.analise.relatorio,
-        ]
-          .filter(Boolean)
-          .join('\n\n');
+          `Score ${pacote.score.total}/100 (alvo >= ${pacote.score.alvo}). Reescreva os pontos abaixo seguindo o roteiro; depois remeça com texto_br_score e repita até o alvo. Se o score cair, descarte a reescrita e volte à versão anterior.`,
+          '## Diagnóstico priorizado',
+          pacote.diagnostico,
+          '## Roteiro de reescrita',
+          ROTEIRO_REESCRITA,
+          '## Relatório completo',
+          pacote.relatorio,
+        ].join('\n\n');
         return { content: [{ type: 'text', text }] };
       } catch (err) {
-        const semAuth =
-          err instanceof Anthropic.AuthenticationError ||
-          /authentication|api.?key|x-api-key/i.test(err.message ?? '');
-        if (semAuth) {
-          return { isError: true, content: [{ type: 'text', text: SEM_CREDENCIAL }] };
-        }
         return { isError: true, content: [{ type: 'text', text: err.message }] };
       }
     }
